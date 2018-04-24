@@ -1,5 +1,5 @@
 lazy val core = project.in(file("."))
-    .settings(commonSettings)
+    .settings(commonSettings, releaseSettings)
     .settings(
       name := "log4cats"
     )
