@@ -17,3 +17,6 @@ cache:
 
 jdk:
   - oraclejdk8
+
+after_success:
+- test $TRAVIS_PULL_REQUEST == "false" && test $TRAVIS_BRANCH == "master" && test $TRAVIS_REPO_SLUG == "ChristopherDavenport/log4cats" && sbt ++$TRAVIS_SCALA_VERSION publish
