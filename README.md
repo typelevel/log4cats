@@ -1,9 +1,18 @@
-# log4cats
+# log4cats [![Build Status](https://travis-ci.org/ChristopherDavenport/log4cats.svg?branch=master)](https://travis-ci.org/ChristopherDavenport/log4cats) [![Maven Central](https://maven-badges.herokuapp.com/maven-central/io.chrisdavenport/log4cats_2.12/badge.svg)](https://maven-badges.herokuapp.com/maven-central/io.chrisdavenport/log4cats_2.12)
+
+## Quick Start
+
+To use linebacker in an existing SBT project with Scala 2.11 or a later version, add the following dependency to your
+`build.sbt`:
+
+```scala
+libraryDependencies += "io.chrisdavenport" %% "log4cats" % "<version>"
+```
 
 ## Examples
 
 ```scala
-import io.chrisdavenport.log4scats.Logger
+import io.chrisdavenport.log4cats.Logger
 import cats.effect.Sync
 import cats.implicits._
 
