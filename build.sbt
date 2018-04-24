@@ -6,6 +6,9 @@ lazy val core = project.in(file("."))
 
 val catsV = "1.1.0"
 val catsEffectV = "0.10.1"
+
+val log4sV = "1.6.1"
+
 val specs2V = "4.1.0"
 
 lazy val contributors = Seq(
@@ -23,6 +26,9 @@ lazy val commonSettings = Seq(
   libraryDependencies ++= Seq(
     "org.typelevel"               %% "cats-core"                  % catsV,
     "org.typelevel"               %% "cats-effect"                % catsEffectV,
+
+    "org.log4s"                   %% "log4s"                      % log4sV,
+
     "org.specs2"                  %% "specs2-core"                % specs2V       % Test,
     "org.specs2"                  %% "specs2-scalacheck"          % specs2V       % Test
   )
