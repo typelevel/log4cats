@@ -4,6 +4,13 @@ import cats.effect.Sync
 import org.log4s.{Logger => Base}
 
 trait Logger[F[_]]{
+
+  def isTraceEnabled: F[Boolean]
+  def isDebugEnabled: F[Boolean]
+  def isInfoEnabled: F[Boolean] 
+  def isWarnEnabled: F[Boolean]
+  def isErrorEnabled: F[Boolean]
+
   def error(message: => String): F[Unit]
   def error(t: Throwable)(message: => String): F[Unit]
   def warn(message: => String): F[Unit]
@@ -26,6 +33,18 @@ object Logger {
 
 
   def fromLog4s[F[_]: Sync](logger: Base): Logger[F] = new Logger[F]{
+
+    override def isTraceEnabled: F[Boolean] =
+      Sync[F].delay(logger.isTraceEnabled)
+    override def isDebugEnabled: F[Boolean] = 
+      Sync[F].delay(logger.isDebugEnabled)
+    override def isInfoEnabled: F[Boolean] =
+      Sync[F].delay(logger.isInfoEnabled)
+    override def isWarnEnabled: F[Boolean] =
+      Sync[F].delay(logger.isWarnEnabled)
+    override def isErrorEnabled: F[Boolean] =
+      Sync[F].delay(logger.isErrorEnabled)
+
     override def error(message: => String): F[Unit] =
       Sync[F].delay(logger.error(message))
     override def error(t: Throwable)(message: => String): F[Unit] = 
