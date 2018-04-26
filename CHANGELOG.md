@@ -8,7 +8,7 @@ This file summarizes **notable** changes for each release, but does not describe
 
 Minor release addressing initial concerns.
 
-- Made Calls to Algebra Lazy so when disable are not evaluated. [#4](https://github.com/ChristopherDavenport/log4cats/pull/4)
+- Made calls to algebra lazy so when disabled are not evaluated. [#4](https://github.com/ChristopherDavenport/log4cats/pull/4)
 - Access to whether a particular log level is enabled. [#5](https://github.com/ChristopherDavenport/log4cats/pull/5)
 - withModifiedString for modifying the logged message. [#6](https://github.com/ChristopherDavenport/log4cats/pull/6)
 
