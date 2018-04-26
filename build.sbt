@@ -1,15 +1,40 @@
-lazy val core = project.in(file("."))
-    .settings(commonSettings, releaseSettings)
-    .settings(
-      name := "log4cats"
-    )
-
 val catsV = "1.1.0"
 val catsEffectV = "0.10.1"
-
 val log4sV = "1.6.1"
-
 val specs2V = "4.1.0"
+
+lazy val log4cats = project.in(file("."))
+  .aggregate(
+    core, 
+    log4s,
+    scribe
+  )
+
+lazy val core = project.in(file("core"))
+  .settings(commonSettings, releaseSettings)
+  .settings(
+    name := "log4cats-core"
+  )
+
+lazy val log4s = project.in(file("log4s"))
+  .settings(commonSettings, releaseSettings)
+  .dependsOn(core)
+  .settings(
+    name := "log4cats-log4s",
+    libraryDependencies ++= Seq(
+      "org.log4s"                   %% "log4s"                      % log4sV,
+    )
+  )
+
+lazy val scribe = project.in(file("scribe"))
+  .settings(commonSettings, releaseSettings)
+  .dependsOn(core)
+  .settings(
+    name := "log4cats-scribe",
+    libraryDependencies ++= Seq(
+      "com.outr" %% "scribe" % "2.3.3"
+    )
+  )
 
 lazy val contributors = Seq(
   "ChristopherDavenport" -> "Christopher Davenport"
@@ -26,8 +51,6 @@ lazy val commonSettings = Seq(
   libraryDependencies ++= Seq(
     "org.typelevel"               %% "cats-core"                  % catsV,
     "org.typelevel"               %% "cats-effect"                % catsEffectV,
-
-    "org.log4s"                   %% "log4s"                      % log4sV,
 
     "org.specs2"                  %% "specs2-core"                % specs2V       % Test,
     "org.specs2"                  %% "specs2-scalacheck"          % specs2V       % Test
