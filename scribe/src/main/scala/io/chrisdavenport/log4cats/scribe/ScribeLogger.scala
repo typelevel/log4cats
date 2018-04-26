@@ -1,23 +1,34 @@
 package io.chrisdavenport.log4cats.scribe
 
 import io.chrisdavenport.log4cats.Logger
-import scribe.{Logger => Base}
+import _root_.scribe.{Logger => Base,  Level, LogRecord}
 import cats.effect.Sync
 
 object ScribeLogger {
 
   def fromLogger[F[_]: Sync](logger: Base): Logger[F] = new Logger[F]{
-    // Law Abiding But Not What We Want
+
+    // This May Be a Very Bad Approach...
     def isTraceEnabled: F[Boolean] = 
-      Sync[F].delay(???)
+      Sync[F].delay(
+        logger.modifiers.find(mod => mod(LogRecord.simple("", "", "", None, None, Level.Trace)).isDefined).isDefined
+      )
     def isDebugEnabled: F[Boolean] = 
-      Sync[F].delay(???)
+      Sync[F].delay(
+        logger.modifiers.find(mod => mod(LogRecord.simple("", "", "", None, None, Level.Debug)).isDefined).isDefined
+      )
     def isInfoEnabled: F[Boolean] =
-      Sync[F].delay(???)
+      Sync[F].delay(
+        logger.modifiers.find(mod => mod(LogRecord.simple("", "", "", None, None, Level.Info)).isDefined).isDefined
+      )
     def isWarnEnabled: F[Boolean] = 
-      Sync[F].delay(???)
+      Sync[F].delay(
+        logger.modifiers.find(mod => mod(LogRecord.simple("", "", "", None, None, Level.Warn)).isDefined).isDefined
+      )
     def isErrorEnabled: F[Boolean] = 
-      Sync[F].delay(???)
+      Sync[F].delay(
+        logger.modifiers.find(mod => mod(LogRecord.simple("", "", "", None, None, Level.Error)).isDefined).isDefined
+      )
 
     def error(message: => String): F[Unit] = 
       Sync[F].delay(logger.error(message))
