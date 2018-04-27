@@ -7,9 +7,12 @@ import cats.effect.Sync
 
 object ScribeLogger {
 
+  def empty[F[_]: Sync] = fromLogger[F](Base.empty)
+  def root[F[_]: Sync] = fromLogger[F](Base.root)
+  def byName[F[_]: Sync](name: String) = fromLogger[F](Base.byName(name))
+
   def fromLogger[F[_]: Sync](logger: Base): Logger[F] = new Logger[F]{
 
-    // This May Be a Very Bad Approach...
     def isTraceEnabled: F[Boolean] = 
       Sync[F].delay(
         checkLogLevelEnabled(logger.handlers, Level.Trace)
