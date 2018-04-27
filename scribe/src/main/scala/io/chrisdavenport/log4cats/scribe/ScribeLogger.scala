@@ -2,7 +2,6 @@ package io.chrisdavenport.log4cats.scribe
 
 import io.chrisdavenport.log4cats.Logger
 import _root_.scribe.{Logger => Base,  Level}
-import _root_.scribe.handler.LogHandler
 import cats.effect.Sync
 
 object ScribeLogger {
@@ -15,23 +14,23 @@ object ScribeLogger {
 
     def isTraceEnabled: F[Boolean] = 
       Sync[F].delay(
-        checkLogLevelEnabled(logger.handlers, Level.Trace)
+        checkLogLevelEnabled(logger, Level.Trace)
       )
     def isDebugEnabled: F[Boolean] = 
       Sync[F].delay(
-        checkLogLevelEnabled(logger.handlers, Level.Debug)
+        checkLogLevelEnabled(logger, Level.Debug)
       )
     def isInfoEnabled: F[Boolean] =
       Sync[F].delay(
-        checkLogLevelEnabled(logger.handlers, Level.Info)
+        checkLogLevelEnabled(logger, Level.Info)
       )
     def isWarnEnabled: F[Boolean] = 
       Sync[F].delay(
-        checkLogLevelEnabled(logger.handlers, Level.Warn)
+        checkLogLevelEnabled(logger, Level.Warn)
       )
     def isErrorEnabled: F[Boolean] = 
       Sync[F].delay(
-        checkLogLevelEnabled(logger.handlers, Level.Error)
+        checkLogLevelEnabled(logger, Level.Error)
       )
 
     def error(message: => String): F[Unit] = 
@@ -56,10 +55,13 @@ object ScribeLogger {
       Sync[F].delay(logger.trace(message, t))
   }
 
-  private[scribe] def checkLogLevelEnabled(handlers: List[LogHandler], level: Level): Boolean = {
-    handlers.exists{
-      _.minimumLevel.map(_ <= level).getOrElse(true)
-    }.getOrElse(false)
+  /**
+    * Almost Certain this Behavior is incorrectly in place
+    * @param l Underlying Scribe Logger
+    * @param level Level to Check if it is enabled
+    */
+  private[scribe] def checkLogLevelEnabled(l: Base, level: Level): Boolean = {
+    l.handlers.forall(_.modifiers.forall(_.priority.value <= level.value))
   }
 
 }
