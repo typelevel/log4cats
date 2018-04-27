@@ -1,7 +1,7 @@
 package io.chrisdavenport.log4cats.scribe
 
 import io.chrisdavenport.log4cats.Logger
-import _root_.scribe.{Logger => Base,  Level, LogRecord}
+import _root_.scribe.{Logger => Base,  Level}
 import _root_.scribe.handler.LogHandler
 import cats.effect.Sync
 
