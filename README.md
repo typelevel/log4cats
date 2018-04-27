@@ -6,19 +6,24 @@ To use log4cats in an existing SBT project with Scala 2.11 or a later version, a
 `build.sbt`:
 
 ```scala
-libraryDependencies += "io.chrisdavenport" %% "log4cats" % "<version>"
+libraryDependencies ++= Seq(
+  "io.chrisdavenport" %% "log4cats-core"    % "<version>",  // Only if you want to Support Any Backend
+  "io.chrisdavenport" %% "log4cats-log4s"   % "<version>",  // For Log4s Support
+  "io.chrisdavenport" %% "log4cats-scribe"  % "<version>",   // For Scribe Support
+)
 ```
 
 ## Examples
 
 ```scala
 import io.chrisdavenport.log4cats.Logger
+import io.chrisdavenport.log4cats.Log4sLogger
 import cats.effect.Sync
 import cats.implicits._
 
 object MyThing {
   // Impure But What 90% of Folks I know do with log4s
-  implicit def localLogger[F[_]: Sync] = Logger.createLocal[F]
+  implicit def localLogger[F[_]: Sync] = Log4sLogger.createLocal[F]
 
   // Arbitrary Local Function Declaration
   def doSomething[F[_]: Sync]: F[Unit] =
