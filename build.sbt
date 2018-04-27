@@ -8,7 +8,7 @@ lazy val log4cats = project.in(file("."))
     core, 
     log4s,
     scribe
-  )
+  ).settings(commonSettings, releaseSettings)
 
 lazy val core = project.in(file("core"))
   .settings(commonSettings, releaseSettings)
