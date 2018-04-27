@@ -5,20 +5,25 @@ val specs2V = "4.1.0"
 
 lazy val log4cats = project.in(file("."))
   .aggregate(
-    core, 
+    coreJVM,
+    coreJS,
     log4s,
-    scribe
+    scribeJVM,
+    scribeJS
   ).settings(commonSettings, releaseSettings)
 
-lazy val core = project.in(file("core"))
+lazy val core = crossProject.in(file("core"))
   .settings(commonSettings, releaseSettings)
   .settings(
     name := "log4cats-core"
   )
 
+lazy val coreJVM = core.jvm
+lazy val coreJS  = core.js
+
 lazy val log4s = project.in(file("log4s"))
   .settings(commonSettings, releaseSettings)
-  .dependsOn(core)
+  .dependsOn(core.jvm)
   .settings(
     name := "log4cats-log4s",
     libraryDependencies ++= Seq(
@@ -26,15 +31,18 @@ lazy val log4s = project.in(file("log4s"))
     )
   )
 
-lazy val scribe = project.in(file("scribe"))
+lazy val scribe = crossProject.in(file("scribe"))
   .settings(commonSettings, releaseSettings)
   .dependsOn(core)
   .settings(
     name := "log4cats-scribe",
     libraryDependencies ++= Seq(
-      "com.outr" %% "scribe" % "2.3.3"
+      "com.outr" %%% "scribe" % "2.3.3"
     )
   )
+
+lazy val scribeJVM = scribe.jvm
+lazy val scribeJS = scribe.js
 
 lazy val contributors = Seq(
   "ChristopherDavenport" -> "Christopher Davenport"
@@ -49,11 +57,11 @@ lazy val commonSettings = Seq(
   addCompilerPlugin("org.spire-math" % "kind-projector" % "0.9.6" cross CrossVersion.binary),
 
   libraryDependencies ++= Seq(
-    "org.typelevel"               %% "cats-core"                  % catsV,
-    "org.typelevel"               %% "cats-effect"                % catsEffectV,
+    "org.typelevel"               %%% "cats-core"                  % catsV,
+    "org.typelevel"               %%% "cats-effect"                % catsEffectV,
 
-    "org.specs2"                  %% "specs2-core"                % specs2V       % Test,
-    "org.specs2"                  %% "specs2-scalacheck"          % specs2V       % Test
+    "org.specs2"                  %%% "specs2-core"                % specs2V       % Test
+    // "org.specs2"                  %% "specs2-scalacheck"          % specs2V       % Test
   )
 )
 
