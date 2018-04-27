@@ -27,7 +27,7 @@ lazy val testing = crossProject.in(file("testing"))
   .settings(commonSettings, releaseSettings)
   .dependsOn(core)
   .settings(
-    name := "log4s-testing"
+    name := "log4cats-testing"
   )
 
 lazy val testingJVM = testing.jvm
