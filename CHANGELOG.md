@@ -4,6 +4,13 @@ This file summarizes **notable** changes for each release, but does not describe
 
 ----
 
+## <a name="0.0.3"></a>New and Noteworthy for Version 0.0.3
+
+Multi Project Support Migration
+
+- Added Experimental Support for Scribe
+- Log4s now has a dedication Log4sLogger for build functions
+
 ## <a name="0.0.2"></a>New and Noteworthy for Version 0.0.2
 
 Minor release addressing initial concerns.
