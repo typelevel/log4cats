@@ -10,6 +10,7 @@ ScalaJS Support
 
 - Compiled primary algebra to ScalaJS
 - Built Scribe backend with ScalaJS as well
+- Testing project added which implements a logger with ability to check logs
 
 ## <a name="0.0.3"></a>New and Noteworthy for Version 0.0.3
 

@@ -7,6 +7,8 @@ lazy val log4cats = project.in(file("."))
   .aggregate(
     coreJVM,
     coreJS,
+    testingJVM,
+    testingJS,
     log4s,
     scribeJVM,
     scribeJS
@@ -20,6 +22,16 @@ lazy val core = crossProject.in(file("core"))
 
 lazy val coreJVM = core.jvm
 lazy val coreJS  = core.js
+
+lazy val testing = crossProject.in(file("testing"))
+  .settings(commonSettings, releaseSettings)
+  .dependsOn(core)
+  .settings(
+    name := "log4cats-testing"
+  )
+
+lazy val testingJVM = testing.jvm
+lazy val testingJS = testing.js
 
 lazy val log4s = project.in(file("log4s"))
   .settings(commonSettings, releaseSettings)
