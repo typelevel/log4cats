@@ -4,6 +4,13 @@ This file summarizes **notable** changes for each release, but does not describe
 
 ----
 
+## <a name="0.0.4"></a>New and Noteworthy for Version 0.0.4
+
+ScalaJS Support
+
+- Compiled primary algebra to ScalaJS
+- Built Scribe backend with ScalaJS as well
+
 ## <a name="0.0.3"></a>New and Noteworthy for Version 0.0.3
 
 Multi Project Support Migration
