@@ -12,7 +12,9 @@ lazy val log4cats = project.in(file("."))
     log4s,
     scribeJVM,
     scribeJS
-  ).settings(commonSettings, releaseSettings)
+  )
+  .settings(noPublishSettings)
+  .settings(commonSettings, releaseSettings)
 
 lazy val core = crossProject.in(file("core"))
   .settings(commonSettings, releaseSettings)
@@ -140,5 +142,15 @@ lazy val releaseSettings = {
         }
       </developers>
     }
+  )
+}
+
+lazy val noPublishSettings = {
+  import com.typesafe.sbt.pgp.PgpKeys.publishSigned
+  Seq(
+    publish := {},
+    publishLocal := {},
+    publishSigned := {},
+    publishArtifact := false
   )
 }
