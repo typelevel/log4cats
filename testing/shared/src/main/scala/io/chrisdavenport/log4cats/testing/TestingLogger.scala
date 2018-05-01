@@ -12,7 +12,12 @@ trait TestingLogger[F[_]] extends Logger[F] {
 }
 
 object TestingLogger {
-  sealed trait LogMessage
+
+  sealed trait LogMessage {
+    def message: String
+    def throwOpt: Option[Throwable]
+  }
+
   final case class TRACE(message: String, throwOpt: Option[Throwable]) extends LogMessage
   final case class DEBUG(message: String, throwOpt: Option[Throwable]) extends LogMessage
   final case class INFO(message: String, throwOpt: Option[Throwable]) extends LogMessage
