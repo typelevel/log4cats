@@ -1,0 +1,11 @@
+name: log4cats
+baseurl: /log4cats
+description: Functional Logging
+highlighter: rouge
+docs: true
+collections:
+  tut:
+    output: true
+version: 0.0.5-SNAPSHOT
+org: io.chrisdavenport
+markdown: kramdown
