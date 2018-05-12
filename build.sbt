@@ -9,12 +9,21 @@ lazy val log4cats = project.in(file("."))
     coreJS,
     testingJVM,
     testingJS,
-    log4s,
     scribeJVM,
-    scribeJS
+    scribeJS,
+    log4sJVM,
+    log4sJS,
+    docs
   )
   .settings(noPublishSettings)
   .settings(commonSettings, releaseSettings)
+
+lazy val docs = project.in(file("docs"))
+  .settings(noPublishSettings)
+  .settings(commonSettings, micrositeSettings)
+  .enablePlugins(MicrositesPlugin)
+  .enablePlugins(TutPlugin)
+  .dependsOn(log4sJVM)
 
 lazy val core = crossProject.in(file("core"))
   .settings(commonSettings, releaseSettings)
@@ -35,15 +44,18 @@ lazy val testing = crossProject.in(file("testing"))
 lazy val testingJVM = testing.jvm
 lazy val testingJS = testing.js
 
-lazy val log4s = project.in(file("log4s"))
+lazy val log4s = crossProject.in(file("log4s"))
   .settings(commonSettings, releaseSettings)
-  .dependsOn(core.jvm)
+  .dependsOn(core)
   .settings(
     name := "log4cats-log4s",
     libraryDependencies ++= Seq(
-      "org.log4s"                   %% "log4s"                      % log4sV,
+      "org.log4s"                   %%% "log4s"                      % log4sV
     )
   )
+
+lazy val log4sJVM = log4s.jvm
+lazy val log4sJS = log4s.js
 
 lazy val scribe = crossProject.in(file("scribe"))
   .settings(commonSettings, releaseSettings)
@@ -141,6 +153,65 @@ lazy val releaseSettings = {
         </developer>
         }
       </developers>
+    }
+  )
+}
+
+lazy val micrositeSettings = Seq(
+  micrositeName := "log4cats",
+  micrositeDescription := "Functional Logging",
+  micrositeAuthor := "Christopher Davenport",
+  micrositeGithubOwner := "ChristopherDavenport",
+  micrositeGithubRepo := "log4cats",
+  micrositeBaseUrl := "/log4cats",
+  micrositeDocumentationUrl := "https://christopherdavenport.github.io/log4cats",
+  micrositeFooterText := None,
+  micrositeHighlightTheme := "atom-one-light",
+  micrositePalette := Map(
+    "brand-primary" -> "#3e5b95",
+    "brand-secondary" -> "#294066",
+    "brand-tertiary" -> "#2d5799",
+    "gray-dark" -> "#49494B",
+    "gray" -> "#7B7B7E",
+    "gray-light" -> "#E5E5E6",
+    "gray-lighter" -> "#F4F3F4",
+    "white-color" -> "#FFFFFF"
+  ),
+  fork in tut := true,
+  scalacOptions in Tut --= Seq(
+    "-Xfatal-warnings",
+    "-Ywarn-unused-import",
+    "-Ywarn-numeric-widen",
+    "-Ywarn-dead-code",
+    "-Ywarn-unused:imports",
+    "-Xlint:-missing-interpolator,_"
+  ),
+  libraryDependencies += "com.47deg" %% "github4s" % "0.18.4",
+  micrositePushSiteWith := GitHub4s,
+  micrositeGithubToken := sys.env.get("GITHUB_TOKEN")
+)
+
+// Not Used Currently
+lazy val mimaSettings = {
+  import sbtrelease.Version
+  def mimaVersion(version: String) = {
+    Version(version) match {
+      case Some(Version(major, Seq(minor, patch), _)) if patch.toInt > 0 =>
+        Some(s"${major}.${minor}.${patch.toInt - 1}")
+      case _ =>
+        None
+    }
+  }
+
+  Seq(
+    mimaFailOnProblem := mimaVersion(version.value).isDefined,
+    mimaPreviousArtifacts := (mimaVersion(version.value) map {
+      organization.value % s"${moduleName.value}_${scalaBinaryVersion.value}" % _
+    }).toSet,
+    mimaBinaryIssueFilters ++= {
+      import com.typesafe.tools.mima.core._
+      import com.typesafe.tools.mima.core.ProblemFilters._
+      Seq()
     }
   )
 }
