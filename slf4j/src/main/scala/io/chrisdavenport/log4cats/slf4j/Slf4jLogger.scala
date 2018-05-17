@@ -4,6 +4,7 @@ import cats.implicits._
 import cats.effect.Sync
 import io.chrisdavenport.log4cats.Logger
 import org.slf4j.{Logger => Base, LoggerFactory}
+import language.experimental.macros
 
 object Slf4jLogger {
 
@@ -13,7 +14,7 @@ object Slf4jLogger {
   def fromClass[F[_]: Sync](clazz: Class[_]): Logger[F] =
     fromLogger[F](LoggerFactory.getLogger(clazz))
 
-  // Do we want a macro here for reflection?
+  def getLogger[F[_]: Sync]: Logger[F] = macro Slf4jMacros.getLoggerImpl[F[_]]
 
   def fromLogger[F[_]: Sync](logger: Base): Logger[F] = new Logger[F]{
 
