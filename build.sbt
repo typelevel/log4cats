@@ -11,7 +11,8 @@ lazy val log4cats = project.in(file("."))
     testingJS,
     log4s,
     scribeJVM,
-    scribeJS
+    scribeJS,
+    slf4j
   )
   .settings(noPublishSettings)
   .settings(commonSettings, releaseSettings)
@@ -42,6 +43,16 @@ lazy val log4s = project.in(file("log4s"))
     name := "log4cats-log4s",
     libraryDependencies ++= Seq(
       "org.log4s"                   %% "log4s"                      % log4sV,
+    )
+  )
+
+lazy val slf4j = project.in(file("slf4j"))
+  .settings(commonSettings, releaseSettings)
+  .dependsOn(core.jvm)
+  .settings(
+    name := "log4cats-slf4j",
+    libraryDependencies ++= Seq(
+      "org.slf4j" % "slf4j-api" % "1.7.25"
     )
   )
 
