@@ -225,3 +225,4 @@ lazy val noPublishSettings = {
     publishSigned := {},
     publishArtifact := false
   )
+}
