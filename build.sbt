@@ -1,7 +1,7 @@
 val catsV = "1.1.0"
 val catsEffectV = "0.10.1"
 val log4sV = "1.6.1"
-val specs2V = "4.0.4"
+val specs2V = "4.2.0"
 
 lazy val log4cats = project.in(file("."))
   .aggregate(
@@ -77,10 +77,11 @@ lazy val contributors = Seq(
 lazy val commonSettings = Seq(
   organization := "io.chrisdavenport",
 
-  scalaVersion := "2.12.4",
+  scalaVersion := "2.12.6",
   crossScalaVersions := Seq(scalaVersion.value, "2.11.12"),
 
   addCompilerPlugin("org.spire-math" % "kind-projector" % "0.9.6" cross CrossVersion.binary),
+  addCompilerPlugin("com.olegpy" %% "better-monadic-for" % "0.2.4"),
 
   libraryDependencies ++= Seq(
     "org.typelevel"               %%% "cats-core"                  % catsV,
