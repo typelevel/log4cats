@@ -8,7 +8,7 @@ object ScribeLogger {
 
   def empty[F[_]: Sync] = fromLogger[F](Base.empty)
   def root[F[_]: Sync] = fromLogger[F](Base.root)
-  def byName[F[_]: Sync](name: String) = fromLogger[F](Base.byName(name))
+  def byName[F[_]: Sync](name: String) = fromLogger[F](Base(name))
 
   def fromLogger[F[_]: Sync](logger: Base): Logger[F] = new Logger[F]{
 
