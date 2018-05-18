@@ -11,6 +11,7 @@ lazy val log4cats = project.in(file("."))
     testingJS,
     scribeJVM,
     scribeJS,
+    slf4j,
     log4sJVM,
     log4sJS,
     docs
@@ -54,6 +55,15 @@ lazy val log4s = crossProject.in(file("log4s"))
     )
   )
 
+lazy val slf4j = project.in(file("slf4j"))
+  .settings(commonSettings, releaseSettings)
+  .dependsOn(core.jvm)
+  .settings(
+    name := "log4cats-slf4j",
+    libraryDependencies ++= Seq(
+      "org.slf4j" % "slf4j-api" % "1.7.25"
+    )
+  )
 lazy val log4sJVM = log4s.jvm
 lazy val log4sJS = log4s.js
 
