@@ -29,7 +29,7 @@ object MyThing {
   def doSomething[F[_]: Sync]: F[Unit] =
     Logger[F].info("Logging Start Something") *>
     Sync[F].delay(println("I could be doing anything"))
-      .attempt.flatTap{
+      .attempt.flatMap{
         case Left(e) => Logger[F].error(e)("Something Went Wrong")
         case Right(_) => Sync[F].pure(())
       }
