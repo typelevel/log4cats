@@ -149,7 +149,7 @@ lazy val releaseSettings = {
       )
     ),
     homepage := Some(url("https://github.com/ChristopherDavenport/log4cats")),
-    licenses := Seq("Apache-2.0" -> url("https://www.apache.org/licenses/LICENSE-2.0.html")),,
+    licenses := Seq("Apache-2.0" -> url("https://www.apache.org/licenses/LICENSE-2.0.html")),
     publishMavenStyle := true,
     pomIncludeRepository := { _ =>
       false
