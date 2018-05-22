@@ -27,7 +27,7 @@ lazy val docs = project.in(file("docs"))
   .dependsOn(log4sJVM)
 
 lazy val core = crossProject.in(file("core"))
-  .settings(commonSettings, releaseSettings)
+  .settings(commonSettings, releaseSettings, mimaSettings)
   .settings(
     name := "log4cats-core"
   )
@@ -36,7 +36,7 @@ lazy val coreJVM = core.jvm
 lazy val coreJS  = core.js
 
 lazy val testing = crossProject.in(file("testing"))
-  .settings(commonSettings, releaseSettings)
+  .settings(commonSettings, releaseSettings, mimaSettings)
   .dependsOn(core)
   .settings(
     name := "log4cats-testing"
@@ -46,7 +46,7 @@ lazy val testingJVM = testing.jvm
 lazy val testingJS = testing.js
 
 lazy val log4s = crossProject.in(file("log4s"))
-  .settings(commonSettings, releaseSettings)
+  .settings(commonSettings, releaseSettings, mimaSettings)
   .dependsOn(core)
   .settings(
     name := "log4cats-log4s",
@@ -56,7 +56,7 @@ lazy val log4s = crossProject.in(file("log4s"))
   )
 
 lazy val slf4j = project.in(file("slf4j"))
-  .settings(commonSettings, releaseSettings)
+  .settings(commonSettings, releaseSettings, mimaSettings)
   .dependsOn(core.jvm)
   .settings(
     name := "log4cats-slf4j",
@@ -68,7 +68,7 @@ lazy val log4sJVM = log4s.jvm
 lazy val log4sJS = log4s.js
 
 lazy val scribe = crossProject.in(file("scribe"))
-  .settings(commonSettings, releaseSettings)
+  .settings(commonSettings, releaseSettings, mimaSettings)
   .dependsOn(core)
   .settings(
     name := "log4cats-scribe",
@@ -222,16 +222,17 @@ lazy val mimaSettings = {
     }
 
     Version(version) match {
-      case Some(Version(major, Seq(minor, patch), _) =>
+      case Some(Version(major, Seq(minor, patch), _)) =>
         binCompatVersions(major.toInt, minor.toInt, patch.toInt)
           .map{case (maj, min, pat) => s"${maj}.${min}.${pat}"}
       case _ =>
         List.empty[String]
+    }
   }
 
   Seq(
-    mimaFailOnProblem := mimaVersion(version.value).isDefined,
-    mimaPreviousArtifacts := (mimaVersion(version.value) map {
+    mimaFailOnProblem := mimaVersions(version.value).isEmpty,
+    mimaPreviousArtifacts := (mimaVersions(version.value) map {
       organization.value % s"${moduleName.value}_${scalaBinaryVersion.value}" % _
     }).toSet,
     mimaBinaryIssueFilters ++= {
