@@ -27,7 +27,7 @@ lazy val docs = project.in(file("docs"))
   .dependsOn(log4sJVM)
 
 lazy val core = crossProject.in(file("core"))
-  .settings(commonSettings, releaseSettings)
+  .settings(commonSettings, releaseSettings, mimaSettings)
   .settings(
     name := "log4cats-core"
   )
@@ -36,7 +36,7 @@ lazy val coreJVM = core.jvm
 lazy val coreJS  = core.js
 
 lazy val testing = crossProject.in(file("testing"))
-  .settings(commonSettings, releaseSettings)
+  .settings(commonSettings, releaseSettings, mimaSettings)
   .dependsOn(core)
   .settings(
     name := "log4cats-testing"
@@ -46,7 +46,7 @@ lazy val testingJVM = testing.jvm
 lazy val testingJS = testing.js
 
 lazy val log4s = crossProject.in(file("log4s"))
-  .settings(commonSettings, releaseSettings)
+  .settings(commonSettings, releaseSettings, mimaSettings)
   .dependsOn(core)
   .settings(
     name := "log4cats-log4s",
@@ -56,7 +56,7 @@ lazy val log4s = crossProject.in(file("log4s"))
   )
 
 lazy val slf4j = project.in(file("slf4j"))
-  .settings(commonSettings, releaseSettings)
+  .settings(commonSettings, releaseSettings, mimaSettings)
   .dependsOn(core.jvm)
   .settings(
     name := "log4cats-slf4j",
@@ -68,7 +68,7 @@ lazy val log4sJVM = log4s.jvm
 lazy val log4sJS = log4s.js
 
 lazy val scribe = crossProject.in(file("scribe"))
-  .settings(commonSettings, releaseSettings)
+  .settings(commonSettings, releaseSettings, mimaSettings)
   .dependsOn(core)
   .settings(
     name := "log4cats-scribe",
@@ -202,21 +202,42 @@ lazy val micrositeSettings = Seq(
   micrositeGithubToken := sys.env.get("GITHUB_TOKEN")
 )
 
-// Not Used Currently
 lazy val mimaSettings = {
   import sbtrelease.Version
-  def mimaVersion(version: String) = {
+  def semverBinCompatVersions(major: Int, minor: Int, patch: Int): Set[(Int, Int, Int)] = {
+    val majorVersions: List[Int] = List(major)
+    val minorVersions : List[Int] = 
+      if (major >= 1) Range(0, minor).inclusive.toList
+      else List(minor)
+    def patchVersions(currentMinVersion: Int): List[Int] = 
+      if (minor == 0 && patch == 0) List.empty[Int]
+      else if (currentMinVersion != minor) List(0)
+      else Range(0, patch - 1).inclusive.toList
+
+    val versions = for {
+      maj <- majorVersions
+      min <- minorVersions
+      pat <- patchVersions(min)
+    } yield (maj, min, pat)
+    
+    versions.toSet
+  }
+
+  def mimaVersions(version: String): List[String] = {
     Version(version) match {
-      case Some(Version(major, Seq(minor, patch), _)) if patch.toInt > 0 =>
-        Some(s"${major}.${minor}.${patch.toInt - 1}")
+      case Some(Version(major, Seq(minor, patch), _)) =>
+        semverBinCompatVersions(major.toInt, minor.toInt, patch.toInt)
+          .map{case (maj, min, pat) => s"${maj}.${min}.${pat}"}
       case _ =>
-        None
+        List.empty[String]
     }
   }
 
+  lazy val versionSkips: Set[String] = Set.empty[String]
+
   Seq(
-    mimaFailOnProblem := mimaVersion(version.value).isDefined,
-    mimaPreviousArtifacts := (mimaVersion(version.value) map {
+    mimaFailOnProblem := mimaVersions(version.value).nonEmpty,
+    mimaPreviousArtifacts := (mimaVersions(version.value).filterNot(versionSkips.contains(_)) map {
       organization.value % s"${moduleName.value}_${scalaBinaryVersion.value}" % _
     }).toSet,
     mimaBinaryIssueFilters ++= {
