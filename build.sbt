@@ -202,16 +202,31 @@ lazy val micrositeSettings = Seq(
   micrositeGithubToken := sys.env.get("GITHUB_TOKEN")
 )
 
-// Not Used Currently
 lazy val mimaSettings = {
   import sbtrelease.Version
-  def mimaVersion(version: String) = {
-    Version(version) match {
-      case Some(Version(major, Seq(minor, patch), _)) if patch.toInt > 0 =>
-        Some(s"${major}.${minor}.${patch.toInt - 1}")
-      case _ =>
-        None
+  def mimaVersions(version: String): List[String] = {
+    def binCompatVersions(major: Int, minor: Int, patch: Int): List[(Int, Int, Int)] = {
+      val majorVersions: List[Int] = List(major)
+      val minorVersions : List[Int] = 
+        if (major >= 1) Range(0, minor).inclusive.toList
+        else List(minor)
+      val patchVersions: List[Int] = 
+        if (minor == 0 || patch == 0) List.empty[Int] 
+        else Range(0, patch - 1).inclusive.toList
+
+        for {
+          maj <- majorVersions
+          min <- minorVersions
+          pat <- patchVersions
+        } yield (maj, min, pat)
     }
+
+    Version(version) match {
+      case Some(Version(major, Seq(minor, patch), _) =>
+        binCompatVersions(major.toInt, minor.toInt, patch.toInt)
+          .map{case (maj, min, pat) => s"${maj}.${min}.${pat}"}
+      case _ =>
+        List.empty[String]
   }
 
   Seq(
