@@ -204,35 +204,40 @@ lazy val micrositeSettings = Seq(
 
 lazy val mimaSettings = {
   import sbtrelease.Version
+  def semverBinCompatVersions(major: Int, minor: Int, patch: Int): Set[(Int, Int, Int)] = {
+    val majorVersions: List[Int] = List(major)
+    val minorVersions : List[Int] = 
+      if (major >= 1) Range(0, minor).inclusive.toList
+      else List(minor)
+    def patchVersions(currentMinVersion: Int): List[Int] = 
+      if (minor == 0 && patch == 0) List.empty[Int]
+      else if (currentMinVersion != minor) List(0)
+      else Range(0, patch - 1).inclusive.toList
+
+    val versions = for {
+      maj <- majorVersions
+      min <- minorVersions
+      pat <- patchVersions(min)
+    } yield (maj, min, pat)
+    
+    versions.toSet
+  }
+
   def mimaVersions(version: String): List[String] = {
-    def binCompatVersions(major: Int, minor: Int, patch: Int): List[(Int, Int, Int)] = {
-      val majorVersions: List[Int] = List(major)
-      val minorVersions : List[Int] = 
-        if (major >= 1) Range(0, minor).inclusive.toList
-        else List(minor)
-      val patchVersions: List[Int] = 
-        if (minor == 0 || patch == 0) List.empty[Int] 
-        else Range(0, patch - 1).inclusive.toList
-
-        for {
-          maj <- majorVersions
-          min <- minorVersions
-          pat <- patchVersions
-        } yield (maj, min, pat)
-    }
-
     Version(version) match {
       case Some(Version(major, Seq(minor, patch), _)) =>
-        binCompatVersions(major.toInt, minor.toInt, patch.toInt)
+        semverBinCompatVersions(major.toInt, minor.toInt, patch.toInt)
           .map{case (maj, min, pat) => s"${maj}.${min}.${pat}"}
       case _ =>
         List.empty[String]
     }
   }
 
+  lazy val versionSkips: Set[String] = Set.empty[String]
+
   Seq(
-    mimaFailOnProblem := mimaVersions(version.value).isEmpty,
-    mimaPreviousArtifacts := (mimaVersions(version.value) map {
+    mimaFailOnProblem := mimaVersions(version.value).nonEmpty,
+    mimaPreviousArtifacts := (mimaVersions(version.value).filterNot(versionSkips.contains(_)) map {
       organization.value % s"${moduleName.value}_${scalaBinaryVersion.value}" % _
     }).toSet,
     mimaBinaryIssueFilters ++= {
