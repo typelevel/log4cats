@@ -1,3 +1,4 @@
+import sbtcrossproject.{crossProject, CrossType}
 val catsV = "1.1.0"
 val catsEffectV = "0.10.1"
 val log4sV = "1.6.1"
@@ -26,7 +27,7 @@ lazy val docs = project.in(file("docs"))
   .enablePlugins(TutPlugin)
   .dependsOn(log4sJVM)
 
-lazy val core = crossProject.in(file("core"))
+lazy val core = crossProject(JSPlatform, JVMPlatform).in(file("core"))
   .settings(commonSettings, releaseSettings)
   .settings(
     name := "log4cats-core"
@@ -35,7 +36,7 @@ lazy val core = crossProject.in(file("core"))
 lazy val coreJVM = core.jvm
 lazy val coreJS  = core.js
 
-lazy val testing = crossProject.in(file("testing"))
+lazy val testing = crossProject(JSPlatform, JVMPlatform).in(file("testing"))
   .settings(commonSettings, releaseSettings)
   .dependsOn(core)
   .settings(
@@ -45,7 +46,7 @@ lazy val testing = crossProject.in(file("testing"))
 lazy val testingJVM = testing.jvm
 lazy val testingJS = testing.js
 
-lazy val log4s = crossProject.in(file("log4s"))
+lazy val log4s = crossProject(JSPlatform, JVMPlatform).in(file("log4s"))
   .settings(commonSettings, releaseSettings)
   .dependsOn(core)
   .settings(
@@ -67,7 +68,7 @@ lazy val slf4j = project.in(file("slf4j"))
 lazy val log4sJVM = log4s.jvm
 lazy val log4sJS = log4s.js
 
-lazy val scribe = crossProject.in(file("scribe"))
+lazy val scribe = crossProject(JSPlatform, JVMPlatform).in(file("scribe"))
   .settings(commonSettings, releaseSettings)
   .dependsOn(core)
   .settings(
@@ -84,13 +85,18 @@ lazy val contributors = Seq(
   "ChristopherDavenport" -> "Christopher Davenport"
 )
 
+// check for library updates whenever the project is [re]load
+onLoad in Global := { s =>
+  "dependencyUpdates" :: s
+}
+
 lazy val commonSettings = Seq(
   organization := "io.chrisdavenport",
 
   scalaVersion := "2.12.6",
   crossScalaVersions := Seq(scalaVersion.value, "2.11.12"),
 
-  addCompilerPlugin("org.spire-math" % "kind-projector" % "0.9.6" cross CrossVersion.binary),
+  addCompilerPlugin("org.spire-math" % "kind-projector" % "0.9.7" cross CrossVersion.binary),
   addCompilerPlugin("com.olegpy" %% "better-monadic-for" % "0.2.4"),
 
   libraryDependencies ++= Seq(
