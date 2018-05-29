@@ -4,7 +4,7 @@ import language.experimental.macros
 import org.slf4j.{Logger => JLogger}
 import cats.effect.Sync
 
-object Slf4jLoggerInternal {
+private[slf4j] object Slf4jLoggerInternal {
 
   final val singletonsByName = true
   final val trailingDollar = false

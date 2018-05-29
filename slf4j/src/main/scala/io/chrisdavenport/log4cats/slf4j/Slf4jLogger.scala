@@ -21,6 +21,7 @@ package io.chrisdavenport.log4cats.slf4j
 import cats.effect.Sync
 import io.chrisdavenport.log4cats.{Logger, LogLevelAware, MDCLogger}
 import io.chrisdavenport.log4cats.slf4j.internal._
+import org.slf4j.{Logger => JLogger}
 
 import language.experimental.macros
 
@@ -29,11 +30,14 @@ object Slf4jLogger {
   def create[F[_]: Sync]: Logger[F] with LogLevelAware[F] with MDCLogger[F] = 
     macro LoggerMacros.getLoggerImpl[F[_]]
 
-  def fromName[F[_]: Sync](name: String): Logger[F] with LogLevelAware[F] with MDCLogger[F] =
+  def fromName[F[_]: Sync](name: String):Logger[F] with LogLevelAware[F] with MDCLogger[F] =
     fromSlf4jLogger(new Slf4jLoggerInternal[F](org.slf4j.LoggerFactory.getLogger(name)))
 
   def fromClass[F[_]: Sync](clazz: Class[_]): Logger[F] with LogLevelAware[F] with MDCLogger[F] =
     fromSlf4jLogger(new Slf4jLoggerInternal[F](org.slf4j.LoggerFactory.getLogger(clazz)))
+
+  def fromSlf4j[F[_]: Sync](s: JLogger): Logger[F] with LogLevelAware[F] with MDCLogger[F] =
+    fromSlf4jLogger(new Slf4jLoggerInternal[F](s))
 
   private def fromSlf4jLogger[F[_]: Sync](s: Slf4jLoggerInternal[F]): Logger[F] with LogLevelAware[F] with MDCLogger[F] = 
     new Logger[F] with LogLevelAware[F] with MDCLogger[F] {
