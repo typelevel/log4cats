@@ -16,7 +16,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.chrisdavenport.log4cats.slf4j
+package io.chrisdavenport.log4cats.slf4j.internal
 
 import scala.annotation.tailrec
 import scala.reflect.macros.{blackbox, whitebox}
@@ -51,7 +51,7 @@ private[slf4j] object LoggerMacros {
     assert(cls.isModule || cls.isClass, "Enclosing class is always either a module or a class")
 
     def loggerByParam(param: c.Tree)(f: c.Expr[F]) =
-      q"new _root_.io.chrisdavenport.log4cats.slf4j.Slf4jLogger(_root_.org.slf4j.LoggerFactory.getLogger(...${List(
+      q"new _root_.io.chrisdavenport.log4cats.slf4j.internal.Slf4jLoggerInternal(_root_.org.slf4j.LoggerFactory.getLogger(...${List(
         param)}))($f)"
 
     def loggerBySymbolName(s: Symbol)(f: c.Expr[F]) = {
@@ -98,7 +98,7 @@ private[slf4j] object LoggerMacros {
     @inline def isInnerClass(s: Symbol) =
       s.isClass && !(s.owner.isPackage)
 
-    val instanceByName = Slf4jLogger.singletonsByName && (cls.isModule || cls.isModuleClass) || cls.isClass && isInnerClass(
+    val instanceByName = Slf4jLoggerInternal.singletonsByName && (cls.isModule || cls.isModuleClass) || cls.isClass && isInnerClass(
       cls
     )
 
@@ -110,7 +110,7 @@ private[slf4j] object LoggerMacros {
   }
 
   /** A macro context that represents a method call on a Logger instance. */
-  private[this] type LogCtx[F[_]] = whitebox.Context { type PrefixType = Slf4jLogger[F] }
+  private[this] type LogCtx[F[_]] = whitebox.Context { type PrefixType = Slf4jLoggerInternal[F] }
 
   /** Log a message reflectively at a given level.
    *

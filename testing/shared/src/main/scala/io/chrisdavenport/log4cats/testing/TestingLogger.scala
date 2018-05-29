@@ -1,12 +1,12 @@
 package io.chrisdavenport.log4cats.testing
 
-import io.chrisdavenport.log4cats.Logger
+import io.chrisdavenport.log4cats.{Logger, LogLevelAware}
 import cats.effect.Sync
 import cats.implicits._
 import java.util.concurrent.atomic.AtomicReference
 import scala.annotation.tailrec
 
-trait TestingLogger[F[_]] extends Logger[F] {
+trait TestingLogger[F[_]] extends Logger[F] with LogLevelAware[F]{
   import TestingLogger.LogMessage
   def logged: F[Vector[LogMessage]]
 }

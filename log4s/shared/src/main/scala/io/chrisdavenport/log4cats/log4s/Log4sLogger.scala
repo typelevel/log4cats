@@ -10,7 +10,7 @@ object Log4sLogger {
   def createByName[F[_]: Sync](name: String) = fromLog4s[F](org.log4s.getLogger(name))
   def createByClass[F[_]: Sync](clazz: Class[_]) = fromLog4s[F](org.log4s.getLogger(clazz))
 
-  def fromLog4s[F[_]: Sync](logger: Base): Logger[F] = new Logger[F]{
+  def fromLog4s[F[_]: Sync](logger: Base): Logger[F] with LogLevelAware[F] = new Logger[F] with LogLevelAware[F] {
 
     override def isTraceEnabled: F[Boolean] =
       Sync[F].delay(logger.isTraceEnabled)

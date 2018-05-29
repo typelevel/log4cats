@@ -19,152 +19,48 @@
 package io.chrisdavenport.log4cats.slf4j
 
 import cats.effect.Sync
-import io.chrisdavenport.log4cats.Logger
+import io.chrisdavenport.log4cats.{Logger, LogLevelAware, MDCLogger}
+import io.chrisdavenport.log4cats.slf4j.internal._
 
 import language.experimental.macros
-import org.slf4j.{Logger => JLogger}
+// import org.slf4j.{Logger => JLogger}
 
 object Slf4jLogger {
 
-  def create[F[_]: Sync]: Slf4jLogger[F] = macro LoggerMacros.getLoggerImpl[F[_]]
+  def create[F[_]: Sync]: Logger[F] with LogLevelAware[F] with MDCLogger[F] = 
+     macro LoggerMacros.getLoggerImpl[F[_]]
 
-  def fromName[F[_]: Sync](name: String): Slf4jLogger[F] =
-    new Slf4jLogger(org.slf4j.LoggerFactory.getLogger(name))
+  def fromName[F[_]: Sync](name: String): Logger[F] with LogLevelAware[F] with MDCLogger[F] =
+    fromSlf4jLogger(new Slf4jLoggerInternal[F](org.slf4j.LoggerFactory.getLogger(name)))
 
-  def fromClass[F[_]: Sync](clazz: Class[_]): Slf4jLogger[F] =
-    new Slf4jLogger(org.slf4j.LoggerFactory.getLogger(clazz))
+  def fromClass[F[_]: Sync](clazz: Class[_]): Logger[F] with LogLevelAware[F] with MDCLogger[F] =
+    fromSlf4jLogger(new Slf4jLoggerInternal[F](org.slf4j.LoggerFactory.getLogger(clazz)))
 
-  final val singletonsByName = true
-  final val trailingDollar = false
+  private def fromSlf4jLogger[F[_]: Sync](s: Slf4jLoggerInternal[F]): Logger[F] with LogLevelAware[F] with MDCLogger[F] = 
+    new Logger[F] with LogLevelAware[F] with MDCLogger[F] {
+      @inline override def isTraceEnabled: F[Boolean] = s.isTraceEnabled
+      @inline override def isDebugEnabled: F[Boolean] = s.isDebugEnabled
+      @inline override def isInfoEnabled: F[Boolean] = s.isInfoEnabled
+      @inline override def isWarnEnabled: F[Boolean] = s.isWarnEnabled
+      @inline override def isErrorEnabled: F[Boolean] = s.isErrorEnabled
 
-  sealed trait LevelLogger[F[_]] extends Any {
-    def isEnabled: F[Boolean]
+      override def trace(t: Throwable)(msg: => String): F[Unit] = s.internalTraceTM(t)(msg)
+      override def trace(msg: => String): F[Unit] = s.internalTraceM(msg)
+      override def trace(ctx: (String, String)*)(msg: => String): F[Unit] = s.internalTraceMDC(ctx:_*)(msg)
+      override def debug(t: Throwable)(msg: => String): F[Unit] = s.internalDebugTM(t)(msg)
+      override def debug(msg: => String): F[Unit] = s.internalDebugM(msg)
+      override def debug(ctx: (String, String)*)(msg: => String): F[Unit] = s.internalDebugMDC(ctx:_*)(msg)
+      override def info(t: Throwable)(msg: => String): F[Unit] = s.internalInfoTM(t)(msg)
+      override def info(msg: => String): F[Unit] = s.internalInfoM(msg)
+      override def info(ctx: (String, String)*)(msg: => String): F[Unit] = s.internalInfoMDC(ctx:_*)(msg)
+      override def warn(t: Throwable)(msg: => String): F[Unit] = s.internalWarnTM(t)(msg)
+      override def warn(msg: => String): F[Unit] = s.internalWarnM(msg)
+      override def warn(ctx: (String, String)*)(msg: => String): F[Unit] = s.internalWarnMDC(ctx:_*)(msg)
+      override def error(t: Throwable)(msg: => String): F[Unit] = s.internalErrorTM(t)(msg)
+      override def error(msg: => String): F[Unit] = s.internalErrorM(msg)
+      override def error(ctx: (String, String)*)(msg: => String): F[Unit] = s.internalErrorMDC(ctx:_*)(msg)
+    }
 
-    def apply(msg: => String): F[Unit]
-    def apply(t: Throwable)(msg: => String): F[Unit]
-  }
-//
-//  final class TraceLevelLogger[F[_]: Sync] private[slf4j] (val logger: JLogger)
-//      extends AnyVal
-//      with LevelLogger[F] {
-//    @inline def isEnabled: F[Boolean] = F.delay(logger.isTraceEnabled)
-//    @inline def apply(msg: => String): F[Unit] = isEnabled.flatMap {isEnabled => if(isEnabled) $F.delay($logExpr) else $F.unit
-//    @inline def apply(t: Throwable)(msg: => String) = if (isEnabled) logger.trace(msg, t)
-//  }
-
-//  final class DebugLevelLogger private[slf4j] (val logger: JLogger)
-//      extends AnyVal
-//      with LevelLogger {
-//    @inline def isEnabled: Boolean = logger.isDebugEnabled
-//    @inline def apply(msg: => String): Unit = if (isEnabled) logger.debug(msg)
-//    @inline def apply(t: Throwable)(msg: => String): Unit = if (isEnabled) logger.debug(msg, t)
-//  }
-//
-//  final class InfoLevelLogger private[slf4j] (val logger: JLogger)
-//      extends AnyVal
-//      with LevelLogger {
-//    @inline def isEnabled: Boolean = logger.isInfoEnabled
-//    @inline def apply(msg: => String): Unit = if (isEnabled) logger.info(msg)
-//    @inline def apply(t: Throwable)(msg: => String): Unit = if (isEnabled) logger.info(msg, t)
-//  }
-//
-//  final class WarnLevelLogger private[slf4j] (val logger: JLogger)
-//      extends AnyVal
-//      with LevelLogger {
-//    @inline def isEnabled: Boolean = logger.isWarnEnabled
-//    @inline def apply(msg: => String): Unit = if (isEnabled) logger.warn(msg)
-//    @inline def apply(t: Throwable)(msg: => String): Unit = if (isEnabled) logger.warn(msg, t)
-//  }
-//
-//  final class ErrorLevelLogger private[slf4j] (val logger: JLogger)
-//      extends AnyVal
-//      with LevelLogger {
-//    @inline def isEnabled: Boolean = logger.isErrorEnabled
-//    @inline def apply(msg: => String): Unit = if (isEnabled) logger.error(msg)
-//    @inline def apply(t: Throwable)(msg: => String): Unit = if (isEnabled) logger.error(msg, t)
-//  }
-
-  /**
-   * The existance of this class is due to the in-ability of macros to
-   * override abstract methods, only methods directly.
-   *
-   * See:
-   * https://github.com/scala/scala/commit/ef979c02da887b7c56bc1da9c4eb888e92af570f
-   */
-  private[Slf4jLogger] class NonMacroSlf4jWrapper[F[_]](val logger: JLogger)(
-      implicit val F: Sync[F])
-      extends Logger[F] {
-
-    @inline override def isTraceEnabled: F[Boolean] = F.delay(logger.isTraceEnabled)
-
-    @inline override def isDebugEnabled: F[Boolean] = F.delay(logger.isDebugEnabled)
-
-    @inline override def isInfoEnabled: F[Boolean] = F.delay(logger.isInfoEnabled)
-
-    @inline override def isWarnEnabled: F[Boolean] = F.delay(logger.isWarnEnabled)
-
-    @inline override def isErrorEnabled: F[Boolean] = F.delay(logger.isErrorEnabled)
-
-    override def trace(t: Throwable)(msg: => String): F[Unit] = F.delay(logger.trace(msg, t))
-    override def trace(msg: => String): F[Unit] = F.delay(logger.trace(msg))
-    def trace(ctx: (String, String)*)(msg: => String): F[Unit] =
-      ??? //implement if it makes it into the Logger[F] interface
-
-    override def debug(t: Throwable)(msg: => String): F[Unit] = F.delay(logger.debug(msg, t))
-    override def debug(msg: => String): F[Unit] = F.delay(logger.debug(msg))
-    def debug(ctx: (String, String)*)(msg: => String): F[Unit] =
-      ??? //implement if it makes it into the Logger[F] interface
-
-    override def info(t: Throwable)(msg: => String): F[Unit] = F.delay(logger.info(msg, t))
-    override def info(msg: => String): F[Unit] = F.delay(logger.info(msg))
-    def info(ctx: (String, String)*)(msg: => String): F[Unit] =
-      ??? //implement if it makes it into the Logger[F] interface
-
-    override def warn(t: Throwable)(msg: => String): F[Unit] = F.delay(logger.warn(msg, t))
-    override def warn(msg: => String): F[Unit] = F.delay(logger.warn(msg))
-    def warn(ctx: (String, String)*)(msg: => String): F[Unit] =
-      ??? //implement if it makes it into the Logger[F] interface
-
-    override def error(t: Throwable)(msg: => String): F[Unit] = F.delay(logger.error(msg, t))
-    override def error(msg: => String): F[Unit] = F.delay(logger.error(msg))
-    def error(ctx: (String, String)*)(msg: => String): F[Unit] =
-      ??? //implement if it makes it into the Logger[F] interface
-  }
-}
-
-final class Slf4jLogger[F[_]](override val logger: JLogger)(implicit override val F: Sync[F])
-    extends Slf4jLogger.NonMacroSlf4jWrapper[F](logger)(F) {
-
-  @inline override def isTraceEnabled: F[Boolean] = F.delay(logger.isTraceEnabled)
-
-  @inline override def isDebugEnabled: F[Boolean] = F.delay(logger.isDebugEnabled)
-
-  @inline override def isInfoEnabled: F[Boolean] = F.delay(logger.isInfoEnabled)
-
-  @inline override def isWarnEnabled: F[Boolean] = F.delay(logger.isWarnEnabled)
-
-  @inline override def isErrorEnabled: F[Boolean] = F.delay(logger.isErrorEnabled)
-
-  import LoggerMacros._
-
-  override def trace(t: Throwable)(msg: => String): F[Unit] = macro traceTM[F]
-  override def trace(msg: => String): F[Unit] = macro traceM[F]
-  override def trace(ctx: (String, String)*)(msg: => String): F[Unit] = macro traceCM[F]
-
-  override def debug(t: Throwable)(msg: => String): F[Unit] = macro debugTM[F]
-  override def debug(msg: => String): F[Unit] = macro debugM[F]
-  override def debug(ctx: (String, String)*)(msg: => String): F[Unit] = macro debugCM[F]
-
-  override def info(t: Throwable)(msg: => String): F[Unit] = macro infoTM[F]
-  override def info(msg: => String): F[Unit] = macro infoM[F]
-  override def info(ctx: (String, String)*)(msg: => String): F[Unit] = macro infoCM[F]
-
-  override def warn(t: Throwable)(msg: => String): F[Unit] = macro warnTM[F]
-  override def warn(msg: => String): F[Unit] = macro warnM[F]
-  override def warn(ctx: (String, String)*)(msg: => String): F[Unit] = macro warnCM[F]
-
-  override def error(t: Throwable)(msg: => String): F[Unit] = macro errorTM[F]
-  override def error(msg: => String): F[Unit] = macro errorM[F]
-  override def error(ctx: (String, String)*)(msg: => String): F[Unit] = macro errorCM[F]
 
 }
+

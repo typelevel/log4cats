@@ -16,7 +16,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.chrisdavenport.log4cats.slf4j
+package io.chrisdavenport.log4cats.slf4j.internal
 
 /** A severity level that can be assigned to log statements. */
 sealed trait LogLevel {
