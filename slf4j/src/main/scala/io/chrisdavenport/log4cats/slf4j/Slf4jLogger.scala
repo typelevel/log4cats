@@ -47,21 +47,21 @@ object Slf4jLogger {
       @inline override def isWarnEnabled: F[Boolean] = s.isWarnEnabled
       @inline override def isErrorEnabled: F[Boolean] = s.isErrorEnabled
 
-      override def trace(t: Throwable)(msg: => String): F[Unit] = s.internalTraceTM(t)(msg)
-      override def trace(msg: => String): F[Unit] = s.internalTraceM(msg)
-      override def trace(ctx: (String, String)*)(msg: => String): F[Unit] = s.internalTraceMDC(ctx:_*)(msg)
-      override def debug(t: Throwable)(msg: => String): F[Unit] = s.internalDebugTM(t)(msg)
-      override def debug(msg: => String): F[Unit] = s.internalDebugM(msg)
-      override def debug(ctx: (String, String)*)(msg: => String): F[Unit] = s.internalDebugMDC(ctx:_*)(msg)
-      override def info(t: Throwable)(msg: => String): F[Unit] = s.internalInfoTM(t)(msg)
-      override def info(msg: => String): F[Unit] = s.internalInfoM(msg)
-      override def info(ctx: (String, String)*)(msg: => String): F[Unit] = s.internalInfoMDC(ctx:_*)(msg)
-      override def warn(t: Throwable)(msg: => String): F[Unit] = s.internalWarnTM(t)(msg)
-      override def warn(msg: => String): F[Unit] = s.internalWarnM(msg)
-      override def warn(ctx: (String, String)*)(msg: => String): F[Unit] = s.internalWarnMDC(ctx:_*)(msg)
-      override def error(t: Throwable)(msg: => String): F[Unit] = s.internalErrorTM(t)(msg)
-      override def error(msg: => String): F[Unit] = s.internalErrorM(msg)
-      override def error(ctx: (String, String)*)(msg: => String): F[Unit] = s.internalErrorMDC(ctx:_*)(msg)
+      @inline override def trace(t: Throwable)(msg: => String): F[Unit] = s.internalTraceTM(t)(msg)
+      @inline override def trace(msg: => String): F[Unit] = s.internalTraceM(msg)
+      @inline override def trace(ctx: (String, String)*)(msg: => String): F[Unit] = s.internalTraceMDC(ctx:_*)(msg)
+      @inline override def debug(t: Throwable)(msg: => String): F[Unit] = s.internalDebugTM(t)(msg)
+      @inline override def debug(msg: => String): F[Unit] = s.internalDebugM(msg)
+      @inline override def debug(ctx: (String, String)*)(msg: => String): F[Unit] = s.internalDebugMDC(ctx:_*)(msg)
+      @inline override def info(t: Throwable)(msg: => String): F[Unit] = s.internalInfoTM(t)(msg)
+      @inline override def info(msg: => String): F[Unit] = s.internalInfoM(msg)
+      @inline override def info(ctx: (String, String)*)(msg: => String): F[Unit] = s.internalInfoMDC(ctx:_*)(msg)
+      @inline override def warn(t: Throwable)(msg: => String): F[Unit] = s.internalWarnTM(t)(msg)
+      @inline override def warn(msg: => String): F[Unit] = s.internalWarnM(msg)
+      @inline override def warn(ctx: (String, String)*)(msg: => String): F[Unit] = s.internalWarnMDC(ctx:_*)(msg)
+      @inline override def error(t: Throwable)(msg: => String): F[Unit] = s.internalErrorTM(t)(msg)
+      @inline override def error(msg: => String): F[Unit] = s.internalErrorM(msg)
+      @inline override def error(ctx: (String, String)*)(msg: => String): F[Unit] = s.internalErrorMDC(ctx:_*)(msg)
     }
 
 
