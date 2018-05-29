@@ -23,12 +23,11 @@ import io.chrisdavenport.log4cats.{Logger, LogLevelAware, MDCLogger}
 import io.chrisdavenport.log4cats.slf4j.internal._
 
 import language.experimental.macros
-// import org.slf4j.{Logger => JLogger}
 
 object Slf4jLogger {
 
   def create[F[_]: Sync]: Logger[F] with LogLevelAware[F] with MDCLogger[F] = 
-     macro LoggerMacros.getLoggerImpl[F[_]]
+    macro LoggerMacros.getLoggerImpl[F[_]]
 
   def fromName[F[_]: Sync](name: String): Logger[F] with LogLevelAware[F] with MDCLogger[F] =
     fromSlf4jLogger(new Slf4jLoggerInternal[F](org.slf4j.LoggerFactory.getLogger(name)))

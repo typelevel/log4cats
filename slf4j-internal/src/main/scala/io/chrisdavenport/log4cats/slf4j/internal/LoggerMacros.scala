@@ -51,8 +51,8 @@ private[slf4j] object LoggerMacros {
     assert(cls.isModule || cls.isClass, "Enclosing class is always either a module or a class")
 
     def loggerByParam(param: c.Tree)(f: c.Expr[F]) =
-      q"new _root_.io.chrisdavenport.log4cats.slf4j.internal.Slf4jLoggerInternal(_root_.org.slf4j.LoggerFactory.getLogger(...${List(
-        param)}))($f)"
+      q"_root_.io.chrisdavenport.log4cats.slf4j.Slf4jLogger.fromSlf4jLogger(new _root_.io.chrisdavenport.log4cats.slf4j.internal.Slf4jLoggerInternal(_root_.org.slf4j.LoggerFactory.getLogger(...${List(
+        param)}))($f))"
 
     def loggerBySymbolName(s: Symbol)(f: c.Expr[F]) = {
       def fullName(s: Symbol): String = {
