@@ -1,6 +1,6 @@
 package io.chrisdavenport.log4cats
 
-trait MDCLogger[F[_]] extends Logger[F] {
+trait StructuredLogger[F[_]] extends Logger[F] {
   def trace(ctx: (String, String)*)(msg: => String): F[Unit]
   def debug(ctx: (String, String)*)(msg: => String): F[Unit]
   def info(ctx: (String, String)*)(msg: => String): F[Unit]
