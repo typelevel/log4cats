@@ -13,6 +13,7 @@ lazy val log4cats = project.in(file("."))
     scribeJVM,
     scribeJS,
     slf4j,
+    `slf4j-internal`,
     log4sJVM,
     log4sJS,
     docs
@@ -58,13 +59,21 @@ lazy val log4s = crossProject(JSPlatform, JVMPlatform).in(file("log4s"))
 
 lazy val slf4j = project.in(file("slf4j"))
   .settings(commonSettings, releaseSettings)
+  .dependsOn(`slf4j-internal`)
+  .settings(
+    name := "log4cats-slf4j"
+  )
+
+lazy val `slf4j-internal` = project.in(file("slf4j-internal"))
+.settings(commonSettings, releaseSettings)
   .dependsOn(core.jvm)
   .settings(
-    name := "log4cats-slf4j",
+    name := "log4cats-slf4j-internal",
     libraryDependencies ++= Seq(
       "org.slf4j" % "slf4j-api" % "1.7.25"
     )
   )
+
 lazy val log4sJVM = log4s.jvm
 lazy val log4sJS = log4s.js
 
@@ -82,7 +91,8 @@ lazy val scribeJVM = scribe.jvm
 lazy val scribeJS = scribe.js
 
 lazy val contributors = Seq(
-  "ChristopherDavenport" -> "Christopher Davenport"
+  "ChristopherDavenport" -> "Christopher Davenport",
+  "lorandszakacs"        -> "Loránd Szakács"
 )
 
 // check for library updates whenever the project is [re]load

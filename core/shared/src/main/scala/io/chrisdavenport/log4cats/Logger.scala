@@ -3,12 +3,6 @@ package io.chrisdavenport.log4cats
 trait Logger[F[_]]{
   import Logger.{withModifiedString => wMS}
 
-  def isTraceEnabled: F[Boolean]
-  def isDebugEnabled: F[Boolean]
-  def isInfoEnabled: F[Boolean] 
-  def isWarnEnabled: F[Boolean]
-  def isErrorEnabled: F[Boolean]
-
   def error(message: => String): F[Unit]
   def error(t: Throwable)(message: => String): F[Unit]
   def warn(message: => String): F[Unit]
@@ -27,11 +21,6 @@ object Logger {
   def apply[F[_]](implicit ev: Logger[F]) = ev
 
   private def withModifiedString[F[_]](l: Logger[F], f: String => String): Logger[F] = new Logger[F]{
-    def isTraceEnabled: F[Boolean] = l.isTraceEnabled
-    def isDebugEnabled: F[Boolean] = l.isDebugEnabled
-    def isInfoEnabled: F[Boolean] = l.isInfoEnabled
-    def isWarnEnabled: F[Boolean] = l.isWarnEnabled
-    def isErrorEnabled: F[Boolean] = l.isErrorEnabled
     def error(message: => String): F[Unit] = l.error(f(message))
     def error(t: Throwable)(message: => String): F[Unit] = l.error(t)(f(message))
     def warn(message: => String): F[Unit] = l.warn(f(message))
