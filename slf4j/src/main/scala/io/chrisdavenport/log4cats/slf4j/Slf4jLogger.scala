@@ -27,17 +27,29 @@ import language.experimental.macros
 
 object Slf4jLogger {
 
-  def create[F[_]: Sync]: Logger[F] with LogLevelAware[F] with MDCLogger[F] = 
+  def create[F[_]: Sync]: F[Logger[F] with LogLevelAware[F] with MDCLogger[F]] =
+    Sync[F].delay(unsafeCreate)
+
+  def fromName[F[_]: Sync](name: String): F[Logger[F] with LogLevelAware[F] with MDCLogger[F]] =
+    Sync[F].delay(unsafeFromName(name))
+
+  def fromClass[F[_]: Sync](clazz: Class[_]): F[Logger[F] with LogLevelAware[F] with MDCLogger[F]] = 
+    Sync[F].delay(unsafeFromClass(clazz))
+
+  def fromSlf4j[F[_]: Sync](logger: JLogger): F[Logger[F] with LogLevelAware[F] with MDCLogger[F]] = 
+    Sync[F].delay(unsafeFromSlf4j(logger))
+
+  def unsafeCreate[F[_]: Sync]: Logger[F] with LogLevelAware[F] with MDCLogger[F] = 
     macro LoggerMacros.getLoggerImpl[F[_]]
 
-  def fromName[F[_]: Sync](name: String):Logger[F] with LogLevelAware[F] with MDCLogger[F] =
+  def unsafeFromName[F[_]: Sync](name: String):Logger[F] with LogLevelAware[F] with MDCLogger[F] =
     fromSlf4jLogger(new Slf4jLoggerInternal[F](org.slf4j.LoggerFactory.getLogger(name)))
 
-  def fromClass[F[_]: Sync](clazz: Class[_]): Logger[F] with LogLevelAware[F] with MDCLogger[F] =
+  def unsafeFromClass[F[_]: Sync](clazz: Class[_]): Logger[F] with LogLevelAware[F] with MDCLogger[F] =
     fromSlf4jLogger(new Slf4jLoggerInternal[F](org.slf4j.LoggerFactory.getLogger(clazz)))
 
-  def fromSlf4j[F[_]: Sync](s: JLogger): Logger[F] with LogLevelAware[F] with MDCLogger[F] =
-    fromSlf4jLogger(new Slf4jLoggerInternal[F](s))
+  def unsafeFromSlf4j[F[_]: Sync](logger: JLogger): Logger[F] with LogLevelAware[F] with MDCLogger[F] =
+    fromSlf4jLogger(new Slf4jLoggerInternal[F](logger))
 
   private def fromSlf4jLogger[F[_]: Sync](s: Slf4jLoggerInternal[F]): Logger[F] with LogLevelAware[F] with MDCLogger[F] = 
     new Logger[F] with LogLevelAware[F] with MDCLogger[F] {
