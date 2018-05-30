@@ -19,7 +19,7 @@
 package io.chrisdavenport.log4cats.slf4j
 
 import cats.effect.Sync
-import io.chrisdavenport.log4cats.{Logger, LogLevelAware, MDCLogger}
+import io.chrisdavenport.log4cats.SelfAwareMDCLogger
 import io.chrisdavenport.log4cats.slf4j.internal._
 import org.slf4j.{Logger => JLogger}
 
@@ -27,32 +27,32 @@ import language.experimental.macros
 
 object Slf4jLogger {
 
-  def create[F[_]: Sync]: F[Logger[F] with LogLevelAware[F] with MDCLogger[F]] =
+  def create[F[_]: Sync]: F[SelfAwareMDCLogger[F]] =
     Sync[F].delay(unsafeCreate)
 
-  def fromName[F[_]: Sync](name: String): F[Logger[F] with LogLevelAware[F] with MDCLogger[F]] =
+  def fromName[F[_]: Sync](name: String): F[SelfAwareMDCLogger[F]] =
     Sync[F].delay(unsafeFromName(name))
 
-  def fromClass[F[_]: Sync](clazz: Class[_]): F[Logger[F] with LogLevelAware[F] with MDCLogger[F]] = 
+  def fromClass[F[_]: Sync](clazz: Class[_]): F[SelfAwareMDCLogger[F]] = 
     Sync[F].delay(unsafeFromClass(clazz))
 
-  def fromSlf4j[F[_]: Sync](logger: JLogger): F[Logger[F] with LogLevelAware[F] with MDCLogger[F]] = 
+  def fromSlf4j[F[_]: Sync](logger: JLogger): F[SelfAwareMDCLogger[F]] = 
     Sync[F].delay(unsafeFromSlf4j(logger))
 
-  def unsafeCreate[F[_]: Sync]: Logger[F] with LogLevelAware[F] with MDCLogger[F] = 
+  def unsafeCreate[F[_]: Sync]: SelfAwareMDCLogger[F] = 
     macro LoggerMacros.getLoggerImpl[F[_]]
 
-  def unsafeFromName[F[_]: Sync](name: String):Logger[F] with LogLevelAware[F] with MDCLogger[F] =
+  def unsafeFromName[F[_]: Sync](name: String): SelfAwareMDCLogger[F] =
     fromSlf4jLogger(new Slf4jLoggerInternal[F](org.slf4j.LoggerFactory.getLogger(name)))
 
-  def unsafeFromClass[F[_]: Sync](clazz: Class[_]): Logger[F] with LogLevelAware[F] with MDCLogger[F] =
+  def unsafeFromClass[F[_]: Sync](clazz: Class[_]): SelfAwareMDCLogger[F] =
     fromSlf4jLogger(new Slf4jLoggerInternal[F](org.slf4j.LoggerFactory.getLogger(clazz)))
 
-  def unsafeFromSlf4j[F[_]: Sync](logger: JLogger): Logger[F] with LogLevelAware[F] with MDCLogger[F] =
+  def unsafeFromSlf4j[F[_]: Sync](logger: JLogger): SelfAwareMDCLogger[F] =
     fromSlf4jLogger(new Slf4jLoggerInternal[F](logger))
 
-  private def fromSlf4jLogger[F[_]: Sync](s: Slf4jLoggerInternal[F]): Logger[F] with LogLevelAware[F] with MDCLogger[F] = 
-    new Logger[F] with LogLevelAware[F] with MDCLogger[F] {
+  private def fromSlf4jLogger[F[_]: Sync](s: Slf4jLoggerInternal[F]): SelfAwareMDCLogger[F] = 
+    new SelfAwareMDCLogger[F] {
       @inline override def isTraceEnabled: F[Boolean] = s.isTraceEnabled
       @inline override def isDebugEnabled: F[Boolean] = s.isDebugEnabled
       @inline override def isInfoEnabled: F[Boolean] = s.isInfoEnabled
