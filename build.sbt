@@ -26,7 +26,7 @@ lazy val docs = project.in(file("docs"))
   .settings(commonSettings, micrositeSettings)
   .enablePlugins(MicrositesPlugin)
   .enablePlugins(TutPlugin)
-  .dependsOn(log4sJVM)
+  .dependsOn(slf4j)
 
 lazy val core = crossProject(JSPlatform, JVMPlatform).in(file("core"))
   .settings(commonSettings, releaseSettings)
