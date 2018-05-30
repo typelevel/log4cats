@@ -4,6 +4,17 @@ This file summarizes **notable** changes for each release, but does not describe
 
 ----
 
+## <a name="0.0.5"></a>New and Noteworthy for Version 0.0.5
+
+Transition to a hierarchical logger algebra, which has logger as central and capabilities such as self-awareness of logging capabilities, and structured logging as additional abilitites. slf4j wrapper specifically optimized for log4cats, testing logger improvements, apache licensing transition
+
+- Hierarchical Logging Algebras [#34](https://github.com/ChristopherDavenport/log4cats/pull/34)
+- slf4j-api optimized logger implementation [#33](https://github.com/ChristopherDavenport/log4cats/pull/33)
+- Upgrades
+  - scribe 2.4.0
+
+Thanks to Loránd Szakács and Joe Kachmar in helping get this release ready.
+
 ## <a name="0.0.4"></a>New and Noteworthy for Version 0.0.4
 
 ScalaJS Support
