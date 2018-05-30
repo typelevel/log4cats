@@ -90,7 +90,8 @@ lazy val scribeJVM = scribe.jvm
 lazy val scribeJS = scribe.js
 
 lazy val contributors = Seq(
-  "ChristopherDavenport" -> "Christopher Davenport"
+  "ChristopherDavenport" -> "Christopher Davenport",
+  "lorandszakacs"        -> "Loránd Szakács"
 )
 
 lazy val commonSettings = Seq(
