@@ -1,6 +1,6 @@
 package io.chrisdavenport.log4cats
 
-trait LogLevelAware[F[_]]{
+trait SelfAwareLogger[F[_]] extends Logger[F] {
   def isTraceEnabled: F[Boolean]
   def isDebugEnabled: F[Boolean]
   def isInfoEnabled: F[Boolean] 
