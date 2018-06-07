@@ -16,7 +16,8 @@ lazy val log4cats = project.in(file("."))
     `slf4j-internal`,
     log4sJVM,
     log4sJS,
-    docs
+    docs,
+    `scalaz-log4s`
   )
   .settings(noPublishSettings)
   .settings(commonSettings, releaseSettings)
@@ -37,8 +38,8 @@ lazy val core = crossProject(JSPlatform, JVMPlatform).in(file("core"))
 lazy val coreJVM = core.jvm
 lazy val coreJS  = core.js
 
-lazy val testing = crossProject(JSPlatform, JVMPlatform).in(file("testing"))
-  .settings(commonSettings, releaseSettings)
+lazy val testing = crossProject(JSPlatform, JVMPlatform).in(file("cats/testing"))
+  .settings(commonSettings, releaseSettings, catsSettings)
   .dependsOn(core)
   .settings(
     name := "log4cats-testing"
@@ -47,8 +48,8 @@ lazy val testing = crossProject(JSPlatform, JVMPlatform).in(file("testing"))
 lazy val testingJVM = testing.jvm
 lazy val testingJS = testing.js
 
-lazy val log4s = crossProject(JSPlatform, JVMPlatform).in(file("log4s"))
-  .settings(commonSettings, releaseSettings)
+lazy val log4s = crossProject(JSPlatform, JVMPlatform).in(file("cats/log4s"))
+  .settings(commonSettings, releaseSettings, catsSettings)
   .dependsOn(core)
   .settings(
     name := "log4cats-log4s",
@@ -57,15 +58,15 @@ lazy val log4s = crossProject(JSPlatform, JVMPlatform).in(file("log4s"))
     )
   )
 
-lazy val slf4j = project.in(file("slf4j"))
-  .settings(commonSettings, releaseSettings)
+lazy val slf4j = project.in(file("cats/slf4j"))
+  .settings(commonSettings, releaseSettings, catsSettings)
   .dependsOn(`slf4j-internal`)
   .settings(
     name := "log4cats-slf4j"
   )
 
-lazy val `slf4j-internal` = project.in(file("slf4j-internal"))
-.settings(commonSettings, releaseSettings)
+lazy val `slf4j-internal` = project.in(file("cats/slf4j-internal"))
+.settings(commonSettings, releaseSettings, catsSettings)
   .dependsOn(core.jvm)
   .settings(
     name := "log4cats-slf4j-internal",
@@ -77,8 +78,8 @@ lazy val `slf4j-internal` = project.in(file("slf4j-internal"))
 lazy val log4sJVM = log4s.jvm
 lazy val log4sJS = log4s.js
 
-lazy val scribe = crossProject(JSPlatform, JVMPlatform).in(file("scribe"))
-  .settings(commonSettings, releaseSettings)
+lazy val scribe = crossProject(JSPlatform, JVMPlatform).in(file("cats/scribe"))
+  .settings(commonSettings, releaseSettings, catsSettings)
   .dependsOn(core)
   .settings(
     name := "log4cats-scribe",
@@ -89,6 +90,20 @@ lazy val scribe = crossProject(JSPlatform, JVMPlatform).in(file("scribe"))
 
 lazy val scribeJVM = scribe.jvm
 lazy val scribeJS = scribe.js
+
+// Scalaz Projects
+
+lazy val `scalaz-log4s` = project
+  .in(file("scalaz/log4s"))
+  .settings(commonSettings, releaseSettings, scalazSettings)
+  .dependsOn(coreJVM)
+  .settings(
+    name := "log4scalaz-log4s",
+    libraryDependencies ++= Seq(
+      "org.log4s"                   %%% "log4s"                      % log4sV
+    )
+  )
+
 
 lazy val contributors = Seq(
   "ChristopherDavenport" -> "Christopher Davenport",
@@ -110,12 +125,20 @@ lazy val commonSettings = Seq(
   addCompilerPlugin("com.olegpy" %% "better-monadic-for" % "0.2.4"),
 
   libraryDependencies ++= Seq(
-    "org.typelevel"               %%% "cats-core"                  % catsV,
-    "org.typelevel"               %%% "cats-effect"                % catsEffectV,
-
     "org.specs2"                  %%% "specs2-core"                % specs2V       % Test
     // "org.specs2"                  %% "specs2-scalacheck"          % specs2V       % Test
   )
+)
+
+lazy val catsSettings = Seq(
+  libraryDependencies ++= Seq(
+    "org.typelevel"               %%% "cats-core"                  % catsV,
+    "org.typelevel"               %%% "cats-effect"                % catsEffectV
+  )
+)
+
+lazy val scalazSettings = Seq(
+  libraryDependencies += "org.scalaz" %% "scalaz-ioeffect" % "2.3.0"
 )
 
 lazy val releaseSettings = {
