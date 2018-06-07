@@ -3,6 +3,9 @@
 This file summarizes **notable** changes for each release, but does not describe internal changes unless they are particularly exciting.
 
 ----
+## <a name="0.0.6"></a>New and Noteworthy for Version 0.0.6
+
+Remove cats dependency from log4cats-core. Publish a log4s module with scalaz-ioeffect module name log4scalaz-log4s.
 
 ## <a name="0.0.5"></a>New and Noteworthy for Version 0.0.5
 
