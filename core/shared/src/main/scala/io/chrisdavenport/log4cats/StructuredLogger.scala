@@ -7,3 +7,7 @@ trait StructuredLogger[F[_]] extends Logger[F] {
   def warn(ctx: (String, String)*)(msg: => String): F[Unit]
   def error(ctx: (String, String)*)(msg: => String): F[Unit]
 }
+
+object StructuredLogger{
+  def apply[F[_]](implicit ev: StructuredLogger[F]): StructuredLogger[F] = ev
+}

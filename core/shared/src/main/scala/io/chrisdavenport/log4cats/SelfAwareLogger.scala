@@ -7,3 +7,6 @@ trait SelfAwareLogger[F[_]] extends Logger[F] {
   def isWarnEnabled: F[Boolean]
   def isErrorEnabled: F[Boolean]
 }
+object SelfAwareLogger {
+  def apply[F[_]](implicit ev: SelfAwareLogger[F]): SelfAwareLogger[F] = ev
+}
