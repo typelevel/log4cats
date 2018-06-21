@@ -2,7 +2,7 @@ import sbtcrossproject.{crossProject, CrossType}
 val catsV = "1.1.0"
 val catsEffectV = "0.10.1"
 val log4sV = "1.6.1"
-val specs2V = "4.2.0"
+val specs2V = "4.3.0"
 
 lazy val log4cats = project.in(file("."))
   .aggregate(
