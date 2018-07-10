@@ -10,4 +10,13 @@ trait StructuredLogger[F[_]] extends Logger[F] {
 
 object StructuredLogger{
   def apply[F[_]](implicit ev: StructuredLogger[F]): StructuredLogger[F] = ev
+
+  def withContext[F[_]](sl: StructuredLogger[F])(ctx: (String, String)*): MessageLogger[F] =
+    new MessageLogger[F]{
+      def error(message: => String): F[Unit] = sl.error(ctx:_*)(message)
+      def warn(message: => String): F[Unit] = sl.warn(ctx:_*)(message)
+      def info(message: => String): F[Unit] = sl.info(ctx:_*)(message)
+      def debug(message: => String): F[Unit] = sl.debug(ctx:_*)(message)
+      def trace(message: => String): F[Unit] = sl.trace(ctx:_*)(message)
+    }
 }
