@@ -3,6 +3,16 @@
 This file summarizes **notable** changes for each release, but does not describe internal changes unless they are particularly exciting.
 
 ----
+
+## <a name="0.1.0"></a>New and Noteworthy for Version 0.1.0
+
+- Upgrades
+  - specs2
+  - scribe
+  - scalajs
+  - tut (docs)
+  - github4s (docs)
+
 ## <a name="0.0.7"></a>New and Noteworthy for Version 0.0.7
 
 - Add Implicit Summoning for Logger Hierarchy Traits [#43](https://github.com/ChristopherDavenport/log4cats/pull/43)
