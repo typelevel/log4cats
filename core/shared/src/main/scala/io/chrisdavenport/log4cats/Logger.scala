@@ -1,20 +1,8 @@
 package io.chrisdavenport.log4cats
 
-trait Logger[F[_]]{
-  import Logger.{withModifiedString => wMS}
-
-  def error(message: => String): F[Unit]
-  def error(t: Throwable)(message: => String): F[Unit]
-  def warn(message: => String): F[Unit]
-  def warn(t: Throwable)(message: => String): F[Unit]
-  def info(message: => String): F[Unit]
-  def info(t: Throwable)(message: => String): F[Unit]
-  def debug(message: => String): F[Unit]
-  def debug(t: Throwable)(message: => String): F[Unit]
-  def trace(message: => String): F[Unit]
-  def trace(t: Throwable)(message: => String): F[Unit]
-  
-  def withModifiedString(f: String => String): Logger[F] = wMS[F](this, f)
+trait Logger[F[_]] extends MessageLogger[F] with ErrorLogger[F] {
+  // Perhaps this should be a typeclass over algebras?
+  def withModifiedString(f: String => String): Logger[F] = Logger.withModifiedString[F](this, f)
 }
 
 object Logger {
