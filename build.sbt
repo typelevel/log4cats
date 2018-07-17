@@ -2,7 +2,7 @@ import sbtcrossproject.{crossProject, CrossType}
 val catsV = "1.1.0"
 val catsEffectV = "0.10.1"
 val log4sV = "1.6.1"
-val specs2V = "4.3.0"
+val specs2V = "4.3.2"
 
 lazy val log4cats = project.in(file("."))
   .aggregate(
@@ -84,7 +84,7 @@ lazy val scribe = crossProject(JSPlatform, JVMPlatform).in(file("cats/scribe"))
   .settings(
     name := "log4cats-scribe",
     libraryDependencies ++= Seq(
-      "com.outr" %%% "scribe" % "2.5.1"
+      "com.outr" %%% "scribe" % "2.5.3"
     )
   )
 
@@ -236,7 +236,7 @@ lazy val micrositeSettings = Seq(
     "-Ywarn-unused:imports",
     "-Xlint:-missing-interpolator,_"
   ),
-  libraryDependencies += "com.47deg" %% "github4s" % "0.18.4",
+  libraryDependencies += "com.47deg" %% "github4s" % "0.18.6",
   micrositePushSiteWith := GitHub4s,
   micrositeGithubToken := sys.env.get("GITHUB_TOKEN")
 )
