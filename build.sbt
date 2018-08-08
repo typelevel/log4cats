@@ -54,7 +54,7 @@ lazy val noop = crossProject(JSPlatform, JVMPlatform).in(file("cats/noop"))
   .settings(commonSettings, releaseSettings)
   .dependsOn(core)
   .settings(
-    name := "log4cats-noop"
+    name := "log4cats-noop",
     libraryDependencies ++= Seq(
       "org.typelevel"               %%% "cats-core"                  % catsV,
     )
