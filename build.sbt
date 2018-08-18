@@ -1,5 +1,5 @@
 import sbtcrossproject.{crossProject, CrossType}
-val catsV = "1.1.0"
+val catsV = "1.2.0"
 val catsEffectV = "0.10.1"
 val log4sV = "1.6.1"
 val specs2V = "4.3.2"
@@ -10,6 +10,8 @@ lazy val log4cats = project.in(file("."))
     coreJS,
     testingJVM,
     testingJS,
+    noopJVM,
+    noopJS,
     scribeJVM,
     scribeJS,
     slf4j,
@@ -47,6 +49,21 @@ lazy val testing = crossProject(JSPlatform, JVMPlatform).in(file("cats/testing")
 
 lazy val testingJVM = testing.jvm
 lazy val testingJS = testing.js
+
+lazy val noop = crossProject(JSPlatform, JVMPlatform).in(file("cats/noop"))
+  .settings(commonSettings, releaseSettings)
+  .dependsOn(core)
+  .settings(
+    name := "log4cats-noop",
+    libraryDependencies ++= Seq(
+      "org.typelevel"               %%% "cats-core"                  % catsV,
+    )
+  )
+
+lazy val noopJVM = noop.jvm
+lazy val noopJS = noop.js
+
+
 
 lazy val log4s = crossProject(JSPlatform, JVMPlatform).in(file("cats/log4s"))
   .settings(commonSettings, releaseSettings, catsSettings)
