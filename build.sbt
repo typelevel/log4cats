@@ -253,7 +253,7 @@ lazy val micrositeSettings = Seq(
     "-Ywarn-unused:imports",
     "-Xlint:-missing-interpolator,_"
   ),
-  libraryDependencies += "com.47deg" %% "github4s" % "0.18.6",
+  libraryDependencies += "com.47deg" %% "github4s" % "0.18.8",
   micrositePushSiteWith := GitHub4s,
   micrositeGithubToken := sys.env.get("GITHUB_TOKEN")
 )
