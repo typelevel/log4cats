@@ -1,4 +1,4 @@
-addSbtPlugin("com.dwijnand" % "sbt-travisci" % "1.1.1")
+addSbtPlugin("com.dwijnand" % "sbt-travisci" % "1.1.3")
 addSbtPlugin("com.typesafe.sbt" % "sbt-git" % "0.9.3")
 addSbtPlugin("com.jsuereth" % "sbt-pgp" % "1.1.1")
 addSbtPlugin("io.github.davidgregory084" % "sbt-tpolecat" % "0.1.3")
