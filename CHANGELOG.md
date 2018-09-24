@@ -4,6 +4,16 @@ This file summarizes **notable** changes for each release, but does not describe
 
 ----
 
+# <a name="0.1.0"></a>New and Noteworthy for Version 0.2.0-M1
+
+Transitioned Scalaz ZIO from scalaz-ioeffect to scalaz-zio.
+
+- Upgrades
+  - cats
+  - cats-effect
+  - scribe
+  - specs2
+
 ## <a name="0.1.0"></a>New and Noteworthy for Version 0.1.0
 
 - Upgrades
