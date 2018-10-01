@@ -2,7 +2,7 @@ sudo: false
 language: scala
 
 scala:
-  - 2.12.6
+  - 2.12.7
   - 2.11.12
 
 before_cache:
@@ -33,4 +33,4 @@ script:
 
 after_success:
 - test $TRAVIS_PULL_REQUEST == "false" && test $TRAVIS_BRANCH == "master" && test $TRAVIS_REPO_SLUG == "ChristopherDavenport/log4cats" && sbt ++$TRAVIS_SCALA_VERSION publish
-- test $TRAVIS_PULL_REQUEST == "false" && test $TRAVIS_BRANCH == "master" && test $TRAVIS_REPO_SLUG == "ChristopherDavenport/log4cats" && test $TRAVIS_SCALA_VERSION == "2.12.6" && sbt docs/publishMicrosite
+- test $TRAVIS_PULL_REQUEST == "false" && test $TRAVIS_BRANCH == "master" && test $TRAVIS_REPO_SLUG == "ChristopherDavenport/log4cats" && test $TRAVIS_SCALA_VERSION == "2.12.7" && sbt docs/publishMicrosite
