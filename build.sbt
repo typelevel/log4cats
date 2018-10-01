@@ -1,6 +1,6 @@
 import sbtcrossproject.{crossProject, CrossType}
 val catsV = "1.4.0"
-val catsEffectV = "0.10.1"
+val catsEffectV = "1.0.0"
 val log4sV = "1.6.1"
 val specs2V = "4.3.4"
 
@@ -63,8 +63,6 @@ lazy val noop = crossProject(JSPlatform, JVMPlatform).in(file("cats/noop"))
 lazy val noopJVM = noop.jvm
 lazy val noopJS = noop.js
 
-
-
 lazy val log4s = crossProject(JSPlatform, JVMPlatform).in(file("cats/log4s"))
   .settings(commonSettings, releaseSettings, catsSettings)
   .dependsOn(core)
@@ -101,7 +99,7 @@ lazy val scribe = crossProject(JSPlatform, JVMPlatform).in(file("cats/scribe"))
   .settings(
     name := "log4cats-scribe",
     libraryDependencies ++= Seq(
-      "com.outr" %%% "scribe" % "2.5.3"
+      "com.outr" %%% "scribe" % "2.6.0"
     )
   )
 
@@ -155,7 +153,7 @@ lazy val catsSettings = Seq(
 )
 
 lazy val scalazSettings = Seq(
-  libraryDependencies += "org.scalaz" %% "scalaz-ioeffect" % "2.5.0"
+  libraryDependencies += "org.scalaz" %% "scalaz-zio" % "0.2.7"
 )
 
 lazy val releaseSettings = {
