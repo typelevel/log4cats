@@ -4,7 +4,7 @@ This file summarizes **notable** changes for each release, but does not describe
 
 ----
 
-# <a name="0.1.0"></a>New and Noteworthy for Version 0.2.0-M1
+# <a name="0.2.0-M1"></a>New and Noteworthy for Version 0.2.0-M1
 
 Transitioned Scalaz ZIO from scalaz-ioeffect to scalaz-zio.
 
@@ -13,7 +13,12 @@ Transitioned Scalaz ZIO from scalaz-ioeffect to scalaz-zio.
   - cats-effect
   - scribe
   - specs2
+  
+## <a name="0.1.1"></a>New and Noteworthy for Version 0.1.1
 
+- Adopt Scala Code of Conduct
+- Publish log4cats-noop, a logger implementation that does nothing.
+  
 ## <a name="0.1.0"></a>New and Noteworthy for Version 0.1.0
 
 - Upgrades
