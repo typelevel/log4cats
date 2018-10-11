@@ -18,6 +18,8 @@ lazy val log4cats = project.in(file("."))
     `slf4j-internal`,
     log4sJVM,
     log4sJS,
+    extrasJVM,
+    extrasJS,
     docs,
     `scalaz-log4s`
   )
@@ -39,6 +41,18 @@ lazy val core = crossProject(JSPlatform, JVMPlatform).in(file("core"))
 
 lazy val coreJVM = core.jvm
 lazy val coreJS  = core.js
+
+
+lazy val extras = crossProject(JSPlatform, JVMPlatform).in(file("cats/extras"))
+  .settings(commonSettings, releaseSettings, catsSettings)
+  .dependsOn(core)
+  .settings(
+    name := "log4cats-extras"
+  )
+
+lazy val extrasJVM = extras.jvm
+lazy val extrasJS  = extras.js
+
 
 lazy val testing = crossProject(JSPlatform, JVMPlatform).in(file("cats/testing"))
   .settings(commonSettings, releaseSettings, catsSettings)
