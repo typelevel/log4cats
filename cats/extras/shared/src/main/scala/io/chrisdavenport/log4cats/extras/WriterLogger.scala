@@ -59,4 +59,35 @@ object WriterLogger {
         else Writer.value[G[LogMessage], Unit](())
     }
   }
+
+  def run[F[_]: Logger: Applicative, G[_]: Foldable]: Writer[G[LogMessage], ?] ~> F =
+    new ~>[Writer[G[LogMessage], ?], F] {
+      def logMessage(logMessage: LogMessage): F[Unit] = logMessage match {
+        case LogMessage(LogLevel.Error, Some(t), m) => 
+          Logger[F].error(t)(m)
+        case LogMessage(LogLevel.Error, None, m) => 
+          Logger[F].error(m)
+        case LogMessage(LogLevel.Warn, Some(t), m) =>
+          Logger[F].warn(t)(m)
+        case LogMessage(LogLevel.Warn, None, m) =>
+          Logger[F].warn(m)
+        case LogMessage(LogLevel.Info, Some(t), m) =>
+          Logger[F].info(t)(m)
+        case LogMessage(LogLevel.Info, None, m) =>
+          Logger[F].info(m)
+        case LogMessage(LogLevel.Debug, Some(t), m) =>
+          Logger[F].debug(t)(m)
+        case LogMessage(LogLevel.Debug, None, m) =>
+          Logger[F].debug(m)
+        case LogMessage(LogLevel.Trace, Some(t), m) =>
+          Logger[F].trace(t)(m)
+        case LogMessage(LogLevel.Trace, None, m) =>
+          Logger[F].trace(m)
+      }
+
+      def apply[A](fa: Writer[G[LogMessage], A]): F[A] = {
+        val (toLog, out) = fa.run
+        toLog.traverse_(logMessage).as(out)
+      }
+    }
 }
