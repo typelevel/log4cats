@@ -13,9 +13,20 @@ object WriterLogger {
     infoEnabled: Boolean = true,
     warnEnabled: Boolean = true,
     errorEnabled: Boolean = true
-  ): Logger[Writer[G[LogMessage], ?]] =  {
+  ): SelfAwareLogger[Writer[G[LogMessage], ?]] =  {
     implicit val monoidGLogMessage = Alternative[G].algebra[LogMessage]
-    new Logger[Writer[G[LogMessage], ?]]{
+    new SelfAwareLogger[Writer[G[LogMessage], ?]]{
+      def isTraceEnabled: Writer[G[LogMessage], Boolean] = 
+        Writer.value[G[LogMessage], Boolean](traceEnabled)
+      def isDebugEnabled: Writer[G[LogMessage], Boolean] =
+        Writer.value[G[LogMessage], Boolean](debugEnabled)
+      def isInfoEnabled: Writer[G[LogMessage], Boolean] =
+        Writer.value[G[LogMessage], Boolean](infoEnabled)
+      def isWarnEnabled: Writer[G[LogMessage], Boolean] =
+        Writer.value[G[LogMessage], Boolean](warnEnabled)
+      def isErrorEnabled: Writer[G[LogMessage], Boolean] =
+        Writer.value[G[LogMessage], Boolean](errorEnabled)
+
       def debug(t: Throwable)(message: => String): Writer[G[LogMessage], Unit] =
         if (debugEnabled) Writer.tell(Alternative[G].pure(LogMessage(LogLevel.Debug, t.some, message)))
         else Writer.value[G[LogMessage], Unit](())
