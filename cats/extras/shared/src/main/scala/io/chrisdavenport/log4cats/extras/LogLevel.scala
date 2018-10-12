@@ -11,7 +11,15 @@ object LogLevel {
   case object Debug extends LogLevel
   case object Trace extends LogLevel
 
-  implicit final val logLevelInstances: Order[LogLevel] =
+  implicit val logLevelShow: Show[LogLevel] = Show.show[LogLevel]{
+    case Error => "LogLevel.Error"
+    case Warn => "LogLevel.Warn"
+    case Info => "LogLevel.Info"
+    case Debug => "LogLevel.Debug"
+    case Trace => "LogLevel.Trace"
+  }
+
+  implicit final val logLevelOrder: Order[LogLevel] =
     Order.by[LogLevel, Int]{
       case Error => 5
       case Warn => 4
