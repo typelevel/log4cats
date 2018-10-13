@@ -4,6 +4,14 @@ This file summarizes **notable** changes for each release, but does not describe
 
 ----
 
+# <a name="0.2.0-RC2"></a>New and Noteworthy for Version 0.2.0-RC2
+
+This is expected to be the last release prior to the 0.2.0 release.
+
+- Loggers for Writer added to cats-extras for pure logging without effects.
+- Upgrades
+  - specs2
+
 # <a name="0.2.0-RC1"></a>New and Noteworthy for Version 0.2.0-RC1
 
 - Added cats-extras, which exposes functions for Rank2 functor behavior for all of the algebras.
