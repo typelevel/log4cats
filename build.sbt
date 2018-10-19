@@ -167,7 +167,7 @@ lazy val catsSettings = Seq(
 )
 
 lazy val scalazSettings = Seq(
-  libraryDependencies += "org.scalaz" %% "scalaz-zio" % "0.2.11"
+  libraryDependencies += "org.scalaz" %% "scalaz-zio" % "0.3.1"
 )
 
 lazy val releaseSettings = {
