@@ -27,8 +27,8 @@ import language.experimental.macros
 
 object Slf4jLogger {
 
-  def create[F[_]: Sync]: F[SelfAwareStructuredLogger[F]] =
-    Sync[F].delay(unsafeCreate)
+  def create[F[_]: Sync]: F[SelfAwareStructuredLogger[F]] = 
+    macro LoggerMacros.getLoggerImplSafe[F[_]]
 
   def fromName[F[_]: Sync](name: String): F[SelfAwareStructuredLogger[F]] =
     Sync[F].delay(unsafeFromName(name))
@@ -39,7 +39,7 @@ object Slf4jLogger {
   def fromSlf4j[F[_]: Sync](logger: JLogger): F[SelfAwareStructuredLogger[F]] = 
     Sync[F].delay(unsafeFromSlf4j(logger))
 
-  def unsafeCreate[F[_]: Sync]: SelfAwareStructuredLogger[F] = 
+  def unsafeCreate[F[_]: Sync]: SelfAwareStructuredLogger[F] =
     macro LoggerMacros.getLoggerImpl[F[_]]
 
   def unsafeFromName[F[_]: Sync](name: String): SelfAwareStructuredLogger[F] =
