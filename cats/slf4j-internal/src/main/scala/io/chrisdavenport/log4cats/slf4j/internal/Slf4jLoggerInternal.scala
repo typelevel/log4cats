@@ -29,7 +29,7 @@ private[slf4j] final class Slf4jLoggerInternal[F[_]](val logger: JLogger)(implic
 
   @inline def isErrorEnabled: F[Boolean] = F.delay(logger.isErrorEnabled)
 
-  import LoggerMacros._
+  import ReflectiveLogMacros._
 
   // Internal Methods To Not Run into Macro Abstract implementation issues.
   def internalTraceTM(t: Throwable)(msg: => String): F[Unit] = macro traceTM[F]
