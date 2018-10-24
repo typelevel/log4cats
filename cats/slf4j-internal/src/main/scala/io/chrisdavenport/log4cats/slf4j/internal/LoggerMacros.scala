@@ -18,7 +18,7 @@
  */
 package io.chrisdavenport.log4cats.slf4j.internal
 
-import scala.annotation.tailrec
+import scala.annotation.{tailrec, StaticAnnotation}
 import scala.reflect.macros.{blackbox, whitebox}
 
 /** Macros that support the logging system.
@@ -29,6 +29,8 @@ import scala.reflect.macros.{blackbox, whitebox}
  * @author Sarah Gerweck <sarah@atscale.com>
  */
 private[slf4j] object LoggerMacros {
+
+  final case class Safe(b: Boolean) extends StaticAnnotation
 
     /** Get a logger by reflecting the enclosing class name. */
   final def getLoggerImpl[F: c.WeakTypeTag](c: blackbox.Context)(f: c.Expr[F]) = {
@@ -46,92 +48,25 @@ private[slf4j] object LoggerMacros {
       }
     }
 
+
+    val isSafe = c.macroApplication.symbol.annotations.find(_.tree.tpe <:< typeOf[Safe])
+      .flatMap(
+        _.tree.children.tail.collectFirst {
+          case Literal(Constant(b: Boolean)) => b
+        } 
+      ).getOrElse(
+        c.abort(c.enclosingPosition, "Annotation @Safe not provided!")
+      )
+      
     val cls = findEnclosingClass(c.internal.enclosingOwner)
 
     assert(cls.isModule || cls.isClass, "Enclosing class is always either a module or a class")
 
     def loggerByParam(param: c.Tree)(f: c.Expr[F]) =
-      q"_root_.io.chrisdavenport.log4cats.slf4j.Slf4jLogger.unsafeFromSlf4j(_root_.org.slf4j.LoggerFactory.getLogger(...${List(
-        param)}))($f)"
-
-    def loggerBySymbolName(s: Symbol)(f: c.Expr[F]) = {
-      def fullName(s: Symbol): String = {
-        @inline def isPackageObject = (
-          (s.isModule || s.isModuleClass)
-            && s.owner.isPackage
-            && s.name.decodedName.toString == termNames.PACKAGE.decodedName.toString
-        )
-        if (s.isModule || s.isClass) {
-          if (isPackageObject) {
-            s.owner.fullName
-          } else if (s.owner.isStatic) {
-            s.fullName
-          } else {
-            fullName(s.owner) + "." + s.name.encodedName.toString
-          }
-        } else {
-          fullName(s.owner)
-        }
-      }
-      loggerByParam(q"${fullName(s)}")(f)
-    }
-
-    def loggerByType(s: Symbol)(f: c.Expr[F]) = {
-      val typeSymbol: ClassSymbol = (if (s.isModule) s.asModule.moduleClass else s).asClass
-      val typeParams = typeSymbol.typeParams
-
-      if (typeParams.isEmpty) {
-        loggerByParam(q"classOf[$typeSymbol]")(f)
-      } else {
-        if (typeParams.exists(_.asType.typeParams.nonEmpty)) {
-          /* We have at least one higher-kinded type: fall back to by-name logger construction, as
-           * there's no simple way to declare a higher-kinded type with an "any" parameter. */
-          loggerBySymbolName(s)(f)
-        } else {
-          val typeArgs = List.fill(typeParams.length)(WildcardType)
-          val typeConstructor = tq"$typeSymbol[..${typeArgs}]"
-          loggerByParam(q"classOf[$typeConstructor]")(f)
-        }
-      }
-    }
-
-    @inline def isInnerClass(s: Symbol) =
-      s.isClass && !(s.owner.isPackage)
-
-    val instanceByName = Slf4jLoggerInternal.singletonsByName && (cls.isModule || cls.isModuleClass) || cls.isClass && isInnerClass(
-      cls
-    )
-
-    if (instanceByName) {
-      loggerBySymbolName(cls)(f)
-    } else {
-      loggerByType(cls)(f)
-    }
-  }
-
-  /** Get a logger by reflecting the enclosing class name. */
-  final def getLoggerImplSafe[F: c.WeakTypeTag](c: blackbox.Context)(f: c.Expr[F]) = {
-    import c.universe._
-
-    @tailrec def findEnclosingClass(sym: c.universe.Symbol): c.universe.Symbol = {
-      sym match {
-        case NoSymbol =>
-          c.abort(c.enclosingPosition, s"Couldn't find an enclosing class or module for the logger")
-        case s if s.isModule || s.isClass =>
-          s
-        case other =>
-          /* We're not in a module or a class, so we're probably inside a member definition. Recurse upward. */
-          findEnclosingClass(other.owner)
-      }
-    }
-
-    val cls = findEnclosingClass(c.internal.enclosingOwner)
-
-    assert(cls.isModule || cls.isClass, "Enclosing class is always either a module or a class")
-
-    def loggerByParam(param: c.Tree)(f: c.Expr[F]) =
-      q"_root_.cats.effect.Sync.apply($f).delay(_root_.io.chrisdavenport.log4cats.slf4j.Slf4jLogger.unsafeFromSlf4j(_root_.org.slf4j.LoggerFactory.getLogger(...${List(
+      if (isSafe) q"_root_.cats.effect.Sync.apply($f).delay(_root_.io.chrisdavenport.log4cats.slf4j.Slf4jLogger.unsafeFromSlf4j(_root_.org.slf4j.LoggerFactory.getLogger(...${List(
         param)}))($f))"
+      else q"_root_.io.chrisdavenport.log4cats.slf4j.Slf4jLogger.unsafeFromSlf4j(_root_.org.slf4j.LoggerFactory.getLogger(...${List(
+        param)}))($f)"
 
     def loggerBySymbolName(s: Symbol)(f: c.Expr[F]) = {
       def fullName(s: Symbol): String = {
