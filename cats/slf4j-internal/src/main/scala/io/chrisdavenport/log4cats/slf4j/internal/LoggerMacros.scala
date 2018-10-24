@@ -28,10 +28,14 @@ import scala.reflect.macros.{blackbox, whitebox}
  *
  * @author Sarah Gerweck <sarah@atscale.com>
  */
-private[slf4j] object LoggerMacros {
+private[slf4j] class GetLoggerMacros(val c: blackbox.Context) {
+
+  final def safeCreateImpl[F: c.WeakTypeTag](f: c.Expr[F]) = getLoggerImpl[F](f, true)
+
+  final def unsafeCreateImpl[F: c.WeakTypeTag](f: c.Expr[F]) = getLoggerImpl[F](f, false)
 
   /** Get a logger by reflecting the enclosing class name. */
-  final def getLoggerImpl[F: c.WeakTypeTag](c: blackbox.Context)(f: c.Expr[F]) = {
+  private def getLoggerImpl[F: c.WeakTypeTag](f: c.Expr[F], delayed: Boolean) = {
     import c.universe._
 
     @tailrec def findEnclosingClass(sym: c.universe.Symbol): c.universe.Symbol = {
@@ -50,11 +54,16 @@ private[slf4j] object LoggerMacros {
 
     assert(cls.isModule || cls.isClass, "Enclosing class is always either a module or a class")
 
-    def loggerByParam(param: c.Tree)(f: c.Expr[F]) =
-      q"_root_.io.chrisdavenport.log4cats.slf4j.Slf4jLogger.unsafeFromSlf4j(_root_.org.slf4j.LoggerFactory.getLogger(...${List(
+    def loggerByParam(param: c.Tree) = {
+      val unsafeCreate = q"_root_.io.chrisdavenport.log4cats.slf4j.Slf4jLogger.unsafeFromSlf4j(_root_.org.slf4j.LoggerFactory.getLogger(...${List(
         param)}))($f)"
+      if (delayed)
+        q"_root_.cats.effect.Sync.apply($f).delay(...$unsafeCreate)"
+      else
+        unsafeCreate
+    }
 
-    def loggerBySymbolName(s: Symbol)(f: c.Expr[F]) = {
+    def loggerBySymbolName(s: Symbol) = {
       def fullName(s: Symbol): String = {
         @inline def isPackageObject = (
           (s.isModule || s.isModuleClass)
@@ -73,24 +82,24 @@ private[slf4j] object LoggerMacros {
           fullName(s.owner)
         }
       }
-      loggerByParam(q"${fullName(s)}")(f)
+      loggerByParam(q"${fullName(s)}")
     }
 
-    def loggerByType(s: Symbol)(f: c.Expr[F]) = {
+    def loggerByType(s: Symbol) = {
       val typeSymbol: ClassSymbol = (if (s.isModule) s.asModule.moduleClass else s).asClass
       val typeParams = typeSymbol.typeParams
 
       if (typeParams.isEmpty) {
-        loggerByParam(q"classOf[$typeSymbol]")(f)
+        loggerByParam(q"classOf[$typeSymbol]")
       } else {
         if (typeParams.exists(_.asType.typeParams.nonEmpty)) {
           /* We have at least one higher-kinded type: fall back to by-name logger construction, as
            * there's no simple way to declare a higher-kinded type with an "any" parameter. */
-          loggerBySymbolName(s)(f)
+          loggerBySymbolName(s)
         } else {
           val typeArgs = List.fill(typeParams.length)(WildcardType)
           val typeConstructor = tq"$typeSymbol[..${typeArgs}]"
-          loggerByParam(q"classOf[$typeConstructor]")(f)
+          loggerByParam(q"classOf[$typeConstructor]")
         }
       }
     }
@@ -103,11 +112,14 @@ private[slf4j] object LoggerMacros {
     )
 
     if (instanceByName) {
-      loggerBySymbolName(cls)(f)
+      loggerBySymbolName(cls)
     } else {
-      loggerByType(cls)(f)
+      loggerByType(cls)
     }
   }
+}
+
+private[slf4j] object ReflectiveLogMacros {
 
   /** A macro context that represents a method call on a Logger instance. */
   private[this] type LogCtx[F[_]] = whitebox.Context { type PrefixType = Slf4jLoggerInternal[F] }
