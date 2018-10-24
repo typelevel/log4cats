@@ -4,13 +4,32 @@ This file summarizes **notable** changes for each release, but does not describe
 
 ----
 
+# <a name="0.2.0"></a>New and Noteworthy for Version 0.2.0
+
+Many thanks to **λoλcat** and **Loránd Szakács** for their contributions to this release.
+
+Primary changes in the new release are additional features and version upgrades.
+Significantly, the upgrade to cats-effect 1.0 and log4scalaz being transitioned onto
+the ZIO project.
+
+New features:
+
+- New Extras Project which contains
+  - Writer Based Logger
+  - MapK transformation Functions
+  - Implicit Syntax Enhancements adding mapK directly onto the algebra.
+
+Bug Fixes:
+
+- Macro Failed to Capture Enclosing Class on safe Slf4jLogger construction. This has been remedied.
+
 # <a name="0.2.0-RC2"></a>New and Noteworthy for Version 0.2.0-RC2
 
 This is expected to be the last release prior to the 0.2.0 release.
 
 - Loggers for Writer added to cats-extras for pure logging without effects.
 - Upgrades
-  - specs2
+  - specs2 4.3.5
 
 # <a name="0.2.0-RC1"></a>New and Noteworthy for Version 0.2.0-RC1
 
@@ -20,12 +39,12 @@ This is expected to be the last release prior to the 0.2.0 release.
 
 # <a name="0.2.0-M1"></a>New and Noteworthy for Version 0.2.0-M1
 
-Transitioned Scalaz ZIO from scalaz-ioeffect to scalaz-zio.
+Transitioned Scalaz ZIO from scalaz-ioeffect to scalaz-zio. 
 
 - Upgrades
-  - cats
-  - cats-effect
-  - scribe
+  - cats 1.4.0
+  - cats-effect 1.0.0 - bincompat breaking
+  - scribe 2.6.0 - bincompat breaking
   - specs2
   
 ## <a name="0.1.1"></a>New and Noteworthy for Version 0.1.1
