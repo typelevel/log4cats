@@ -34,7 +34,7 @@ lazy val docs = project.in(file("docs"))
   .dependsOn(slf4j)
 
 lazy val core = crossProject(JSPlatform, JVMPlatform).in(file("core"))
-  .settings(commonSettings, releaseSettings)
+  .settings(commonSettings, releaseSettings, mimaSettings)
   .settings(
     name := "log4cats-core"
   )
@@ -44,7 +44,7 @@ lazy val coreJS  = core.js
 
 
 lazy val extras = crossProject(JSPlatform, JVMPlatform).in(file("cats/extras"))
-  .settings(commonSettings, releaseSettings, catsSettings)
+  .settings(commonSettings, releaseSettings, mimaSettings, catsSettings)
   .dependsOn(core)
   .settings(
     name := "log4cats-extras"
@@ -55,7 +55,7 @@ lazy val extrasJS  = extras.js
 
 
 lazy val testing = crossProject(JSPlatform, JVMPlatform).in(file("cats/testing"))
-  .settings(commonSettings, releaseSettings, catsSettings)
+  .settings(commonSettings, releaseSettings, mimaSettings, catsSettings)
   .dependsOn(core)
   .settings(
     name := "log4cats-testing"
@@ -65,7 +65,7 @@ lazy val testingJVM = testing.jvm
 lazy val testingJS = testing.js
 
 lazy val noop = crossProject(JSPlatform, JVMPlatform).in(file("cats/noop"))
-  .settings(commonSettings, releaseSettings)
+  .settings(commonSettings, mimaSettings, releaseSettings)
   .dependsOn(core)
   .settings(
     name := "log4cats-noop",
@@ -78,7 +78,7 @@ lazy val noopJVM = noop.jvm
 lazy val noopJS = noop.js
 
 lazy val log4s = crossProject(JSPlatform, JVMPlatform).in(file("cats/log4s"))
-  .settings(commonSettings, releaseSettings, catsSettings)
+  .settings(commonSettings, releaseSettings, mimaSettings, catsSettings)
   .dependsOn(core)
   .settings(
     name := "log4cats-log4s",
@@ -88,14 +88,14 @@ lazy val log4s = crossProject(JSPlatform, JVMPlatform).in(file("cats/log4s"))
   )
 
 lazy val slf4j = project.in(file("cats/slf4j"))
-  .settings(commonSettings, releaseSettings, catsSettings)
+  .settings(commonSettings, releaseSettings, mimaSettings, catsSettings)
   .dependsOn(`slf4j-internal`)
   .settings(
     name := "log4cats-slf4j"
   )
 
 lazy val `slf4j-internal` = project.in(file("cats/slf4j-internal"))
-.settings(commonSettings, releaseSettings, catsSettings)
+.settings(commonSettings, releaseSettings, mimaSettings, catsSettings)
   .dependsOn(core.jvm)
   .settings(
     name := "log4cats-slf4j-internal",
@@ -108,7 +108,7 @@ lazy val log4sJVM = log4s.jvm
 lazy val log4sJS = log4s.js
 
 lazy val scribe = crossProject(JSPlatform, JVMPlatform).in(file("cats/scribe"))
-  .settings(commonSettings, releaseSettings, catsSettings)
+  .settings(commonSettings, releaseSettings, mimaSettings, catsSettings)
   .dependsOn(core)
   .settings(
     name := "log4cats-scribe",
@@ -124,7 +124,7 @@ lazy val scribeJS = scribe.js
 
 lazy val `scalaz-log4s` = project
   .in(file("scalaz/log4s"))
-  .settings(commonSettings, releaseSettings, scalazSettings)
+  .settings(commonSettings, releaseSettings, mimaSettings, scalazSettings)
   .dependsOn(coreJVM)
   .settings(
     name := "log4scalaz-log4s",
