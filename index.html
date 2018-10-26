@@ -13,6 +13,7 @@ or you can use any of the supported backends, or create your own.</p>
 
 <div class="language-scala highlighter-rouge"><pre class="highlight"><code><span class="n">libraryDependencies</span> <span class="o">++=</span> <span class="nc">Seq</span><span class="o">(</span>
   <span class="s">"io.chrisdavenport"</span> <span class="o">%%</span> <span class="s">"log4cats-core"</span>    <span class="o">%</span> <span class="s">"&lt;version&gt;"</span><span class="o">,</span>  <span class="c1">// Only if you want to Support Any Backend
+</span>  <span class="s">"io.chrisdavenport"</span> <span class="o">%%</span> <span class="s">"log4cats-extras"</span>  <span class="o">%</span> <span class="s">"&lt;version&gt;"</span><span class="o">,</span>  <span class="c1">// Cats Extras - mapK, Writer, etc.
 </span>  <span class="s">"io.chrisdavenport"</span> <span class="o">%%</span> <span class="s">"log4cats-slf4j"</span>   <span class="o">%</span> <span class="s">"&lt;version&gt;"</span><span class="o">,</span>  <span class="c1">// Direct Slf4j Support - Recommended
 </span>  <span class="s">"io.chrisdavenport"</span> <span class="o">%%</span> <span class="s">"log4cats-log4s"</span>   <span class="o">%</span> <span class="s">"&lt;version&gt;"</span><span class="o">,</span>  <span class="c1">// For Log4s Support
 </span>  <span class="s">"io.chrisdavenport"</span> <span class="o">%%</span> <span class="s">"log4cats-scribe"</span>  <span class="o">%</span> <span class="s">"&lt;version&gt;"</span><span class="o">,</span>   <span class="c1">// For Scribe Support
