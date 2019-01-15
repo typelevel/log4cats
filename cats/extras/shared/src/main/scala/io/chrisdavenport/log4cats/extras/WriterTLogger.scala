@@ -6,7 +6,7 @@ import cats.implicits._
 import io.chrisdavenport.log4cats._
 
 object WriterTLogger {
-  def apply[F[_]: Alternative, G[_]: Alternative](
+  def apply[F[_]: Applicative, G[_]: Alternative](
       traceEnabled: Boolean = true,
       debugEnabled: Boolean = true,
       infoEnabled: Boolean = true,
