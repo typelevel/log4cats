@@ -57,7 +57,7 @@ object WriterTLogger {
           WriterT.tell[F, G[LogMessage]](Applicative[G].pure(LogMessage(level, t, message)))
         else WriterT.value[F, G[LogMessage], Unit](())
 
-      implicit val monoidGLogMessage: Monoid[G[LogMessage]] = Alternative[G].algebra[LogMessage]
+      private implicit val monoidGLogMessage: Monoid[G[LogMessage]] = Alternative[G].algebra[LogMessage]
     }
 
   def run[F[_]: Logger: Monad, G[_]: Foldable]: WriterT[F, G[LogMessage], ?] ~> F =
