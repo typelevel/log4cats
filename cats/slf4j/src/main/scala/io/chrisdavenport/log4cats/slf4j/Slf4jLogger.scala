@@ -61,19 +61,19 @@ object Slf4jLogger {
 
       @inline override def trace(t: Throwable)(msg: => String): F[Unit] = s.internalTraceTM(t)(msg)
       @inline override def trace(msg: => String): F[Unit] = s.internalTraceM(msg)
-      @inline override def trace(ctx: (String, String)*)(msg: => String): F[Unit] = s.internalTraceMDC(ctx:_*)(msg)
+      @inline override def trace(ctx: Map[String, String])(msg: => String): F[Unit] = s.internalTraceMDC(ctx.toSeq:_*)(msg)
       @inline override def debug(t: Throwable)(msg: => String): F[Unit] = s.internalDebugTM(t)(msg)
       @inline override def debug(msg: => String): F[Unit] = s.internalDebugM(msg)
-      @inline override def debug(ctx: (String, String)*)(msg: => String): F[Unit] = s.internalDebugMDC(ctx:_*)(msg)
+      @inline override def debug(ctx: Map[String, String])(msg: => String): F[Unit] = s.internalDebugMDC(ctx.toSeq:_*)(msg)
       @inline override def info(t: Throwable)(msg: => String): F[Unit] = s.internalInfoTM(t)(msg)
       @inline override def info(msg: => String): F[Unit] = s.internalInfoM(msg)
-      @inline override def info(ctx: (String, String)*)(msg: => String): F[Unit] = s.internalInfoMDC(ctx:_*)(msg)
+      @inline override def info(ctx: Map[String, String])(msg: => String): F[Unit] = s.internalInfoMDC(ctx.toSeq:_*)(msg)
       @inline override def warn(t: Throwable)(msg: => String): F[Unit] = s.internalWarnTM(t)(msg)
       @inline override def warn(msg: => String): F[Unit] = s.internalWarnM(msg)
-      @inline override def warn(ctx: (String, String)*)(msg: => String): F[Unit] = s.internalWarnMDC(ctx:_*)(msg)
+      @inline override def warn(ctx: Map[String, String])(msg: => String): F[Unit] = s.internalWarnMDC(ctx.toSeq:_*)(msg)
       @inline override def error(t: Throwable)(msg: => String): F[Unit] = s.internalErrorTM(t)(msg)
       @inline override def error(msg: => String): F[Unit] = s.internalErrorM(msg)
-      @inline override def error(ctx: (String, String)*)(msg: => String): F[Unit] = s.internalErrorMDC(ctx:_*)(msg)
+      @inline override def error(ctx: Map[String, String])(msg: => String): F[Unit] = s.internalErrorMDC(ctx.toSeq:_*)(msg)
     }
 
 

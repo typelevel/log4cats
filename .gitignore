@@ -5,3 +5,6 @@ target/
 
 # Ignore [ce]tags files
 tags
+
+.metals
+.bloop

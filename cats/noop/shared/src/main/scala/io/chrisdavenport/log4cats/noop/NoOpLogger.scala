@@ -15,18 +15,18 @@ object NoOpLogger {
       @inline override def isErrorEnabled: F[Boolean] = no
       @inline override def trace(t: Throwable)(msg: => String): F[Unit] = unit
       @inline override def trace(msg: => String): F[Unit] = unit
-      @inline override def trace(ctx: (String, String)*)(msg: => String): F[Unit] = unit
+      @inline override def trace(ctx: Map[String, String])(msg: => String): F[Unit] = unit
       @inline override def debug(t: Throwable)(msg: => String): F[Unit] = unit
       @inline override def debug(msg: => String): F[Unit] = unit
-      @inline override def debug(ctx: (String, String)*)(msg: => String): F[Unit] = unit
+      @inline override def debug(ctx: Map[String, String])(msg: => String): F[Unit] = unit
       @inline override def info(t: Throwable)(msg: => String): F[Unit] = unit
       @inline override def info(msg: => String): F[Unit] = unit
-      @inline override def info(ctx: (String, String)*)(msg: => String): F[Unit] = unit
+      @inline override def info(ctx: Map[String, String])(msg: => String): F[Unit] = unit
       @inline override def warn(t: Throwable)(msg: => String): F[Unit] = unit
       @inline override def warn(msg: => String): F[Unit] = unit
-      @inline override def warn(ctx: (String, String)*)(msg: => String): F[Unit] = unit
+      @inline override def warn(ctx: Map[String, String])(msg: => String): F[Unit] = unit
       @inline override def error(t: Throwable)(msg: => String): F[Unit] = unit
       @inline override def error(msg: => String): F[Unit] = unit
-      @inline override def error(ctx: (String, String)*)(msg: => String): F[Unit] = unit
+      @inline override def error(ctx: Map[String, String])(msg: => String): F[Unit] = unit
   }
 }

@@ -11,7 +11,7 @@ object Log4sLogger {
   def createByClass[F[_]: Sync](clazz: Class[_]) = fromLog4s[F](org.log4s.getLogger(clazz))
 
   def fromLog4s[F[_]: Sync](logger: Base): SelfAwareLogger[F] = new SelfAwareLogger[F] {
-
+    
     override def isTraceEnabled: F[Boolean] =
       Sync[F].delay(logger.isTraceEnabled)
     override def isDebugEnabled: F[Boolean] = 

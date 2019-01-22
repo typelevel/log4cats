@@ -109,16 +109,16 @@ object Translate {
         def isErrorEnabled: F[Boolean] =
           f(logger.isErrorEnabled)
 
-        def trace(ctx: (String, String)*)(msg: => String): F[Unit] = 
-          f(logger.trace(ctx:_*)(msg))
-        def debug(ctx: (String, String)*)(msg: => String): F[Unit] = 
-          f(logger.debug(ctx:_*)(msg))
-        def info(ctx: (String, String)*)(msg: => String): F[Unit] = 
-          f(logger.info(ctx:_*)(msg))
-        def warn(ctx: (String, String)*)(msg: => String): F[Unit] = 
-          f(logger.warn(ctx:_*)(msg))
-        def error(ctx: (String, String)*)(msg: => String): F[Unit] =
-          f(logger.error(ctx:_*)(msg))
+        def trace(ctx: Map[String, String])(msg: => String): F[Unit] = 
+          f(logger.trace(ctx)(msg))
+        def debug(ctx: Map[String, String])(msg: => String): F[Unit] = 
+          f(logger.debug(ctx)(msg))
+        def info(ctx: Map[String, String])(msg: => String): F[Unit] = 
+          f(logger.info(ctx)(msg))
+        def warn(ctx: Map[String, String])(msg: => String): F[Unit] = 
+          f(logger.warn(ctx)(msg))
+        def error(ctx: Map[String, String])(msg: => String): F[Unit] =
+          f(logger.error(ctx)(msg))
 
         def error(t: Throwable)(message: => String): F[Unit] = 
           f(logger.error(t)(message))
@@ -146,16 +146,16 @@ object Translate {
 
     def structuredLogger[G[_], F[_]](f: G ~> F)(logger: StructuredLogger[G]): StructuredLogger[F] =
       new StructuredLogger[F]{
-        def trace(ctx: (String, String)*)(msg: => String): F[Unit] = 
-          f(logger.trace(ctx:_*)(msg))
-        def debug(ctx: (String, String)*)(msg: => String): F[Unit] = 
-          f(logger.debug(ctx:_*)(msg))
-        def info(ctx: (String, String)*)(msg: => String): F[Unit] = 
-          f(logger.info(ctx:_*)(msg))
-        def warn(ctx: (String, String)*)(msg: => String): F[Unit] = 
-          f(logger.warn(ctx:_*)(msg))
-        def error(ctx: (String, String)*)(msg: => String): F[Unit] =
-          f(logger.error(ctx:_*)(msg))
+        def trace(ctx: Map[String, String])(msg: => String): F[Unit] = 
+          f(logger.trace(ctx)(msg))
+        def debug(ctx: Map[String, String])(msg: => String): F[Unit] = 
+          f(logger.debug(ctx)(msg))
+        def info(ctx: Map[String, String])(msg: => String): F[Unit] = 
+          f(logger.info(ctx)(msg))
+        def warn(ctx: Map[String, String])(msg: => String): F[Unit] = 
+          f(logger.warn(ctx)(msg))
+        def error(ctx: Map[String, String])(msg: => String): F[Unit] =
+          f(logger.error(ctx)(msg))
 
         def error(t: Throwable)(message: => String): F[Unit] = 
           f(logger.error(t)(message))
