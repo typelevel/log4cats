@@ -21,7 +21,6 @@
  */
 package io.chrisdavenport.log4cats.slf4j.internal
 
-import org.slf4j.{Logger => JLogger}
 import scala.annotation.tailrec
 import scala.reflect.macros.{blackbox, whitebox}
 
@@ -126,7 +125,7 @@ private[slf4j] class GetLoggerMacros(val c: blackbox.Context) {
 private[slf4j] object ReflectiveLogMacros {
 
   /** A macro context that represents a method call on a Logger instance. */
-  private[this] type LogCtx[F[_]] = whitebox.Context { type PrefixType = JLogger }
+  private[this] type LogCtx[F[_]] = whitebox.Context { type PrefixType = Slf4jLoggerInternal.Slf4jLogger[F] }
 
   /** Log a message reflectively at a given level.
    *
@@ -175,7 +174,8 @@ private[slf4j] object ReflectiveLogMacros {
                if ($backup eq null) $MDC.clear()
                else $MDC.setContextMap($backup)
              }
-           } else $F.unit
+           } 
+           else $F.unit
          """
       case (c.Expr(Literal(Constant(_))), _) if errorIsSimple =>
         q"$F.delay($logExpr)"

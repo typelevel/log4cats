@@ -20,11 +20,9 @@ package io.chrisdavenport.log4cats.slf4j
 
 import cats.effect.Sync
 import cats._
-import cats.implicits._
 import io.chrisdavenport.log4cats.SelfAwareStructuredLogger
 import io.chrisdavenport.log4cats.slf4j.internal._
 import org.slf4j.{Logger => JLogger}
-
 import language.experimental.macros
 
 object Slf4jLogger {
@@ -53,7 +51,7 @@ object Slf4jLogger {
 
 
   def getLoggerFromSlf4j[F[_]: Sync](logger: JLogger): SelfAwareStructuredLogger[F] =
-    new Slf4JLogger(logger)
+    new Slf4jLoggerInternal.Slf4jLogger(logger)
 
   @deprecated("0.3.0", "Use getLoggerFromSlf4J instead")
   def unsafeFromSlf4j[F[_]: Sync](logger: JLogger): SelfAwareStructuredLogger[F] =
@@ -72,53 +70,7 @@ object Slf4jLogger {
   def fromSlf4j[F[_]: Sync](logger: JLogger): F[SelfAwareStructuredLogger[F]] =
     Sync[F].delay(getLoggerFromSlf4j[F](logger))
 
-  private class IntermediateForConcretes[F[_]: Applicative] extends SelfAwareStructuredLogger[F]{
-      def isTraceEnabled: F[Boolean] = true.pure[F]
-      def isDebugEnabled: F[Boolean] = true.pure[F]
-      def isInfoEnabled: F[Boolean] = true.pure[F]
-      def isWarnEnabled: F[Boolean] = true.pure[F]
-      def isErrorEnabled: F[Boolean] = true.pure[F]
 
-      override def trace(t: Throwable)(msg: => String): F[Unit] =  Applicative[F].unit
-      override def trace(msg: => String): F[Unit] = Applicative[F].unit
-      override def trace(ctx: Map[String, String])(msg: => String): F[Unit] = Applicative[F].unit
-      override def debug(t: Throwable)(msg: => String): F[Unit] = Applicative[F].unit
-      override def debug(msg: => String): F[Unit] = Applicative[F].unit
-      override def debug(ctx: Map[String, String])(msg: => String): F[Unit] = Applicative[F].unit
-      override def info(t: Throwable)(msg: => String): F[Unit] = Applicative[F].unit
-      override def info(msg: => String): F[Unit] = Applicative[F].unit
-      override def info(ctx: Map[String, String])(msg: => String): F[Unit] = Applicative[F].unit
-      override def warn(t: Throwable)(msg: => String): F[Unit] = Applicative[F].unit
-      override def warn(msg: => String): F[Unit] = Applicative[F].unit
-      override def warn(ctx: Map[String, String])(msg: => String): F[Unit] = Applicative[F].unit
-      override def error(t: Throwable)(msg: => String): F[Unit] = Applicative[F].unit
-      override def error(msg: => String): F[Unit] = Applicative[F].unit
-      override def error(ctx: Map[String, String])(msg: => String): F[Unit] = Applicative[F].unit
-  }
-  
-  private class Slf4JLogger[F[_]: Sync](val logger: JLogger) extends IntermediateForConcretes[F] {
-      override def isTraceEnabled: F[Boolean] = logger.isTraceEnabled.pure[F]
-      override def isDebugEnabled: F[Boolean] = logger.isDebugEnabled.pure[F]
-      override def isInfoEnabled: F[Boolean] = logger.isInfoEnabled.pure[F]
-      override def isWarnEnabled: F[Boolean] = logger.isWarnEnabled.pure[F]
-      override def isErrorEnabled: F[Boolean] = logger.isErrorEnabled.pure[F]
-
-      override def trace(t: Throwable)(msg: => String): F[Unit] = macro ReflectiveLogMacros.traceTM[F]
-      override def trace(msg: => String): F[Unit] = macro ReflectiveLogMacros.traceM[F]
-      override def trace(ctx: Map[String, String])(msg: => String): F[Unit] = macro ReflectiveLogMacros.traceCM[F]
-      override def debug(t: Throwable)(msg: => String): F[Unit] = macro ReflectiveLogMacros.debugTM[F]
-      override def debug(msg: => String): F[Unit] = macro ReflectiveLogMacros.debugM[F]
-      override def debug(ctx: Map[String, String])(msg: => String): F[Unit] = macro ReflectiveLogMacros.traceCM[F]
-      override def info(t: Throwable)(msg: => String): F[Unit] = macro ReflectiveLogMacros.infoTM[F]
-      override def info(msg: => String): F[Unit] = macro ReflectiveLogMacros.infoM[F]
-      override def info(ctx: Map[String, String])(msg: => String): F[Unit] = macro ReflectiveLogMacros.infoCM[F]
-      override def warn(t: Throwable)(msg: => String): F[Unit] = macro ReflectiveLogMacros.warnTM[F]
-      override def warn(msg: => String): F[Unit] = macro ReflectiveLogMacros.warnM[F]
-      override def warn(ctx: Map[String, String])(msg: => String): F[Unit] = macro ReflectiveLogMacros.warnCM[F]
-      override def error(t: Throwable)(msg: => String): F[Unit] = macro ReflectiveLogMacros.errorTM[F]
-      override def error(msg: => String): F[Unit] = macro ReflectiveLogMacros.errorM[F]
-      override def error(ctx: Map[String, String])(msg: => String): F[Unit] = macro ReflectiveLogMacros.errorCM[F]
-    }
 
 }
 
