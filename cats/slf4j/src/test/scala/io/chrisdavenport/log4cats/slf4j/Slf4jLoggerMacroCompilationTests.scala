@@ -37,8 +37,25 @@ object LoggingBaseline {
   val t = new Throwable
   def logger[F[_]: Sync]: SelfAwareStructuredLogger[F] = Slf4jLogger.getLogger[F]
 
+  val traceM  = logger[IO].trace("")
+  val traceTM = logger[IO].trace(t)("")
+  val traceCM = logger[IO].trace(Map.empty[String, String])("")
+  
   val debugM  = logger[IO].debug("")
-  val debugCM = logger[IO].debug(Map.empty[String, String])("")
   val debugTM = logger[IO].debug(t)("")
+  val debugCM = logger[IO].debug(Map.empty[String, String])("")
+
+  val infoM  = logger[IO].info("")
+  val infoTM = logger[IO].info(t)("")
+  val infoCM = logger[IO].info(Map.empty[String, String])("")
+
+  val warnM  = logger[IO].warn("")
+  val warnTM = logger[IO].warn(t)("")
+  val warnCM = logger[IO].warn(Map.empty[String, String])("")
+
+  val errorM  = logger[IO].error("")
+  val errorTM = logger[IO].error(t)("")
+  val errorCM = logger[IO].error(Map.empty[String, String])("")
+  
 }
 

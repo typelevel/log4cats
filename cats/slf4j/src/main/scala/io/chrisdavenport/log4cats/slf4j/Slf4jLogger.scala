@@ -33,7 +33,7 @@ object Slf4jLogger {
 
   @deprecated("0.3.0", "Use getLogger instead")
   def unsafeCreate[F[_]: Sync]: SelfAwareStructuredLogger[F] =
-    getLogger[F]
+    macro GetLoggerMacros.unsafeCreateImpl[F[_]]
 
   def getLoggerFromName[F[_]: Sync](name: String): SelfAwareStructuredLogger[F] =
     getLoggerFromSlf4j(org.slf4j.LoggerFactory.getLogger(name))

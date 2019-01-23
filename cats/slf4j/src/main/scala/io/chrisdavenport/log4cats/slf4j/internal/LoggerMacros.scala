@@ -160,7 +160,6 @@ private[slf4j] object ReflectiveLogMacros {
     (msg, context) match {
       case (_, Some(ctxExp)) =>
         val MDC = q"org.slf4j.MDC"
-        // val Seq = q"scala.collection.Seq"
         val backup = TermName(c.freshName("mdcBackup"))
         q"""
            if ($checkExpr) $F.delay {
@@ -168,7 +167,7 @@ private[slf4j] object ReflectiveLogMacros {
              try {
                for {
                  (k, v) <- $ctxExp.toSeq
-                } yield $MDC.put(k, v)
+                } $MDC.put(k, v)
                $logExpr
              } finally {
                if ($backup eq null) $MDC.clear()
