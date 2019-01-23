@@ -166,7 +166,7 @@ private[slf4j] object ReflectiveLogMacros {
              val $backup = $MDC.getCopyOfContextMap
              try {
                for {
-                 (k, v) <- $ctxExp.toSeq
+                 (k, v) <- $ctxExp
                 } $MDC.put(k, v)
                $logExpr
              } finally {
