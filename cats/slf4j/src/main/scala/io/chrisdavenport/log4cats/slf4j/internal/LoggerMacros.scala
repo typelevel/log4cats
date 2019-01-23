@@ -15,6 +15,9 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
+ * 
+ * Modifications:
+ * - Major Rework
  */
 package io.chrisdavenport.log4cats.slf4j.internal
 
@@ -55,7 +58,7 @@ private[slf4j] class GetLoggerMacros(val c: blackbox.Context) {
     assert(cls.isModule || cls.isClass, "Enclosing class is always either a module or a class")
 
     def loggerByParam(param: c.Tree) = {
-      val unsafeCreate = q"_root_.io.chrisdavenport.log4cats.slf4j.Slf4jLogger.unsafeFromSlf4j(_root_.org.slf4j.LoggerFactory.getLogger(...${List(
+      val unsafeCreate = q"_root_.io.chrisdavenport.log4cats.slf4j.Slf4jLogger.getLoggerFromSlf4j(_root_.org.slf4j.LoggerFactory.getLogger(...${List(
         param)}))($f)"
       if (delayed)
         q"_root_.cats.effect.Sync.apply($f).delay(...$unsafeCreate)"
@@ -122,7 +125,7 @@ private[slf4j] class GetLoggerMacros(val c: blackbox.Context) {
 private[slf4j] object ReflectiveLogMacros {
 
   /** A macro context that represents a method call on a Logger instance. */
-  private[this] type LogCtx[F[_]] = whitebox.Context { type PrefixType = Slf4jLoggerInternal[F] }
+  private[this] type LogCtx[F[_]] = whitebox.Context { type PrefixType = Slf4jLoggerInternal.Slf4jLogger[F] }
 
   /** Log a message reflectively at a given level.
    *
@@ -134,7 +137,7 @@ private[slf4j] object ReflectiveLogMacros {
    */
   private[this] def reflectiveLog[F[_]](
       c: LogCtx[F]
-  )(msg: c.Tree, error: Option[c.Expr[Throwable]], context: Seq[c.Expr[(String, String)]])(
+  )(msg: c.Tree, error: Option[c.Expr[Throwable]], context: Option[c.Expr[Map[String, String]]])(
       logLevel: LogLevel) = {
     import c.universe._
 
@@ -154,24 +157,26 @@ private[slf4j] object ReflectiveLogMacros {
       }
     }
 
-    msg match {
-      case _ if context.nonEmpty =>
+    (msg, context) match {
+      case (_, Some(ctxExp)) =>
         val MDC = q"org.slf4j.MDC"
-        val Seq = q"scala.collection.Seq"
         val backup = TermName(c.freshName("mdcBackup"))
         q"""
            if ($checkExpr) $F.delay {
              val $backup = $MDC.getCopyOfContextMap
              try {
-               for ((k, v) <- $Seq(..$context)) $MDC.put(k, v)
+               for {
+                 (k, v) <- $ctxExp
+                } $MDC.put(k, v)
                $logExpr
              } finally {
                if ($backup eq null) $MDC.clear()
                else $MDC.setContextMap($backup)
              }
-           } else $F.unit
+           } 
+           else $F.unit
          """
-      case c.Expr(Literal(Constant(_))) if errorIsSimple =>
+      case (c.Expr(Literal(Constant(_))), _) if errorIsSimple =>
         q"$F.delay($logExpr)"
       case _ =>
         q"if ($checkExpr) $F.delay($logExpr) else $F.unit"
@@ -179,42 +184,57 @@ private[slf4j] object ReflectiveLogMacros {
   }
 
   def traceTM[F[_]](c: LogCtx[F])(t: c.Expr[Throwable])(msg: c.Tree) =
-    reflectiveLog(c)(msg, Some(t), Nil)(LogLevel.Trace)
+    reflectiveLog(c)(msg, Some(t), None)(LogLevel.Trace)
 
-  def traceM[F[_]](c: LogCtx[F])(msg: c.Tree) = reflectiveLog(c)(msg, None, Nil)(LogLevel.Trace)
+  def traceM[F[_]](c: LogCtx[F])(msg: c.Tree) = reflectiveLog(c)(msg, None, None)(LogLevel.Trace)
 
-  def traceCM[F[_]](c: LogCtx[F])(ctx: c.Expr[(String, String)]*)(msg: c.Tree) =
-    reflectiveLog(c)(msg, None, ctx)(LogLevel.Trace)
+  def traceCM[F[_]](c: LogCtx[F])(ctx: c.Expr[Map[String, String]])(msg: c.Tree) =
+    reflectiveLog(c)(msg, None, Some(ctx))(LogLevel.Trace)
+
+  def traceTCM[F[_]](c: LogCtx[F])(ctx: c.Expr[Map[String, String]])(t: c.Expr[Throwable])(msg: c.Tree) =
+    reflectiveLog(c)(msg, Some(t), Some(ctx))(LogLevel.Trace)
 
   def debugTM[F[_]](c: LogCtx[F])(t: c.Expr[Throwable])(msg: c.Tree) =
-    reflectiveLog(c)(msg, Some(t), Nil)(LogLevel.Debug)
+    reflectiveLog(c)(msg, Some(t), None)(LogLevel.Debug)
 
-  def debugM[F[_]](c: LogCtx[F])(msg: c.Tree) = reflectiveLog(c)(msg, None, Nil)(LogLevel.Debug)
+  def debugM[F[_]](c: LogCtx[F])(msg: c.Tree) = reflectiveLog(c)(msg, None, None)(LogLevel.Debug)
 
-  def debugCM[F[_]](c: LogCtx[F])(ctx: c.Expr[(String, String)]*)(msg: c.Tree) =
-    reflectiveLog(c)(msg, None, ctx)(LogLevel.Debug)
+  def debugCM[F[_]](c: LogCtx[F])(ctx: c.Expr[Map[String, String]])(msg: c.Tree) =
+    reflectiveLog(c)(msg, None, Some(ctx))(LogLevel.Debug)
+
+  def debugTCM[F[_]](c: LogCtx[F])(ctx: c.Expr[Map[String, String]])(t: c.Expr[Throwable])(msg: c.Tree) =
+    reflectiveLog(c)(msg, Some(t), Some(ctx))(LogLevel.Debug)
 
   def infoTM[F[_]](c: LogCtx[F])(t: c.Expr[Throwable])(msg: c.Tree) =
-    reflectiveLog(c)(msg, Some(t), Nil)(LogLevel.Info)
+    reflectiveLog(c)(msg, Some(t), None)(LogLevel.Info)
 
-  def infoM[F[_]](c: LogCtx[F])(msg: c.Tree) = reflectiveLog(c)(msg, None, Nil)(LogLevel.Info)
+  def infoM[F[_]](c: LogCtx[F])(msg: c.Tree) = reflectiveLog(c)(msg, None, None)(LogLevel.Info)
 
-  def infoCM[F[_]](c: LogCtx[F])(ctx: c.Expr[(String, String)]*)(msg: c.Tree) =
-    reflectiveLog(c)(msg, None, ctx)(LogLevel.Info)
+  def infoCM[F[_]](c: LogCtx[F])(ctx: c.Expr[Map[String, String]])(msg: c.Tree) =
+    reflectiveLog(c)(msg, None, Some(ctx))(LogLevel.Info)
+
+  def infoTCM[F[_]](c: LogCtx[F])(ctx: c.Expr[Map[String, String]])(t: c.Expr[Throwable])(msg: c.Tree) =
+    reflectiveLog(c)(msg, Some(t), Some(ctx))(LogLevel.Info)
 
   def warnTM[F[_]](c: LogCtx[F])(t: c.Expr[Throwable])(msg: c.Tree) =
-    reflectiveLog(c)(msg, Some(t), Nil)(LogLevel.Warn)
+    reflectiveLog(c)(msg, Some(t), None)(LogLevel.Warn)
 
-  def warnM[F[_]](c: LogCtx[F])(msg: c.Tree) = reflectiveLog(c)(msg, None, Nil)(LogLevel.Warn)
+  def warnM[F[_]](c: LogCtx[F])(msg: c.Tree) = reflectiveLog(c)(msg, None, None)(LogLevel.Warn)
 
-  def warnCM[F[_]](c: LogCtx[F])(ctx: c.Expr[(String, String)]*)(msg: c.Tree) =
-    reflectiveLog(c)(msg, None, ctx)(LogLevel.Warn)
+  def warnCM[F[_]](c: LogCtx[F])(ctx: c.Expr[Map[String, String]])(msg: c.Tree) =
+    reflectiveLog(c)(msg, None, Some(ctx))(LogLevel.Warn)
+
+  def warnTCM[F[_]](c: LogCtx[F])(ctx: c.Expr[Map[String, String]])(t: c.Expr[Throwable])(msg: c.Tree) =
+    reflectiveLog(c)(msg, Some(t), Some(ctx))(LogLevel.Warn)
 
   def errorTM[F[_]](c: LogCtx[F])(t: c.Expr[Throwable])(msg: c.Tree) =
-    reflectiveLog(c)(msg, Some(t), Nil)(LogLevel.Error)
+    reflectiveLog(c)(msg, Some(t), None)(LogLevel.Error)
 
-  def errorM[F[_]](c: LogCtx[F])(msg: c.Tree) = reflectiveLog(c)(msg, None, Nil)(LogLevel.Error)
+  def errorM[F[_]](c: LogCtx[F])(msg: c.Tree) = reflectiveLog(c)(msg, None, None)(LogLevel.Error)
 
-  def errorCM[F[_]](c: LogCtx[F])(ctx: c.Expr[(String, String)]*)(msg: c.Tree) =
-    reflectiveLog(c)(msg, None, ctx)(LogLevel.Error)
+  def errorCM[F[_]](c: LogCtx[F])(ctx: c.Expr[Map[String, String]])(msg: c.Tree) =
+    reflectiveLog(c)(msg, None, Some(ctx))(LogLevel.Error)
+
+  def errorTCM[F[_]](c: LogCtx[F])(ctx: c.Expr[Map[String, String]])(t: c.Expr[Throwable])(msg: c.Tree) =
+    reflectiveLog(c)(msg, Some(t), Some(ctx))(LogLevel.Error)
 }

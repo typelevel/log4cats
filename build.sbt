@@ -15,7 +15,6 @@ lazy val log4cats = project.in(file("."))
     scribeJVM,
     scribeJS,
     slf4j,
-    `slf4j-internal`,
     log4sJVM,
     log4sJS,
     extrasJVM,
@@ -89,16 +88,9 @@ lazy val log4s = crossProject(JSPlatform, JVMPlatform).in(file("cats/log4s"))
 
 lazy val slf4j = project.in(file("cats/slf4j"))
   .settings(commonSettings, releaseSettings, mimaSettings, catsSettings)
-  .dependsOn(`slf4j-internal`)
+  .dependsOn(coreJVM)
   .settings(
-    name := "log4cats-slf4j"
-  )
-
-lazy val `slf4j-internal` = project.in(file("cats/slf4j-internal"))
-.settings(commonSettings, releaseSettings, mimaSettings, catsSettings)
-  .dependsOn(core.jvm)
-  .settings(
-    name := "log4cats-slf4j-internal",
+    name := "log4cats-slf4j",
     libraryDependencies ++= Seq(
       "org.slf4j" % "slf4j-api" % "1.7.25"
     )
