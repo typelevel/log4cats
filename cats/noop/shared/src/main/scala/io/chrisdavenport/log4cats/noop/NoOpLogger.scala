@@ -28,5 +28,15 @@ object NoOpLogger {
       @inline override def error(t: Throwable)(msg: => String): F[Unit] = unit
       @inline override def error(msg: => String): F[Unit] = unit
       @inline override def error(ctx: Map[String, String])(msg: => String): F[Unit] = unit
+      @inline override def trace(ctx: Map[String, String], t: Throwable)(msg: => String): F[Unit] =
+        unit
+      @inline override def debug(ctx: Map[String, String], t: Throwable)(msg: => String): F[Unit] =
+        unit
+      @inline override def info(ctx: Map[String, String], t: Throwable)(msg: => String): F[Unit] =
+        unit
+      @inline override def warn(ctx: Map[String, String], t: Throwable)(msg: => String): F[Unit] =
+        unit
+      @inline override def error(ctx: Map[String, String], t: Throwable)(msg: => String): F[Unit] =
+        unit
   }
 }

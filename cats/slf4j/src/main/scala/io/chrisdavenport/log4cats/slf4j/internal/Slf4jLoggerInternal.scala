@@ -40,6 +40,16 @@ private[slf4j] object Slf4jLoggerInternal {
       override def error(t: Throwable)(msg: => String): F[Unit] = Applicative[F].unit
       override def error(msg: => String): F[Unit] = Applicative[F].unit
       override def error(ctx: Map[String, String])(msg: => String): F[Unit] = Applicative[F].unit
+      override def trace(ctx: Map[String, String], t: Throwable)(msg: => String): F[Unit] =
+        Applicative[F].unit
+      override def debug(ctx: Map[String, String], t: Throwable)(msg: => String): F[Unit] =
+        Applicative[F].unit
+      override def info(ctx: Map[String, String], t: Throwable)(msg: => String): F[Unit] =
+        Applicative[F].unit
+      override def warn(ctx: Map[String, String], t: Throwable)(msg: => String): F[Unit] =
+        Applicative[F].unit
+      override def error(ctx: Map[String, String], t: Throwable)(msg: => String): F[Unit] =
+        Applicative[F].unit
   }
   
   class Slf4jLogger[F[_]: Sync](val logger: JLogger) extends IntermediateForConcretes[F] {
@@ -64,5 +74,15 @@ private[slf4j] object Slf4jLoggerInternal {
       override def error(t: Throwable)(msg: => String): F[Unit] = macro ReflectiveLogMacros.errorTM[F]
       override def error(msg: => String): F[Unit] = macro ReflectiveLogMacros.errorM[F]
       override def error(ctx: Map[String, String])(msg: => String): F[Unit] = macro ReflectiveLogMacros.errorCM[F]
+      override def trace(ctx: Map[String, String], t: Throwable)(msg: => String): F[Unit] =
+        macro ReflectiveLogMacros.traceCTM[F]
+      override def debug(ctx: Map[String, String], t: Throwable)(msg: => String): F[Unit] =
+        macro ReflectiveLogMacros.debugCTM[F]
+      override def info(ctx: Map[String, String], t: Throwable)(msg: => String): F[Unit] =
+        macro ReflectiveLogMacros.infoCTM[F]
+      override def warn(ctx: Map[String, String], t: Throwable)(msg: => String): F[Unit] =
+        macro ReflectiveLogMacros.warnCTM[F]
+      override def error(ctx: Map[String, String], t: Throwable)(msg: => String): F[Unit] =
+        macro ReflectiveLogMacros.errorCTM[F]
     }
 }

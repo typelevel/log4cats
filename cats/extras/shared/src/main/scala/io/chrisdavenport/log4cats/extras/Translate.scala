@@ -140,6 +140,17 @@ object Translate {
           f(logger.debug(message))
         def trace(message: => String): F[Unit] =
           f(logger.trace(message))
+
+        def trace(ctx: Map[String, String], t: Throwable)(msg: => String): F[Unit] =
+          f(logger.trace(ctx, t)(msg))
+        def debug(ctx: Map[String, String], t: Throwable)(msg: => String): F[Unit] =
+          f(logger.debug(ctx, t)(msg))
+        def info(ctx: Map[String, String], t: Throwable)(msg: => String): F[Unit] =
+          f(logger.info(ctx, t)(msg))
+        def warn(ctx: Map[String, String], t: Throwable)(msg: => String): F[Unit] =
+          f(logger.warn(ctx, t)(msg))
+        def error(ctx: Map[String, String], t: Throwable)(msg: => String): F[Unit] =
+          f(logger.error(ctx, t)(msg))
       }
 
 
@@ -177,6 +188,17 @@ object Translate {
           f(logger.debug(message))
         def trace(message: => String): F[Unit] =
           f(logger.trace(message))
+
+        def trace(ctx: Map[String, String], t: Throwable)(msg: => String): F[Unit] =
+          f(logger.trace(ctx, t)(msg))
+        def debug(ctx: Map[String, String], t: Throwable)(msg: => String): F[Unit] =
+          f(logger.debug(ctx, t)(msg))
+        def info(ctx: Map[String, String], t: Throwable)(msg: => String): F[Unit] =
+          f(logger.info(ctx, t)(msg))
+        def warn(ctx: Map[String, String], t: Throwable)(msg: => String): F[Unit] =
+          f(logger.warn(ctx, t)(msg))
+        def error(ctx: Map[String, String], t: Throwable)(msg: => String): F[Unit] =
+          f(logger.error(ctx, t)(msg))
       }
 
 }
