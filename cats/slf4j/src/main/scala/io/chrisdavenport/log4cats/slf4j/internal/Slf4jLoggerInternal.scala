@@ -4,6 +4,7 @@ import io.chrisdavenport.log4cats._
 import cats.implicits._
 import cats.effect._
 import org.slf4j.{Logger => JLogger}
+import org.slf4j.MDC
 
 private[slf4j] object Slf4jLoggerInternal {
 
@@ -17,74 +18,173 @@ private[slf4j] object Slf4jLoggerInternal {
     def apply(t: Throwable)(msg: => String): F[Unit]
   }
 
-  class IntermediateForConcretes[F[_]: Sync] extends SelfAwareStructuredLogger[F]{
-      def isTraceEnabled: F[Boolean] = true.pure[F]
-      def isDebugEnabled: F[Boolean] = true.pure[F]
-      def isInfoEnabled: F[Boolean] = true.pure[F]
-      def isWarnEnabled: F[Boolean] = true.pure[F]
-      def isErrorEnabled: F[Boolean] = true.pure[F]
-
-      private def putStrLn(s: String): F[Unit] = Sync[F].delay(println(s"$s - YOU SHOULD NEVER SEE THIS"))
-
-      override def trace(t: Throwable)(msg: => String): F[Unit] =  putStrLn("traceTM")
-      override def trace(msg: => String): F[Unit] = putStrLn("traceM")
-      override def trace(ctx: Map[String, String])(msg: => String): F[Unit] = putStrLn("traceCM")
-      override def debug(t: Throwable)(msg: => String): F[Unit] = putStrLn("debugTM")
-      override def debug(msg: => String): F[Unit] = putStrLn("debugM")
-      override def debug(ctx: Map[String, String])(msg: => String): F[Unit] = putStrLn("debugCM")
-      override def info(t: Throwable)(msg: => String): F[Unit] = putStrLn("infoTM")
-      override def info(msg: => String): F[Unit] = putStrLn("infoM")
-      override def info(ctx: Map[String, String])(msg: => String): F[Unit] =
-        putStrLn("infoCM")
-      override def warn(t: Throwable)(msg: => String): F[Unit] = putStrLn("warnTM")
-      override def warn(msg: => String): F[Unit] = putStrLn("warnM")
-      override def warn(ctx: Map[String, String])(msg: => String): F[Unit] = putStrLn("warnCM")
-      override def error(t: Throwable)(msg: => String): F[Unit] = putStrLn("errorTM")
-      override def error(msg: => String): F[Unit] = putStrLn("errorM")
-      override def error(ctx: Map[String, String])(msg: => String): F[Unit] = putStrLn("errorCM")
-      override def trace(ctx: Map[String, String], t: Throwable)(msg: => String): F[Unit] =
-        putStrLn("traceCTM")
-      override def debug(ctx: Map[String, String], t: Throwable)(msg: => String): F[Unit] =
-        putStrLn("debugCTM")
-      override def info(ctx: Map[String, String], t: Throwable)(msg: => String): F[Unit] =
-        putStrLn("infoCTM")
-      override def warn(ctx: Map[String, String], t: Throwable)(msg: => String): F[Unit] =
-        putStrLn("warnCTM")
-      override def error(ctx: Map[String, String], t: Throwable)(msg: => String): F[Unit] =
-        putStrLn("errorCTM")
-  }
-  
-  class Slf4jLogger[F[_]: Sync](val logger: JLogger) extends IntermediateForConcretes[F] {
+  final class Slf4jLogger[F[_]](val logger: JLogger)(implicit F: Sync[F]) extends SelfAwareStructuredLogger[F] {
       override def isTraceEnabled: F[Boolean] = logger.isTraceEnabled.pure[F]
       override def isDebugEnabled: F[Boolean] = logger.isDebugEnabled.pure[F]
       override def isInfoEnabled: F[Boolean] = logger.isInfoEnabled.pure[F]
       override def isWarnEnabled: F[Boolean] = logger.isWarnEnabled.pure[F]
       override def isErrorEnabled: F[Boolean] = logger.isErrorEnabled.pure[F]
 
-      override def trace(t: Throwable)(msg: => String): F[Unit] = macro ReflectiveLogMacros.traceTM[F]
-      override def trace(msg: => String): F[Unit] = macro ReflectiveLogMacros.traceM[F]
-      override def trace(ctx: Map[String, String])(msg: => String): F[Unit] = macro ReflectiveLogMacros.traceCM[F]
-      override def debug(t: Throwable)(msg: => String): F[Unit] = macro ReflectiveLogMacros.debugTM[F]
-      override def debug(msg: => String): F[Unit] = macro ReflectiveLogMacros.debugM[F]
-      override def debug(ctx: Map[String, String])(msg: => String): F[Unit] = macro ReflectiveLogMacros.traceCM[F]
-      override def info(t: Throwable)(msg: => String): F[Unit] = macro ReflectiveLogMacros.infoTM[F]
-      override def info(msg: => String): F[Unit] = macro ReflectiveLogMacros.infoM[F]
-      override def info(ctx: Map[String, String])(msg: => String): F[Unit] = macro ReflectiveLogMacros.infoCM[F]
-      override def warn(t: Throwable)(msg: => String): F[Unit] = macro ReflectiveLogMacros.warnTM[F]
-      override def warn(msg: => String): F[Unit] = macro ReflectiveLogMacros.warnM[F]
-      override def warn(ctx: Map[String, String])(msg: => String): F[Unit] = macro ReflectiveLogMacros.warnCM[F]
-      override def error(t: Throwable)(msg: => String): F[Unit] = macro ReflectiveLogMacros.errorTM[F]
-      override def error(msg: => String): F[Unit] = macro ReflectiveLogMacros.errorM[F]
-      override def error(ctx: Map[String, String])(msg: => String): F[Unit] = macro ReflectiveLogMacros.errorCM[F]
+      override def trace(t: Throwable)(msg: => String): F[Unit] = 
+        if (logger.isTraceEnabled) F.delay(logger.trace(msg, t))
+        else F.unit
+      override def trace(msg: => String): F[Unit] = 
+        if (logger.isTraceEnabled) F.delay(logger.trace(msg))
+        else F.unit
+      override def trace(ctx: Map[String, String])(msg: => String): F[Unit] = {
+        if (logger.isTraceEnabled) F.delay {
+          val backup = MDC.getCopyOfContextMap
+          try {
+            for {
+              (k, v) <- ctx
+            } MDC.put(k, v)
+            logger.trace(msg)
+          } finally {
+            if (backup eq null) MDC.clear()
+            else MDC.setContextMap(backup)
+          }
+        } else F.unit
+      }
+      override def debug(t: Throwable)(msg: => String): F[Unit] =
+        if (logger.isDebugEnabled) F.delay(logger.debug(msg, t))
+        else F.unit
+      override def debug(msg: => String): F[Unit] =
+        if (logger.isDebugEnabled) F.delay(logger.debug(msg))
+        else F.unit
+      override def debug(ctx: Map[String, String])(msg: => String): F[Unit] =
+        if (logger.isDebugEnabled) F.delay {
+          val backup = MDC.getCopyOfContextMap
+          try {
+            for {
+              (k, v) <- ctx
+            } MDC.put(k, v)
+            logger.debug(msg)
+          } finally {
+            if (backup eq null) MDC.clear()
+            else MDC.setContextMap(backup)
+          }
+        } else F.unit
+      override def info(t: Throwable)(msg: => String): F[Unit] = 
+        if (logger.isInfoEnabled) F.delay(logger.info(msg,t))
+        else F.unit
+      override def info(msg: => String): F[Unit] = 
+        if (logger.isInfoEnabled) F.delay(logger.info(msg))
+        else F.unit
+      override def info(ctx: Map[String, String])(msg: => String): F[Unit] = 
+        if (logger.isInfoEnabled) F.delay {
+          val backup = MDC.getCopyOfContextMap
+          try {
+            for {
+              (k, v) <- ctx
+            } MDC.put(k, v)
+            logger.info(msg)
+          } finally {
+            if (backup eq null) MDC.clear()
+            else MDC.setContextMap(backup)
+          }
+        } else F.unit
+      override def warn(t: Throwable)(msg: => String): F[Unit] = 
+        if (logger.isWarnEnabled) F.delay(logger.warn(msg,t))
+        else F.unit
+      override def warn(msg: => String): F[Unit] = 
+        if (logger.isWarnEnabled) F.delay(logger.warn(msg))
+        else F.unit
+      override def warn(ctx: Map[String, String])(msg: => String): F[Unit] =
+        if (logger.isWarnEnabled) F.delay {
+          val backup = MDC.getCopyOfContextMap
+          try {
+            for {
+              (k, v) <- ctx
+            } MDC.put(k, v)
+            logger.warn(msg)
+          } finally {
+            if (backup eq null) MDC.clear()
+            else MDC.setContextMap(backup)
+          }
+        } else F.unit
+      override def error(t: Throwable)(msg: => String): F[Unit] = 
+        if (logger.isErrorEnabled) F.delay(logger.error(msg,t))
+        else F.unit
+      override def error(msg: => String): F[Unit] =
+        if (logger.isErrorEnabled) F.delay(logger.error(msg))
+        else F.unit
+      override def error(ctx: Map[String, String])(msg: => String): F[Unit] = 
+        if (logger.isErrorEnabled) F.delay {
+          val backup = MDC.getCopyOfContextMap
+          try {
+            for {
+              (k, v) <- ctx
+            } MDC.put(k, v)
+            logger.error(msg)
+          } finally {
+            if (backup eq null) MDC.clear()
+            else MDC.setContextMap(backup)
+          }
+        } else F.unit
       override def trace(ctx: Map[String, String], t: Throwable)(msg: => String): F[Unit] =
-        macro ReflectiveLogMacros.traceCTM[F]
+        if (logger.isTraceEnabled) F.delay {
+          val backup = MDC.getCopyOfContextMap
+          try {
+            for {
+              (k, v) <- ctx
+            } MDC.put(k, v)
+            logger.trace(msg, t)
+          } finally {
+            if (backup eq null) MDC.clear()
+            else MDC.setContextMap(backup)
+          }
+        } else F.unit
       override def debug(ctx: Map[String, String], t: Throwable)(msg: => String): F[Unit] =
-        macro ReflectiveLogMacros.debugCTM[F]
+        if (logger.isDebugEnabled) F.delay {
+          val backup = MDC.getCopyOfContextMap
+          try {
+            for {
+              (k, v) <- ctx
+            } MDC.put(k, v)
+            logger.debug(msg, t)
+          } finally {
+            if (backup eq null) MDC.clear()
+            else MDC.setContextMap(backup)
+          }
+        } else F.unit
       override def info(ctx: Map[String, String], t: Throwable)(msg: => String): F[Unit] =
-        macro ReflectiveLogMacros.infoCTM[F]
+        if (logger.isInfoEnabled) F.delay {
+          val backup = MDC.getCopyOfContextMap
+          try {
+            for {
+              (k, v) <- ctx
+            } MDC.put(k, v)
+            logger.info(msg, t)
+          } finally {
+            if (backup eq null) MDC.clear()
+            else MDC.setContextMap(backup)
+          }
+        } else F.unit
       override def warn(ctx: Map[String, String], t: Throwable)(msg: => String): F[Unit] =
-        macro ReflectiveLogMacros.warnCTM[F]
+        if (logger.isWarnEnabled) F.delay {
+          val backup = MDC.getCopyOfContextMap
+          try {
+            for {
+              (k, v) <- ctx
+            } MDC.put(k, v)
+            logger.warn(msg, t)
+          } finally {
+            if (backup eq null) MDC.clear()
+            else MDC.setContextMap(backup)
+          }
+        } else F.unit
       override def error(ctx: Map[String, String], t: Throwable)(msg: => String): F[Unit] =
-        macro ReflectiveLogMacros.errorCTM[F]
+        if (logger.isErrorEnabled) F.delay {
+          val backup = MDC.getCopyOfContextMap
+          try {
+            for {
+              (k, v) <- ctx
+            } MDC.put(k, v)
+            logger.error(msg,t)
+          } finally {
+            if (backup eq null) MDC.clear()
+            else MDC.setContextMap(backup)
+          }
+        } else F.unit
     }
 }
