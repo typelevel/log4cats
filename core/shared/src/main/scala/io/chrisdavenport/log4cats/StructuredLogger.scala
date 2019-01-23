@@ -2,10 +2,15 @@ package io.chrisdavenport.log4cats
 
 trait StructuredLogger[F[_]] extends Logger[F] {
   def trace(ctx: Map[String,String])(msg: => String): F[Unit]
+  def trace(ctx: Map[String, String], t: Throwable)(msg: => String): F[Unit]
   def debug(ctx: Map[String, String])(msg: => String): F[Unit]
+  def debug(ctx: Map[String, String], t: Throwable)(msg: => String): F[Unit]
   def info(ctx: Map[String, String])(msg: => String): F[Unit]
+  def info(ctx: Map[String, String], t: Throwable)(msg: => String): F[Unit]
   def warn(ctx: Map[String, String])(msg: => String): F[Unit]
+  def warn(ctx: Map[String, String], t: Throwable)(msg: => String): F[Unit]
   def error(ctx: Map[String, String])(msg: => String): F[Unit]
+  def error(ctx: Map[String, String], t: Throwable)(msg: => String): F[Unit]
 }
 
 object StructuredLogger{
@@ -33,18 +38,26 @@ object StructuredLogger{
       def error(ctx: Map[String, String])(msg: => String): F[Unit] =
         sl.error(outer ++ ctx)(msg)
 
-      /** 
-       * Context Logging Is not available on throwable methods 
-       */
       def error(t: Throwable)(message: => String): F[Unit] = 
-        sl.error(t)(message)
+        sl.error(outer, t)(message)
       def warn(t: Throwable)(message: => String): F[Unit] = 
-        sl.warn(t)(message)
+        sl.warn(outer, t)(message)
       def info(t: Throwable)(message: => String): F[Unit] = 
-        sl.info(t)(message)
+        sl.info(outer, t)(message)
       def debug(t: Throwable)(message: => String): F[Unit] = 
-        sl.debug(t)(message)
+        sl.debug(outer, t)(message)
       def trace(t: Throwable)(message: => String): F[Unit] =
-        sl.trace(t)(message)
+        sl.trace(outer, t)(message)
+
+      def error(ctx: Map[String, String],t: Throwable)(message: => String) : F[Unit] =
+        sl.error(outer ++ ctx, t)(message)
+      def warn(ctx: Map[String, String], t: Throwable)(message: => String) : F[Unit] =
+        sl.warn(outer ++ ctx, t)(message)
+      def info(ctx: Map[String, String], t: Throwable)(message: => String) : F[Unit] =
+        sl.info(outer ++ ctx, t)(message)
+      def debug(ctx: Map[String, String], t: Throwable)(message: => String) : F[Unit] =
+        sl.debug(outer ++ ctx,t)(message)
+      def trace(ctx: Map[String, String], t: Throwable)(message: => String) : F[Unit] =
+        sl.trace(outer ++ ctx, t)(message)
     }
 }
