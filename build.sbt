@@ -131,11 +131,6 @@ lazy val contributors = Seq(
   "lorandszakacs"        -> "Loránd Szakács"
 )
 
-// check for library updates whenever the project is [re]load
-onLoad in Global := { s =>
-  "dependencyUpdates" :: s
-}
-
 lazy val commonSettings = Seq(
   organization := "io.chrisdavenport",
 
