@@ -1,7 +1,6 @@
 package io.chrisdavenport.log4cats.slf4j.internal
 
 import io.chrisdavenport.log4cats._
-import cats._
 import cats.implicits._
 import cats.effect._
 import org.slf4j.{Logger => JLogger}
@@ -18,38 +17,41 @@ private[slf4j] object Slf4jLoggerInternal {
     def apply(t: Throwable)(msg: => String): F[Unit]
   }
 
-  class IntermediateForConcretes[F[_]: Applicative] extends SelfAwareStructuredLogger[F]{
+  class IntermediateForConcretes[F[_]: Sync] extends SelfAwareStructuredLogger[F]{
       def isTraceEnabled: F[Boolean] = true.pure[F]
       def isDebugEnabled: F[Boolean] = true.pure[F]
       def isInfoEnabled: F[Boolean] = true.pure[F]
       def isWarnEnabled: F[Boolean] = true.pure[F]
       def isErrorEnabled: F[Boolean] = true.pure[F]
 
-      override def trace(t: Throwable)(msg: => String): F[Unit] =  Applicative[F].unit
-      override def trace(msg: => String): F[Unit] = Applicative[F].unit
-      override def trace(ctx: Map[String, String])(msg: => String): F[Unit] = Applicative[F].unit
-      override def debug(t: Throwable)(msg: => String): F[Unit] = Applicative[F].unit
-      override def debug(msg: => String): F[Unit] = Applicative[F].unit
-      override def debug(ctx: Map[String, String])(msg: => String): F[Unit] = Applicative[F].unit
-      override def info(t: Throwable)(msg: => String): F[Unit] = Applicative[F].unit
-      override def info(msg: => String): F[Unit] = Applicative[F].unit
-      override def info(ctx: Map[String, String])(msg: => String): F[Unit] = Applicative[F].unit
-      override def warn(t: Throwable)(msg: => String): F[Unit] = Applicative[F].unit
-      override def warn(msg: => String): F[Unit] = Applicative[F].unit
-      override def warn(ctx: Map[String, String])(msg: => String): F[Unit] = Applicative[F].unit
-      override def error(t: Throwable)(msg: => String): F[Unit] = Applicative[F].unit
-      override def error(msg: => String): F[Unit] = Applicative[F].unit
-      override def error(ctx: Map[String, String])(msg: => String): F[Unit] = Applicative[F].unit
+      private def putStrLn(s: String): F[Unit] = Sync[F].delay(println(s"$s - YOU SHOULD NEVER SEE THIS"))
+
+      override def trace(t: Throwable)(msg: => String): F[Unit] =  putStrLn("traceTM")
+      override def trace(msg: => String): F[Unit] = putStrLn("traceM")
+      override def trace(ctx: Map[String, String])(msg: => String): F[Unit] = putStrLn("traceCM")
+      override def debug(t: Throwable)(msg: => String): F[Unit] = putStrLn("debugTM")
+      override def debug(msg: => String): F[Unit] = putStrLn("debugM")
+      override def debug(ctx: Map[String, String])(msg: => String): F[Unit] = putStrLn("debugCM")
+      override def info(t: Throwable)(msg: => String): F[Unit] = putStrLn("infoTM")
+      override def info(msg: => String): F[Unit] = putStrLn("infoM")
+      override def info(ctx: Map[String, String])(msg: => String): F[Unit] =
+        putStrLn("infoCM")
+      override def warn(t: Throwable)(msg: => String): F[Unit] = putStrLn("warnTM")
+      override def warn(msg: => String): F[Unit] = putStrLn("warnM")
+      override def warn(ctx: Map[String, String])(msg: => String): F[Unit] = putStrLn("warnCM")
+      override def error(t: Throwable)(msg: => String): F[Unit] = putStrLn("errorTM")
+      override def error(msg: => String): F[Unit] = putStrLn("errorM")
+      override def error(ctx: Map[String, String])(msg: => String): F[Unit] = putStrLn("errorCM")
       override def trace(ctx: Map[String, String], t: Throwable)(msg: => String): F[Unit] =
-        Applicative[F].unit
+        putStrLn("traceCTM")
       override def debug(ctx: Map[String, String], t: Throwable)(msg: => String): F[Unit] =
-        Applicative[F].unit
+        putStrLn("debugCTM")
       override def info(ctx: Map[String, String], t: Throwable)(msg: => String): F[Unit] =
-        Applicative[F].unit
+        putStrLn("infoCTM")
       override def warn(ctx: Map[String, String], t: Throwable)(msg: => String): F[Unit] =
-        Applicative[F].unit
+        putStrLn("warnCTM")
       override def error(ctx: Map[String, String], t: Throwable)(msg: => String): F[Unit] =
-        Applicative[F].unit
+        putStrLn("errorCTM")
   }
   
   class Slf4jLogger[F[_]: Sync](val logger: JLogger) extends IntermediateForConcretes[F] {
