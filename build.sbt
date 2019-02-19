@@ -92,7 +92,7 @@ lazy val slf4j = project.in(file("cats/slf4j"))
   .settings(
     name := "log4cats-slf4j",
     libraryDependencies ++= Seq(
-      "org.slf4j" % "slf4j-api" % "1.7.25"
+      "org.slf4j" % "slf4j-api" % "1.7.26"
     )
   )
 
