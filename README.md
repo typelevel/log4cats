@@ -32,7 +32,7 @@ import cats.implicits._
 
 object MyThing {
   // Impure But What 90% of Folks I know do with log4s
-  implicit def unsafeLogger[F[_]: Sync] = Slf4jLogger.unsafeCreate[F]
+  implicit def unsafeLogger[F[_]: Sync] = Slf4jLogger.getLogger[F]
 
   // Arbitrary Local Function Declaration
   def doSomething[F[_]: Sync]: F[Unit] =

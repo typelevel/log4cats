@@ -25,10 +25,9 @@ private[slf4j] object Slf4jLoggerInternal {
       override def isWarnEnabled: F[Boolean] = F.delay(logger.isWarnEnabled)
       override def isErrorEnabled: F[Boolean] = F.delay(logger.isErrorEnabled)
 
-      override def trace(t: Throwable)(msg: => String): F[Unit] = F.suspend{
+      override def trace(t: Throwable)(msg: => String): F[Unit] =
         isTraceEnabled
-        .ifM(F.delay(logger.trace(msg, t)), F.unit)
-      }
+          .ifM(F.delay(logger.trace(msg, t)), F.unit)
       override def trace(msg: => String): F[Unit] = 
         isTraceEnabled
           .ifM(F.delay(logger.trace(msg)), F.unit)
