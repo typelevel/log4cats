@@ -17,7 +17,7 @@ libraryDependencies ++= Seq(
   "io.chrisdavenport" %% "log4cats-extras"  % "<version>",  // Cats Extras - mapK, Writer, etc.
   "io.chrisdavenport" %% "log4cats-slf4j"   % "<version>",  // Direct Slf4j Support - Recommended
   "io.chrisdavenport" %% "log4cats-log4s"   % "<version>",  // For Log4s Support
-  "io.chrisdavenport" %% "log4cats-scribe"  % "<version>",   // For Scribe Support
+  "io.chrisdavenport" %% "log4cats-scribe"  % "<version>",  // For Scribe Support
   "io.chrisdavenport" %% "log4scalaz-log4s" % "<version>"   // Scalaz Log4s Support
 )
 ```
