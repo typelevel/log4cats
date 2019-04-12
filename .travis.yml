@@ -17,6 +17,7 @@ cache:
 
 jdk:
   - oraclejdk8
+  - openjdk12
 
 before_install:
   - export PATH=${PATH}:./vendor/bundle
