@@ -15,7 +15,7 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- * 
+ *
  * Modifications:
  * - Major Rework
  */
@@ -58,8 +58,8 @@ private[slf4j] class GetLoggerMacros(val c: blackbox.Context) {
     assert(cls.isModule || cls.isClass, "Enclosing class is always either a module or a class")
 
     def loggerByParam(param: c.Tree) = {
-      val unsafeCreate = q"_root_.io.chrisdavenport.log4cats.slf4j.Slf4jLogger.getLoggerFromSlf4j(_root_.org.slf4j.LoggerFactory.getLogger(...${List(
-        param)}))($f)"
+      val unsafeCreate =
+        q"_root_.io.chrisdavenport.log4cats.slf4j.Slf4jLogger.getLoggerFromSlf4j(_root_.org.slf4j.LoggerFactory.getLogger(...${List(param)}))($f)"
       if (delayed)
         q"_root_.cats.effect.Sync.apply($f).delay(...$unsafeCreate)"
       else

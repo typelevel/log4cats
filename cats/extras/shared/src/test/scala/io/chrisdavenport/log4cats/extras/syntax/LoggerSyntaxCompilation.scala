@@ -12,16 +12,16 @@ object LoggerSyntaxCompilation {
   def messageLoggerSyntaxMapK[F[_], G[_]](l: MessageLogger[F])(f: F ~> G) =
     l.mapK(f)
 
-  def loggerSyntaxMapK[F[_], G[_]](l: Logger[F])(f: F ~> G) = 
+  def loggerSyntaxMapK[F[_], G[_]](l: Logger[F])(f: F ~> G) =
     l.mapK(f)
 
-  def selfAwareLoggerSyntaxMapK[F[_], G[_]](l: SelfAwareLogger[F])(f: F ~> G) = 
+  def selfAwareLoggerSyntaxMapK[F[_], G[_]](l: SelfAwareLogger[F])(f: F ~> G) =
     l.mapK(f)
 
   def structuredLoggerMapK[F[_], G[_]](l: StructuredLogger[F])(f: F ~> G) =
     l.mapK(f)
 
-  def selfAwareStructuredLoggerMapK[F[_], G[_]](l: SelfAwareStructuredLogger[F])(f: F ~> G) = 
+  def selfAwareStructuredLoggerMapK[F[_], G[_]](l: SelfAwareStructuredLogger[F])(f: F ~> G) =
     l.mapK(f)
 
 }

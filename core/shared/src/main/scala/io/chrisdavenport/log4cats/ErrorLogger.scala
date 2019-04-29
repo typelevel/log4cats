@@ -1,6 +1,6 @@
 package io.chrisdavenport.log4cats
 
-trait ErrorLogger[F[_]]{
+trait ErrorLogger[F[_]] {
   def error(t: Throwable)(message: => String): F[Unit]
   def warn(t: Throwable)(message: => String): F[Unit]
   def info(t: Throwable)(message: => String): F[Unit]

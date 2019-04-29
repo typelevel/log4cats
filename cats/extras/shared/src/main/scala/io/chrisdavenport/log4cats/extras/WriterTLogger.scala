@@ -6,12 +6,12 @@ import cats.implicits._
 import io.chrisdavenport.log4cats._
 
 /**
-  * >>> WARNING READ BEFORE USAGE! <<<
-  * This logger will NOT log anything if `F` fails!
-  *
-  * Running the `WriterT` instance will yield a value of type `F[(G[LogMessage], A)]`.
-  * As a result, the logged messages can be materialized if and only `F` succeeds.
-  */
+ * >>> WARNING READ BEFORE USAGE! <<<
+ * This logger will NOT log anything if `F` fails!
+ *
+ * Running the `WriterT` instance will yield a value of type `F[(G[LogMessage], A)]`.
+ * As a result, the logged messages can be materialized if and only `F` succeeds.
+ */
 object WriterTLogger {
   def apply[F[_]: Applicative, G[_]: Alternative](
       traceEnabled: Boolean = true,
@@ -59,12 +59,14 @@ object WriterTLogger {
           enabled: Boolean,
           level: LogLevel,
           t: Option[Throwable],
-          message: => String): WriterT[F, G[LogMessage], Unit] =
+          message: => String
+      ): WriterT[F, G[LogMessage], Unit] =
         if (enabled)
           WriterT.tell[F, G[LogMessage]](Applicative[G].pure(LogMessage(level, t, message)))
         else WriterT.value[F, G[LogMessage], Unit](())
 
-      private implicit val monoidGLogMessage: Monoid[G[LogMessage]] = Alternative[G].algebra[LogMessage]
+      private implicit val monoidGLogMessage: Monoid[G[LogMessage]] =
+        Alternative[G].algebra[LogMessage]
     }
 
   def run[F[_]: Logger: Monad, G[_]: Foldable]: WriterT[F, G[LogMessage], ?] ~> F =

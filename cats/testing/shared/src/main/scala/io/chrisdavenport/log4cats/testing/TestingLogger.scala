@@ -25,14 +25,14 @@ object TestingLogger {
   final case class ERROR(message: String, throwOpt: Option[Throwable]) extends LogMessage
 
   def impl[F[_]: Sync](
-    traceEnabled: Boolean = true,
-    debugEnabled: Boolean = true,
-    infoEnabled: Boolean = true,
-    warnEnabled: Boolean = true,
-    errorEnabled: Boolean = true
+      traceEnabled: Boolean = true,
+      debugEnabled: Boolean = true,
+      infoEnabled: Boolean = true,
+      warnEnabled: Boolean = true,
+      errorEnabled: Boolean = true
   ): TestingLogger[F] = {
     val ar = new AtomicReference(Vector.empty[LogMessage])
-    def appendLogMessage(m: LogMessage): F[Unit] = Sync[F].delay{
+    def appendLogMessage(m: LogMessage): F[Unit] = Sync[F].delay {
       @tailrec
       def mod(): Unit = {
         val c = ar.get
@@ -43,7 +43,7 @@ object TestingLogger {
       mod()
     }
 
-    new TestingLogger[F]{
+    new TestingLogger[F] {
       def logged: F[Vector[LogMessage]] = Sync[F].delay(ar.get)
 
       def isTraceEnabled: F[Boolean] = Sync[F].pure(traceEnabled)
@@ -54,25 +54,25 @@ object TestingLogger {
 
       def error(message: => String): F[Unit] =
         if (errorEnabled) appendLogMessage(ERROR(message, None)) else Sync[F].pure(())
-      def error(t: Throwable)(message: => String): F[Unit] = 
+      def error(t: Throwable)(message: => String): F[Unit] =
         if (errorEnabled) appendLogMessage(ERROR(message, t.some)) else Sync[F].pure(())
 
-      def warn(message: => String): F[Unit] = 
+      def warn(message: => String): F[Unit] =
         if (warnEnabled) appendLogMessage(WARN(message, None)) else Sync[F].pure(())
-      def warn(t: Throwable)(message: => String): F[Unit] = 
+      def warn(t: Throwable)(message: => String): F[Unit] =
         if (warnEnabled) appendLogMessage(WARN(message, t.some)) else Sync[F].pure(())
 
-      def info(message: => String): F[Unit] = 
+      def info(message: => String): F[Unit] =
         if (infoEnabled) appendLogMessage(INFO(message, None)) else Sync[F].pure(())
-      def info(t: Throwable)(message: => String): F[Unit] = 
+      def info(t: Throwable)(message: => String): F[Unit] =
         if (infoEnabled) appendLogMessage(INFO(message, t.some)) else Sync[F].pure(())
 
-      def debug(message: => String): F[Unit] = 
+      def debug(message: => String): F[Unit] =
         if (debugEnabled) appendLogMessage(DEBUG(message, None)) else Sync[F].pure(())
-      def debug(t: Throwable)(message: => String): F[Unit] = 
+      def debug(t: Throwable)(message: => String): F[Unit] =
         if (debugEnabled) appendLogMessage(DEBUG(message, t.some)) else Sync[F].pure(())
 
-      def trace(message: => String): F[Unit] = 
+      def trace(message: => String): F[Unit] =
         if (traceEnabled) appendLogMessage(TRACE(message, None)) else Sync[F].pure(())
       def trace(t: Throwable)(message: => String): F[Unit] =
         if (traceEnabled) appendLogMessage(TRACE(message, t.some)) else Sync[F].pure(())
