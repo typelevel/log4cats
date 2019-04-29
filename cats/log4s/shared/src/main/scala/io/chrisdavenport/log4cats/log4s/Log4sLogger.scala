@@ -11,10 +11,10 @@ object Log4sLogger {
   def createByClass[F[_]: Sync](clazz: Class[_]) = fromLog4s[F](org.log4s.getLogger(clazz))
 
   def fromLog4s[F[_]: Sync](logger: Base): SelfAwareLogger[F] = new SelfAwareLogger[F] {
-    
+
     override def isTraceEnabled: F[Boolean] =
       Sync[F].delay(logger.isTraceEnabled)
-    override def isDebugEnabled: F[Boolean] = 
+    override def isDebugEnabled: F[Boolean] =
       Sync[F].delay(logger.isDebugEnabled)
     override def isInfoEnabled: F[Boolean] =
       Sync[F].delay(logger.isInfoEnabled)
@@ -25,7 +25,7 @@ object Log4sLogger {
 
     override def error(message: => String): F[Unit] =
       Sync[F].delay(logger.error(message))
-    override def error(t: Throwable)(message: => String): F[Unit] = 
+    override def error(t: Throwable)(message: => String): F[Unit] =
       Sync[F].delay(logger.error(t)(message))
 
     override def warn(message: => String): F[Unit] =
@@ -35,17 +35,17 @@ object Log4sLogger {
 
     override def info(message: => String): F[Unit] =
       Sync[F].delay(logger.info(message))
-    override def info(t: Throwable)(message: => String): F[Unit] = 
+    override def info(t: Throwable)(message: => String): F[Unit] =
       Sync[F].delay(logger.info(t)(message))
 
-    override def debug(message: => String): F[Unit] = 
+    override def debug(message: => String): F[Unit] =
       Sync[F].delay(logger.debug(message))
     override def debug(t: Throwable)(message: => String): F[Unit] =
       Sync[F].delay(logger.debug(t)(message))
 
-    override def trace(message: => String): F[Unit] = 
+    override def trace(message: => String): F[Unit] =
       Sync[F].delay(logger.trace(message))
-    override def trace(t: Throwable)(message: => String): F[Unit] = 
+    override def trace(t: Throwable)(message: => String): F[Unit] =
       Sync[F].delay(logger.trace(t)(message))
   }
 }

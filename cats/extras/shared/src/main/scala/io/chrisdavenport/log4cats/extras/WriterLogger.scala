@@ -8,15 +8,15 @@ import io.chrisdavenport.log4cats._
 object WriterLogger {
 
   def apply[G[_]: Alternative](
-    traceEnabled: Boolean = true,
-    debugEnabled: Boolean = true,
-    infoEnabled: Boolean = true,
-    warnEnabled: Boolean = true,
-    errorEnabled: Boolean = true
-  ): SelfAwareLogger[Writer[G[LogMessage], ?]] =  {
+      traceEnabled: Boolean = true,
+      debugEnabled: Boolean = true,
+      infoEnabled: Boolean = true,
+      warnEnabled: Boolean = true,
+      errorEnabled: Boolean = true
+  ): SelfAwareLogger[Writer[G[LogMessage], ?]] = {
     implicit val monoidGLogMessage = Alternative[G].algebra[LogMessage]
-    new SelfAwareLogger[Writer[G[LogMessage], ?]]{
-      def isTraceEnabled: Writer[G[LogMessage], Boolean] = 
+    new SelfAwareLogger[Writer[G[LogMessage], ?]] {
+      def isTraceEnabled: Writer[G[LogMessage], Boolean] =
         Writer.value[G[LogMessage], Boolean](traceEnabled)
       def isDebugEnabled: Writer[G[LogMessage], Boolean] =
         Writer.value[G[LogMessage], Boolean](debugEnabled)
@@ -28,33 +28,41 @@ object WriterLogger {
         Writer.value[G[LogMessage], Boolean](errorEnabled)
 
       def debug(t: Throwable)(message: => String): Writer[G[LogMessage], Unit] =
-        if (debugEnabled) Writer.tell(Alternative[G].pure(LogMessage(LogLevel.Debug, t.some, message)))
+        if (debugEnabled)
+          Writer.tell(Alternative[G].pure(LogMessage(LogLevel.Debug, t.some, message)))
         else Writer.value[G[LogMessage], Unit](())
-      def error(t: Throwable)(message: => String): Writer[G[LogMessage], Unit] = 
-        if (errorEnabled) Writer.tell(Alternative[G].pure(LogMessage(LogLevel.Error, t.some, message)))
+      def error(t: Throwable)(message: => String): Writer[G[LogMessage], Unit] =
+        if (errorEnabled)
+          Writer.tell(Alternative[G].pure(LogMessage(LogLevel.Error, t.some, message)))
         else Writer.value[G[LogMessage], Unit](())
       def info(t: Throwable)(message: => String): Writer[G[LogMessage], Unit] =
-        if (infoEnabled) Writer.tell(Alternative[G].pure(LogMessage(LogLevel.Info, t.some, message)))
+        if (infoEnabled)
+          Writer.tell(Alternative[G].pure(LogMessage(LogLevel.Info, t.some, message)))
         else Writer.value[G[LogMessage], Unit](())
-      def trace(t: Throwable)(message: => String): Writer[G[LogMessage], Unit] = 
-        if (traceEnabled) Writer.tell(Alternative[G].pure(LogMessage(LogLevel.Trace, t.some, message)))
+      def trace(t: Throwable)(message: => String): Writer[G[LogMessage], Unit] =
+        if (traceEnabled)
+          Writer.tell(Alternative[G].pure(LogMessage(LogLevel.Trace, t.some, message)))
         else Writer.value[G[LogMessage], Unit](())
-      def warn(t: Throwable)(message: => String): Writer[G[LogMessage], Unit] = 
-        if (warnEnabled) Writer.tell(Alternative[G].pure(LogMessage(LogLevel.Warn, t.some, message)))
+      def warn(t: Throwable)(message: => String): Writer[G[LogMessage], Unit] =
+        if (warnEnabled)
+          Writer.tell(Alternative[G].pure(LogMessage(LogLevel.Warn, t.some, message)))
         else Writer.value[G[LogMessage], Unit](())
-      def debug(message: => String): Writer[G[LogMessage], Unit]  = 
-        if (debugEnabled) Writer.tell(Alternative[G].pure(LogMessage(LogLevel.Debug, None, message)))
+      def debug(message: => String): Writer[G[LogMessage], Unit] =
+        if (debugEnabled)
+          Writer.tell(Alternative[G].pure(LogMessage(LogLevel.Debug, None, message)))
         else Writer.value[G[LogMessage], Unit](())
-      def error(message: => String): Writer[G[LogMessage], Unit]  = 
-        if (errorEnabled) Writer.tell(Alternative[G].pure(LogMessage(LogLevel.Error, None, message)))
+      def error(message: => String): Writer[G[LogMessage], Unit] =
+        if (errorEnabled)
+          Writer.tell(Alternative[G].pure(LogMessage(LogLevel.Error, None, message)))
         else Writer.value[G[LogMessage], Unit](())
-      def info(message: => String): Writer[G[LogMessage], Unit] = 
+      def info(message: => String): Writer[G[LogMessage], Unit] =
         if (infoEnabled) Writer.tell(Alternative[G].pure(LogMessage(LogLevel.Info, None, message)))
         else Writer.value[G[LogMessage], Unit](())
-      def trace(message: => String): Writer[G[LogMessage], Unit] = 
-        if (traceEnabled) Writer.tell(Alternative[G].pure(LogMessage(LogLevel.Trace, None, message)))
+      def trace(message: => String): Writer[G[LogMessage], Unit] =
+        if (traceEnabled)
+          Writer.tell(Alternative[G].pure(LogMessage(LogLevel.Trace, None, message)))
         else Writer.value[G[LogMessage], Unit](())
-      def warn(message: => String): Writer[G[LogMessage], Unit] = 
+      def warn(message: => String): Writer[G[LogMessage], Unit] =
         if (warnEnabled) Writer.tell(Alternative[G].pure(LogMessage(LogLevel.Warn, None, message)))
         else Writer.value[G[LogMessage], Unit](())
     }
@@ -63,9 +71,9 @@ object WriterLogger {
   def run[F[_]: Logger: Applicative, G[_]: Foldable]: Writer[G[LogMessage], ?] ~> F =
     new ~>[Writer[G[LogMessage], ?], F] {
       def logMessage(logMessage: LogMessage): F[Unit] = logMessage match {
-        case LogMessage(LogLevel.Error, Some(t), m) => 
+        case LogMessage(LogLevel.Error, Some(t), m) =>
           Logger[F].error(t)(m)
-        case LogMessage(LogLevel.Error, None, m) => 
+        case LogMessage(LogLevel.Error, None, m) =>
           Logger[F].error(m)
         case LogMessage(LogLevel.Warn, Some(t), m) =>
           Logger[F].warn(t)(m)
