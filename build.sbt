@@ -105,7 +105,7 @@ lazy val scribe = crossProject(JSPlatform, JVMPlatform).in(file("cats/scribe"))
   .settings(
     name := "log4cats-scribe",
     libraryDependencies ++= Seq(
-      "com.outr" %%% "scribe" % "2.7.2"
+      "com.outr" %%% "scribe" % "2.7.3"
     )
   )
 
