@@ -12,15 +12,10 @@ lazy val log4cats = project.in(file("."))
     testingJS,
     noopJVM,
     noopJS,
-    scribeJVM,
-    scribeJS,
     slf4j,
-    log4sJVM,
-    log4sJS,
     extrasJVM,
     extrasJS,
-    docs,
-    `scalaz-log4s`
+    docs
   )
   .settings(noPublishSettings)
   .settings(commonSettings, releaseSettings)
@@ -37,7 +32,6 @@ lazy val core = crossProject(JSPlatform, JVMPlatform).in(file("core"))
   .settings(
     name := "log4cats-core"
   )
-
 lazy val coreJVM = core.jvm
 lazy val coreJS  = core.js
 
@@ -48,7 +42,6 @@ lazy val extras = crossProject(JSPlatform, JVMPlatform).in(file("cats/extras"))
   .settings(
     name := "log4cats-extras"
   )
-
 lazy val extrasJVM = extras.jvm
 lazy val extrasJS  = extras.js
 
@@ -59,7 +52,6 @@ lazy val testing = crossProject(JSPlatform, JVMPlatform).in(file("cats/testing")
   .settings(
     name := "log4cats-testing"
   )
-
 lazy val testingJVM = testing.jvm
 lazy val testingJS = testing.js
 
@@ -72,19 +64,8 @@ lazy val noop = crossProject(JSPlatform, JVMPlatform).in(file("cats/noop"))
       "org.typelevel"               %%% "cats-core"                  % catsV,
     )
   )
-
 lazy val noopJVM = noop.jvm
 lazy val noopJS = noop.js
-
-lazy val log4s = crossProject(JSPlatform, JVMPlatform).in(file("cats/log4s"))
-  .settings(commonSettings, releaseSettings, mimaSettings, catsSettings)
-  .dependsOn(core)
-  .settings(
-    name := "log4cats-log4s",
-    libraryDependencies ++= Seq(
-      "org.log4s"                   %%% "log4s"                      % log4sV
-    )
-  )
 
 lazy val slf4j = project.in(file("cats/slf4j"))
   .settings(commonSettings, releaseSettings, mimaSettings, catsSettings)
@@ -93,35 +74,6 @@ lazy val slf4j = project.in(file("cats/slf4j"))
     name := "log4cats-slf4j",
     libraryDependencies ++= Seq(
       "org.slf4j" % "slf4j-api" % "1.7.26"
-    )
-  )
-
-lazy val log4sJVM = log4s.jvm
-lazy val log4sJS = log4s.js
-
-lazy val scribe = crossProject(JSPlatform, JVMPlatform).in(file("cats/scribe"))
-  .settings(commonSettings, releaseSettings, mimaSettings, catsSettings)
-  .dependsOn(core)
-  .settings(
-    name := "log4cats-scribe",
-    libraryDependencies ++= Seq(
-      "com.outr" %%% "scribe" % "2.7.2"
-    )
-  )
-
-lazy val scribeJVM = scribe.jvm
-lazy val scribeJS = scribe.js
-
-// Scalaz Projects
-
-lazy val `scalaz-log4s` = project
-  .in(file("scalaz/log4s"))
-  .settings(commonSettings, releaseSettings, mimaSettings, scalazSettings)
-  .dependsOn(coreJVM)
-  .settings(
-    name := "log4scalaz-log4s",
-    libraryDependencies ++= Seq(
-      "org.log4s"                   %%% "log4s"                      % log4sV
     )
   )
 
@@ -151,10 +103,6 @@ lazy val catsSettings = Seq(
     "org.typelevel"               %%% "cats-core"                  % catsV,
     "org.typelevel"               %%% "cats-effect"                % catsEffectV
   )
-)
-
-lazy val scalazSettings = Seq(
-  libraryDependencies += "org.scalaz" %% "scalaz-zio" % "0.6.3"
 )
 
 lazy val releaseSettings = {
