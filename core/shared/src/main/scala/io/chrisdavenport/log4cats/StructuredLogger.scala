@@ -13,7 +13,7 @@ trait StructuredLogger[F[_]] extends Logger[F] {
   def warn(ctx: Map[String, String], t: Throwable)(msg: => String): F[Unit]
   def error(ctx: Map[String, String])(msg: => String): F[Unit]
   def error(ctx: Map[String, String], t: Throwable)(msg: => String): F[Unit]
-  override def mapK[G[_]](fk: F ~> G): StructuredLogger[G] = 
+  override def mapK[G[_]](fk: F ~> G): StructuredLogger[G] =
     StructuredLogger.mapK(fk)(this)
 }
 
@@ -65,7 +65,6 @@ object StructuredLogger {
     def trace(ctx: Map[String, String], t: Throwable)(message: => String): F[Unit] =
       sl.trace(outer ++ ctx, t)(message)
   }
-
 
   private def mapK[G[_], F[_]](f: G ~> F)(logger: StructuredLogger[G]): StructuredLogger[F] =
     new StructuredLogger[F] {

@@ -8,7 +8,7 @@ trait MessageLogger[F[_]] {
   def info(message: => String): F[Unit]
   def debug(message: => String): F[Unit]
   def trace(message: => String): F[Unit]
-  def mapK[G[_]](fk: F ~> G): MessageLogger[G] = 
+  def mapK[G[_]](fk: F ~> G): MessageLogger[G] =
     MessageLogger.mapK(fk)(this)
 }
 

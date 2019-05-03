@@ -3,7 +3,7 @@ package io.chrisdavenport.log4cats
 import cats._
 
 trait SelfAwareStructuredLogger[F[_]] extends SelfAwareLogger[F] with StructuredLogger[F] {
-  override def mapK[G[_]](fk: F ~> G): SelfAwareStructuredLogger[G] = 
+  override def mapK[G[_]](fk: F ~> G): SelfAwareStructuredLogger[G] =
     SelfAwareStructuredLogger.mapK(fk)(this)
 }
 
@@ -63,7 +63,6 @@ object SelfAwareStructuredLogger {
     def trace(ctx: Map[String, String], t: Throwable)(message: => String): F[Unit] =
       sl.trace(outer ++ ctx, t)(message)
   }
-
 
   private def mapK[G[_], F[_]](
       f: G ~> F

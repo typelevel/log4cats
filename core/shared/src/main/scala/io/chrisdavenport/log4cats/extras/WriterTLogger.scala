@@ -77,7 +77,7 @@ object WriterTLogger {
           case LogMessage(LogLevel.Trace, None, m) => l.trace(m)
 
           case LogMessage(LogLevel.Debug, Some(t), m) => l.debug(t)(m)
-          case LogMessage(LogLevel.Debug, None, m) =>l.debug(m)
+          case LogMessage(LogLevel.Debug, None, m) => l.debug(m)
 
           case LogMessage(LogLevel.Info, Some(t), m) => l.info(t)(m)
           case LogMessage(LogLevel.Info, None, m) => l.info(m)
