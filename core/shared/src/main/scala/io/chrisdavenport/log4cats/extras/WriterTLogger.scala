@@ -69,24 +69,24 @@ object WriterTLogger {
         Alternative[G].algebra[LogMessage]
     }
 
-  def run[F[_]: Logger: Monad, G[_]: Foldable]: WriterT[F, G[LogMessage], ?] ~> F =
+  def run[F[_]: Monad, G[_]: Foldable](l: Logger[F]): WriterT[F, G[LogMessage], ?] ~> F =
     new ~>[WriterT[F, G[LogMessage], ?], F] {
       override def apply[A](fa: WriterT[F, G[LogMessage], A]): F[A] = {
         def logMessage(logMessage: LogMessage): F[Unit] = logMessage match {
-          case LogMessage(LogLevel.Trace, Some(t), m) => Logger[F].trace(t)(m)
-          case LogMessage(LogLevel.Trace, None, m) => Logger[F].trace(m)
+          case LogMessage(LogLevel.Trace, Some(t), m) => l.trace(t)(m)
+          case LogMessage(LogLevel.Trace, None, m) => l.trace(m)
 
-          case LogMessage(LogLevel.Debug, Some(t), m) => Logger[F].debug(t)(m)
-          case LogMessage(LogLevel.Debug, None, m) => Logger[F].debug(m)
+          case LogMessage(LogLevel.Debug, Some(t), m) => l.debug(t)(m)
+          case LogMessage(LogLevel.Debug, None, m) => l.debug(m)
 
-          case LogMessage(LogLevel.Info, Some(t), m) => Logger[F].info(t)(m)
-          case LogMessage(LogLevel.Info, None, m) => Logger[F].info(m)
+          case LogMessage(LogLevel.Info, Some(t), m) => l.info(t)(m)
+          case LogMessage(LogLevel.Info, None, m) => l.info(m)
 
-          case LogMessage(LogLevel.Warn, Some(t), m) => Logger[F].warn(t)(m)
-          case LogMessage(LogLevel.Warn, None, m) => Logger[F].warn(m)
+          case LogMessage(LogLevel.Warn, Some(t), m) => l.warn(t)(m)
+          case LogMessage(LogLevel.Warn, None, m) => l.warn(m)
 
-          case LogMessage(LogLevel.Error, Some(t), m) => Logger[F].error(t)(m)
-          case LogMessage(LogLevel.Error, None, m) => Logger[F].error(m)
+          case LogMessage(LogLevel.Error, Some(t), m) => l.error(t)(m)
+          case LogMessage(LogLevel.Error, None, m) => l.error(m)
         }
 
         fa.run.flatMap {

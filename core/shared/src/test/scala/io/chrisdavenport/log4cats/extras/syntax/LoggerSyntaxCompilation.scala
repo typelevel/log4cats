@@ -2,7 +2,6 @@ package io.chrisdavenport.log4cats.extras.syntax
 
 import cats._
 import io.chrisdavenport.log4cats._
-import io.chrisdavenport.log4cats.extras.implicits._
 
 object LoggerSyntaxCompilation {
 
