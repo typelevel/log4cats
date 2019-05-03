@@ -14,11 +14,7 @@ To use log4cats in an existing SBT project with Scala 2.11 or a later version, a
 ```scala
 libraryDependencies ++= Seq(
   "io.chrisdavenport" %% "log4cats-core"    % "<version>",  // Only if you want to Support Any Backend
-  "io.chrisdavenport" %% "log4cats-extras"  % "<version>",  // Cats Extras - mapK, Writer, etc.
   "io.chrisdavenport" %% "log4cats-slf4j"   % "<version>",  // Direct Slf4j Support - Recommended
-  "io.chrisdavenport" %% "log4cats-log4s"   % "<version>",  // For Log4s Support
-  "io.chrisdavenport" %% "log4cats-scribe"  % "<version>",  // For Scribe Support
-  "io.chrisdavenport" %% "log4scalaz-log4s" % "<version>"   // Scalaz Log4s Support
 )
 ```
 

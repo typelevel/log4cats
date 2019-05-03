@@ -1,7 +1,7 @@
 import sbtcrossproject.{crossProject, CrossType}
 val catsV = "1.6.0"
 val catsEffectV = "1.3.0"
-val log4sV = "1.7.0"
+val slf4jV = "1.7.26"
 val specs2V = "4.5.1"
 
 lazy val log4cats = project.in(file("."))
@@ -13,8 +13,6 @@ lazy val log4cats = project.in(file("."))
     noopJVM,
     noopJS,
     slf4j,
-    extrasJVM,
-    extrasJS,
     docs
   )
   .settings(noPublishSettings)
@@ -30,50 +28,46 @@ lazy val docs = project.in(file("docs"))
 lazy val core = crossProject(JSPlatform, JVMPlatform).in(file("core"))
   .settings(commonSettings, releaseSettings, mimaSettings)
   .settings(
-    name := "log4cats-core"
-  )
-lazy val coreJVM = core.jvm
-lazy val coreJS  = core.js
-
-
-lazy val extras = crossProject(JSPlatform, JVMPlatform).in(file("cats/extras"))
-  .settings(commonSettings, releaseSettings, mimaSettings, catsSettings)
-  .dependsOn(core)
-  .settings(
-    name := "log4cats-extras"
-  )
-lazy val extrasJVM = extras.jvm
-lazy val extrasJS  = extras.js
-
-
-lazy val testing = crossProject(JSPlatform, JVMPlatform).in(file("cats/testing"))
-  .settings(commonSettings, releaseSettings, mimaSettings, catsSettings)
-  .dependsOn(core)
-  .settings(
-    name := "log4cats-testing"
-  )
-lazy val testingJVM = testing.jvm
-lazy val testingJS = testing.js
-
-lazy val noop = crossProject(JSPlatform, JVMPlatform).in(file("cats/noop"))
-  .settings(commonSettings, mimaSettings, releaseSettings)
-  .dependsOn(core)
-  .settings(
-    name := "log4cats-noop",
+    name := "log4cats-core",
     libraryDependencies ++= Seq(
       "org.typelevel"               %%% "cats-core"                  % catsV,
     )
   )
+lazy val coreJVM = core.jvm
+lazy val coreJS  = core.js
+
+lazy val testing = crossProject(JSPlatform, JVMPlatform)
+  .in(file("testing"))
+  .settings(commonSettings, releaseSettings, mimaSettings)
+  .dependsOn(core)
+  .settings(
+    name := "log4cats-testing",
+    libraryDependencies ++= Seq(
+      "org.typelevel"               %%% "cats-effect"                % catsEffectV
+    )
+  )
+lazy val testingJVM = testing.jvm
+lazy val testingJS = testing.js
+
+lazy val noop = crossProject(JSPlatform, JVMPlatform)
+  .in(file("noop"))
+  .settings(commonSettings, mimaSettings, releaseSettings)
+  .dependsOn(core)
+  .settings(
+    name := "log4cats-noop"
+  )
 lazy val noopJVM = noop.jvm
 lazy val noopJS = noop.js
 
-lazy val slf4j = project.in(file("cats/slf4j"))
-  .settings(commonSettings, releaseSettings, mimaSettings, catsSettings)
+lazy val slf4j = project
+  .in(file("slf4j"))
+  .settings(commonSettings, releaseSettings, mimaSettings)
   .dependsOn(coreJVM)
   .settings(
     name := "log4cats-slf4j",
     libraryDependencies ++= Seq(
-      "org.slf4j" % "slf4j-api" % "1.7.26"
+      "org.slf4j"                   % "slf4j-api"                     % slf4jV,
+      "org.typelevel"               %%% "cats-effect"                 % catsEffectV
     )
   )
 
@@ -89,19 +83,12 @@ lazy val commonSettings = Seq(
   scalaVersion := "2.12.8",
   crossScalaVersions := Seq(scalaVersion.value, "2.11.12"),
 
-  addCompilerPlugin("org.spire-math" % "kind-projector" % "0.9.10" cross CrossVersion.binary),
+  addCompilerPlugin("org.typelevel" % "kind-projector" % "0.10.0" cross CrossVersion.binary),
   addCompilerPlugin("com.olegpy" %% "better-monadic-for" % "0.3.0"),
 
   libraryDependencies ++= Seq(
     "org.specs2"                  %%% "specs2-core"                % specs2V       % Test
     // "org.specs2"                  %% "specs2-scalacheck"          % specs2V       % Test
-  )
-)
-
-lazy val catsSettings = Seq(
-  libraryDependencies ++= Seq(
-    "org.typelevel"               %%% "cats-core"                  % catsV,
-    "org.typelevel"               %%% "cats-effect"                % catsEffectV
   )
 )
 

@@ -1,8 +1,10 @@
 package io.chrisdavenport.log4cats
 
+import cats._
+
 trait Logger[F[_]] extends MessageLogger[F] with ErrorLogger[F] {
-  // Perhaps this should be a typeclass over algebras?
   def withModifiedString(f: String => String): Logger[F] = Logger.withModifiedString[F](this, f)
+  override def mapK[G[_]](fk: F ~> G): Logger[G] = Logger.mapK(fk)(this)
 }
 
 object Logger {
@@ -21,4 +23,29 @@ object Logger {
       def trace(message: => String): F[Unit] = l.trace(f(message))
       def trace(t: Throwable)(message: => String): F[Unit] = l.trace(t)(f(message))
     }
+
+  private def mapK[G[_], F[_]](f: G ~> F)(logger: Logger[G]): Logger[F] =
+    new Logger[F] {
+      def error(t: Throwable)(message: => String): F[Unit] =
+        f(logger.error(t)(message))
+      def warn(t: Throwable)(message: => String): F[Unit] =
+        f(logger.warn(t)(message))
+      def info(t: Throwable)(message: => String): F[Unit] =
+        f(logger.info(t)(message))
+      def debug(t: Throwable)(message: => String): F[Unit] =
+        f(logger.debug(t)(message))
+      def trace(t: Throwable)(message: => String): F[Unit] =
+        f(logger.trace(t)(message))
+      def error(message: => String): F[Unit] =
+        f(logger.error(message))
+      def warn(message: => String): F[Unit] =
+        f(logger.warn(message))
+      def info(message: => String): F[Unit] =
+        f(logger.info(message))
+      def debug(message: => String): F[Unit] =
+        f(logger.debug(message))
+      def trace(message: => String): F[Unit] =
+        f(logger.trace(message))
+    }
+
 }
