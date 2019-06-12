@@ -2,6 +2,7 @@ sudo: false
 language: scala
 
 scala:
+  - 2.13.0
   - 2.12.8
   - 2.11.12
 
@@ -31,8 +32,8 @@ install:
 script:
   - sbt scalafmtCheckAll
   - sbt ++$TRAVIS_SCALA_VERSION test
-  - sbt ++$TRAVIS_SCALA_VERSION docs/makeMicrosite
-  - sbt ++$TRAVIS_SCALA_VERSION mimaReportBinaryIssues
+  - test $TRAVIS_SCALA_VERSION == "2.13.0" || sbt ++$TRAVIS_SCALA_VERSION docs/makeMicrosite
+  - test $TRAVIS_SCALA_VERSION == "2.13.0" || sbt ++$TRAVIS_SCALA_VERSION mimaReportBinaryIssues
 
 after_success:
 - test $TRAVIS_PULL_REQUEST == "false" && test $TRAVIS_BRANCH == "master" && test $TRAVIS_REPO_SLUG == "ChristopherDavenport/log4cats" && sbt ++$TRAVIS_SCALA_VERSION publish
