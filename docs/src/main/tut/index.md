@@ -6,7 +6,7 @@ layout: home
 
 ## Project Goals
 
-log4cats and log4scalaz attempt to make referentially transparent logging a reality. These F algebras allow you to write
+log4cats attempts to make referentially transparent logging a reality. These F algebras allow you to write
 code for logging knowing you won't be doing side-effects as it offers no way to do so. We provide our own slf4j layer,
 or you can use any of the supported backends, or create your own.
 
