@@ -26,15 +26,16 @@ private[slf4j] object Slf4jLoggerInternal {
     isEnabled.ifM(
       F.suspend {
         val backup = MDC.getCopyOfContextMap
-        try {
+        val putMDC = F.delay {
           for {
             (k, v) <- ctx
           } MDC.put(k, v)
-          logging
-        } finally {
+        }
+        val clearMDC = F.delay {
           if (backup eq null) MDC.clear()
           else MDC.setContextMap(backup)
         }
+        F.guarantee(putMDC *> logging)(clearMDC)
       },
       F.unit
     )
