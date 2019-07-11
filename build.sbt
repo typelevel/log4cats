@@ -206,6 +206,7 @@ lazy val mimaSettings = {
 
   Seq(
     mimaFailOnProblem := mimaVersion(version.value).isDefined,
+    mimaFailOnNoPrevious in ThisBuild := false,
     mimaPreviousArtifacts := (mimaVersion(version.value) map {
       organization.value % s"${moduleName.value}_${scalaBinaryVersion.value}" % _
     }).toSet,
