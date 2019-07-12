@@ -80,8 +80,8 @@ lazy val contributors = Seq(
 lazy val commonSettings = Seq(
   organization := "io.chrisdavenport",
 
-  scalaVersion := "2.12.8",
-  crossScalaVersions := Seq("2.13.0", scalaVersion.value, "2.11.12"),
+  scalaVersion := "2.13.0",
+  crossScalaVersions := Seq(scalaVersion.value, "2.12.8"),
 
   addCompilerPlugin("org.typelevel" % "kind-projector" % "0.10.3" cross CrossVersion.binary),
   addCompilerPlugin("com.olegpy" %% "better-monadic-for" % "0.3.0"),
