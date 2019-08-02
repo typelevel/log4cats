@@ -16,7 +16,7 @@ cache:
     - $HOME/.sbt
 
 jdk:
-  - oraclejdk8
+  - openjdk8
   - openjdk12
 
 before_install:
