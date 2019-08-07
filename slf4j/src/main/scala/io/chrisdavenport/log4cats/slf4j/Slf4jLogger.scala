@@ -19,7 +19,6 @@
 package io.chrisdavenport.log4cats.slf4j
 
 import cats.effect.Sync
-import cats._
 import io.chrisdavenport.log4cats.SelfAwareStructuredLogger
 import io.chrisdavenport.log4cats.slf4j.internal._
 import org.slf4j.{Logger => JLogger}

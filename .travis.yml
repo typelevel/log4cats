@@ -3,7 +3,7 @@ language: scala
 
 scala:
   - 2.13.0
-  - 2.12.8
+  - 2.12.9
 
 before_cache:
   - find $HOME/.sbt -name "*.lock" -type f -delete
@@ -36,4 +36,4 @@ script:
 
 after_success:
 - test $TRAVIS_PULL_REQUEST == "false" && test $TRAVIS_BRANCH == "master" && test $TRAVIS_REPO_SLUG == "ChristopherDavenport/log4cats" && sbt ++$TRAVIS_SCALA_VERSION publish
-- test $TRAVIS_PULL_REQUEST == "false" && test $TRAVIS_BRANCH == "master" && test $TRAVIS_REPO_SLUG == "ChristopherDavenport/log4cats" && test $TRAVIS_SCALA_VERSION == "2.12.8" && sbt docs/publishMicrosite
+- test $TRAVIS_PULL_REQUEST == "false" && test $TRAVIS_BRANCH == "master" && test $TRAVIS_REPO_SLUG == "ChristopherDavenport/log4cats" && test $TRAVIS_SCALA_VERSION == "2.12.9" && sbt docs/publishMicrosite

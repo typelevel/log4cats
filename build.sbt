@@ -1,8 +1,8 @@
 import sbtcrossproject.{crossProject, CrossType}
-val catsV = "2.0.0-M4"
-val catsEffectV = "2.0.0-M4"
+val catsV = "2.0.0-RC1"
+val catsEffectV = "2.0.0-RC1"
 val slf4jV = "1.7.27"
-val specs2V = "4.6.0"
+val specs2V = "4.7.0"
 
 lazy val log4cats = project.in(file("."))
   .aggregate(
@@ -67,6 +67,7 @@ lazy val slf4j = project
     name := "log4cats-slf4j",
     libraryDependencies ++= Seq(
       "org.slf4j"                   % "slf4j-api"                     % slf4jV,
+      "org.scala-lang"              %  "scala-reflect"                % scalaVersion.value,
       "org.typelevel"               %%% "cats-effect"                 % catsEffectV
     )
   )
@@ -81,10 +82,10 @@ lazy val commonSettings = Seq(
   organization := "io.chrisdavenport",
 
   scalaVersion := "2.13.0",
-  crossScalaVersions := Seq(scalaVersion.value, "2.12.8"),
+  crossScalaVersions := Seq(scalaVersion.value, "2.12.9"),
 
   addCompilerPlugin("org.typelevel" % "kind-projector" % "0.10.3" cross CrossVersion.binary),
-  addCompilerPlugin("com.olegpy" %% "better-monadic-for" % "0.3.0"),
+  addCompilerPlugin("com.olegpy" %% "better-monadic-for" % "0.3.1"),
 
   libraryDependencies ++= Seq(
     "org.specs2"                  %%% "specs2-core"                % specs2V       % Test
