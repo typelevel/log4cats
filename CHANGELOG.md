@@ -4,6 +4,22 @@ This file summarizes **notable** changes for each release, but does not describe
 
 ----
 
+# <a name="1.0.0-RC1"></a>New and Noteworthy for Version 1.0.0-RC1
+
+Many thanks to **Loránd Szakács**, **mr-git**, and **Taylor Brown** for their contributions to this release.
+
+- Introduced Cats Dependency to Core
+- Moved Extras into Core
+- Simplified Slf4j into 1 pass
+- Fixed Bug in Finalizer Based Slf4j Logging
+- Dropped 2.11 Support
+- Dropped Scalaz (Check PR's for old code you can use)
+
+Dependencies:
+
+- cats 2.0.0-RC1
+- In Backends: cats-effect 2.0.0-RC1
+
 # <a name="0.2.0"></a>New and Noteworthy for Version 0.2.0
 
 Many thanks to **λoλcat** and **Loránd Szakács** for their contributions to this release.
