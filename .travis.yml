@@ -16,8 +16,7 @@ cache:
     - $HOME/.sbt
 
 jdk:
-  - openjdk8
-  - openjdk12
+  - openjdk11
 
 before_install:
   - export PATH=${PATH}:./vendor/bundle
