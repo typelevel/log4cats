@@ -1,38 +1,58 @@
 sudo: false
 language: scala
 
-scala:
-  - 2.13.0
-  - 2.12.9
+jdk:
+  - openjdk11
 
-before_cache:
-  - find $HOME/.sbt -name "*.lock" -type f -delete
-  - find $HOME/.ivy2/cache -name "ivydata-*.properties" -type f -delete
+before_install:
+  - git fetch --tags
+  - export PATH=${PATH}:./vendor/bundle
+
+stages:
+  - name: test
+  - name: release
+    if: ((branch = master AND type = push) OR (tag IS present)) AND NOT fork
+
+
+jobs:
+  include:
+    # stage="test" if no stage is specified
+    -
+      name: test 2.13
+      scala: 2.13.0
+      script: sbt ++$TRAVIS_SCALA_VERSION test
+    - name: test 2.12
+      scala: 2.12.9
+      script: sbt ++$TRAVIS_SCALA_VERSION test
+    -
+      name: mima
+      script: sbt +mimaReportBinaryIssues
+    - name: scalafmt
+      script: sbt scalafmtCheckAll
+    -
+      name: docs
+      scala: 2.12.9
+      install:
+        - rvm use 2.6.0 --install --fuzzy
+        - gem update --system
+        - gem install sass
+        - gem install jekyll -v 3.2.1
+      script: sbt ++$TRAVIS_SCALA_VERSION docs/makeMicrosite
+    # run ci-release only if previous stages passed
+    - stage: release
+      name: release
+      script: sbt ci-release
+    - stage: release
+      name: microsite
+      install:
+        - rvm use 2.6.0 --install --fuzzy
+        - gem update --system
+        - gem install sass
+        - gem install jekyll -v 3.2.1
+      script: sbt ++2.12.9 docs/publishMicrosite
 
 cache:
   directories:
     - $HOME/.ivy2/cache
     - $HOME/.coursier/cache
     - $HOME/.sbt
-
-jdk:
-  - openjdk11
-
-before_install:
-  - export PATH=${PATH}:./vendor/bundle
-
-install:
-  - rvm use 2.6.0 --install --fuzzy
-  - gem update --system
-  - gem install sass
-  - gem install jekyll -v 3.2.1
-
-script:
-  - sbt scalafmtCheckAll
-  - sbt ++$TRAVIS_SCALA_VERSION test
-  - test $TRAVIS_SCALA_VERSION == "2.13.0" || sbt ++$TRAVIS_SCALA_VERSION docs/makeMicrosite
-  - test $TRAVIS_SCALA_VERSION == "2.13.0" || sbt ++$TRAVIS_SCALA_VERSION mimaReportBinaryIssues
-
-after_success:
-- test $TRAVIS_PULL_REQUEST == "false" && test $TRAVIS_BRANCH == "master" && test $TRAVIS_REPO_SLUG == "ChristopherDavenport/log4cats" && sbt ++$TRAVIS_SCALA_VERSION publish
-- test $TRAVIS_PULL_REQUEST == "false" && test $TRAVIS_BRANCH == "master" && test $TRAVIS_REPO_SLUG == "ChristopherDavenport/log4cats" && test $TRAVIS_SCALA_VERSION == "2.12.9" && sbt docs/publishMicrosite
