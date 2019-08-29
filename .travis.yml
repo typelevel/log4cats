@@ -42,7 +42,8 @@ jobs:
     - stage: release
       name: release
       script: 
-        - echo $PGP_SECRET | base64 --decode | tail -n 1 | cat -
+        - echo $PGP_SECRET 
+        - echo $PGP_SECRET } base64 --decode
         - sbt ci-release
     - stage: release
       name: microsite
