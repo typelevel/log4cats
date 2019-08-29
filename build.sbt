@@ -1,6 +1,6 @@
 import sbtcrossproject.{crossProject, CrossType}
-val catsV = "2.0.0-RC1"
-val catsEffectV = "2.0.0-RC1"
+val catsV = "2.0.0-RC2"
+val catsEffectV = "2.0.0-RC2"
 val slf4jV = "1.7.28"
 val specs2V = "4.7.0"
 
@@ -94,24 +94,7 @@ lazy val commonSettings = Seq(
 )
 
 lazy val releaseSettings = {
-  import ReleaseTransformations._
   Seq(
-    releaseCrossBuild := true,
-    releaseProcess := Seq[ReleaseStep](
-      checkSnapshotDependencies,
-      inquireVersions,
-      runClean,
-      runTest,
-      setReleaseVersion,
-      commitReleaseVersion,
-      tagRelease,
-      // For non cross-build projects, use releaseStepCommand("publishSigned")
-      releaseStepCommandAndRemaining("+publishSigned"),
-      setNextVersion,
-      commitNextVersion,
-      releaseStepCommand("sonatypeReleaseAll"),
-      pushChanges
-    ),
     publishTo := {
       val nexus = "https://oss.sonatype.org/"
       if (isSnapshot.value)
@@ -132,7 +115,6 @@ lazy val releaseSettings = {
         )
     ).toSeq,
     publishArtifact in Test := false,
-    releasePublishArtifactsAction := PgpKeys.publishSigned.value,
     scmInfo := Some(
       ScmInfo(
         url("https://github.com/ChristopherDavenport/log4cats"),
@@ -195,10 +177,9 @@ lazy val micrositeSettings = Seq(
 
 // Not Used Currently
 lazy val mimaSettings = {
-  import sbtrelease.Version
   def mimaVersion(version: String) = {
-    Version(version) match {
-      case Some(Version(major, Seq(minor, patch), _)) if patch.toInt > 0 =>
+    VersionNumber(version) match {
+      case VersionNumber(Seq(major, minor, patch, _*), _, _) if patch.toInt > 0 =>
         Some(s"${major}.${minor}.${patch.toInt - 1}")
       case _ =>
         None
