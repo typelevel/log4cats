@@ -18,7 +18,6 @@ libraryDependencies ++= Seq(
 )
 ```
 
-
 ## Examples
 
 ```scala
