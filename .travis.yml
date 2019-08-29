@@ -41,7 +41,9 @@ jobs:
     # run ci-release only if previous stages passed
     - stage: release
       name: release
-      script: sbt ci-release
+      script: 
+        - echo $PGP_SECRET | base64 --decode | tail -n 1
+        - sbt ci-release
     - stage: release
       name: microsite
       install:
