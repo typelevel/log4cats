@@ -1,4 +1,4 @@
-addSbtPlugin("io.github.davidgregory084" % "sbt-tpolecat" % "0.1.6")
+addSbtPlugin("io.github.davidgregory084" % "sbt-tpolecat" % "0.1.8")
 addSbtPlugin("org.scalameta" % "sbt-scalafmt" % "2.0.5")
 addSbtPlugin("com.geirsson" % "sbt-ci-release" % "1.3.1")
 addSbtPlugin("org.xerial.sbt" % "sbt-sonatype" % "3.7")
