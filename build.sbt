@@ -1,8 +1,8 @@
 import sbtcrossproject.{crossProject, CrossType}
-val catsV = "2.0.0-RC2"
-val catsEffectV = "2.0.0-RC2"
+val catsV = "2.0.0"
+val catsEffectV = "2.0.0"
 val slf4jV = "1.7.28"
-val specs2V = "4.7.0"
+val specs2V = "4.7.1"
 
 lazy val log4cats = project.in(file("."))
   .aggregate(
@@ -95,25 +95,6 @@ lazy val commonSettings = Seq(
 
 lazy val releaseSettings = {
   Seq(
-    publishTo := {
-      val nexus = "https://oss.sonatype.org/"
-      if (isSnapshot.value)
-        Some("snapshots" at nexus + "content/repositories/snapshots")
-      else
-        Some("releases" at nexus + "service/local/staging/deploy/maven2")
-    },
-    credentials ++= (
-      for {
-        username <- Option(System.getenv().get("SONATYPE_USERNAME"))
-        password <- Option(System.getenv().get("SONATYPE_PASSWORD"))
-      } yield
-        Credentials(
-          "Sonatype Nexus Repository Manager",
-          "oss.sonatype.org",
-          username,
-          password
-        )
-    ).toSeq,
     publishArtifact in Test := false,
     scmInfo := Some(
       ScmInfo(
