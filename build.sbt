@@ -12,8 +12,8 @@ lazy val log4cats = project.in(file("."))
     testingJS,
     noopJVM,
     noopJS,
-    slf4j//,
-    //docs
+    slf4j,
+    docs,
   )
   .settings(noPublishSettings)
   .settings(commonSettings, releaseSettings)
