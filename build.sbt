@@ -1,6 +1,7 @@
 import sbtcrossproject.{crossProject, CrossType}
 val catsV = "2.0.0"
 val catsEffectV = "2.0.0"
+val catsMtlV = "0.7.0"
 val slf4jV = "1.7.28"
 val specs2V = "4.7.1"
 
@@ -23,7 +24,7 @@ lazy val docs = project.in(file("docs"))
   .settings(commonSettings, micrositeSettings)
   .enablePlugins(MicrositesPlugin)
   .enablePlugins(TutPlugin)
-  .dependsOn(slf4j)
+  .dependsOn(slf4j, mtlJVM)
 
 lazy val core = crossProject(JSPlatform, JVMPlatform).in(file("core"))
   .settings(commonSettings, releaseSettings, mimaSettings)
@@ -72,6 +73,17 @@ lazy val slf4j = project
     )
   )
 
+lazy val mtl = crossProject(JSPlatform, JVMPlatform)
+  .in(file("mtl"))
+  .settings(commonSettings, releaseSettings, mimaSettings)
+  .dependsOn(core)
+  .settings(
+    name := "log4cats-mtl",
+    libraryDependencies += "org.typelevel" %% "cats-mtl-core" % catsMtlV
+  )
+
+lazy val mtlJVM = mtl.jvm
+lazy val mtlJS  = mtl.js
 
 lazy val contributors = Seq(
   "ChristopherDavenport" -> "Christopher Davenport",

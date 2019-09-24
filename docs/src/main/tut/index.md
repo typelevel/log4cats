@@ -19,6 +19,7 @@ To use log4cats in an existing SBT project with Scala 2.11 or a later version, a
 libraryDependencies ++= Seq(
   "io.chrisdavenport" %% "log4cats-core"    % "<version>",  // Only if you want to Support Any Backend
   "io.chrisdavenport" %% "log4cats-slf4j"   % "<version>",  // Direct Slf4j Support - Recommended
+  "io.chrisdavenport" %% "log4cats-mtl"     % "<version>",  // cats-mtl ApplicativeLocal Support - Optional
 )
 ```
 
@@ -58,4 +59,29 @@ def passForEasierUse[F[_]: Sync: Logger] = for {
       .onError{case e => Logger[F].error(e)("Something Went Wrong in passForEasierUse")}
     _ <- Logger[F].info("Logging at end of passForEasierUse")
   } yield something
+```
+
+### Cats-mtl  
+
+```tut
+import io.chrisdavenport.log4cats.slf4j.Slf4jLogger
+import io.chrisdavenport.log4cats.mtl.{ApplicativeAskLogger, CtxEncoder}
+import cats.effect.{Sync, IO}
+import cats.implicits._
+import cats.mtl._
+import cats.mtl.implicits._
+
+final case class TraceId(value: String)
+
+implicit val traceIdCtxEncoder: CtxEncoder[TraceId] = (traceId: TraceId) => Map("traceId" -> traceId.value)
+
+def safelyDoThings[F[_]: Sync: ApplicativeLocal[?[_], TraceId]]: F[Unit] = 
+  (for {
+    logger <- ApplicativeAskLogger.create[F, TraceId](Slf4jLogger.create[F])
+    _ <- logger.info("Logging at start of safelyDoThings").scope(TraceId("inner-id"))
+    something <- Sync[F].delay(println("I could do anything"))
+      .onError{case e => logger.error(e)("Something Went Wrong in safelyDoThings")}
+    _ <- logger.info("Logging at end of safelyDoThings")
+  } yield something).scope(TraceId("outter-id"))
+
 ```
