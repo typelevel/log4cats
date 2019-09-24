@@ -19,7 +19,7 @@ To use log4cats in an existing SBT project with Scala 2.11 or a later version, a
 libraryDependencies ++= Seq(
   "io.chrisdavenport" %% "log4cats-core"    % "<version>",  // Only if you want to Support Any Backend
   "io.chrisdavenport" %% "log4cats-slf4j"   % "<version>",  // Direct Slf4j Support - Recommended
-  "io.chrisdavenport" %% "log4cats-mtl"     % "<version>",  // cats-mtl ApplicativeLocal Support - Optional
+  "io.chrisdavenport" %% "log4cats-mtl"     % "<version>",  // cats-mtl ApplicativeLocal and FunctorTell Support - Optional
 )
 ```
 
@@ -64,9 +64,12 @@ def passForEasierUse[F[_]: Sync: Logger] = for {
 ### Cats-mtl  
 
 ```tut
+import io.chrisdavenport.log4cats.extras.LogMessage
 import io.chrisdavenport.log4cats.slf4j.Slf4jLogger
-import io.chrisdavenport.log4cats.mtl.{ApplicativeAskLogger, CtxEncoder}
-import cats.effect.{Sync, IO}
+import io.chrisdavenport.log4cats.mtl._
+import cats._
+import cats.data._
+import cats.effect.Sync
 import cats.implicits._
 import cats.mtl._
 import cats.mtl.implicits._
@@ -75,7 +78,7 @@ final case class TraceId(value: String)
 
 implicit val traceIdCtxEncoder: CtxEncoder[TraceId] = (traceId: TraceId) => Map("traceId" -> traceId.value)
 
-def safelyDoThings[F[_]: Sync: ApplicativeLocal[?[_], TraceId]]: F[Unit] = 
+def doApplicativeLocalThings[F[_]: Sync: ApplicativeLocal[?[_], TraceId]]: F[Unit] = 
   (for {
     logger <- ApplicativeAskLogger.create[F, TraceId](Slf4jLogger.create[F])
     _ <- logger.info("Logging at start of safelyDoThings").scope(TraceId("inner-id"))
@@ -83,5 +86,16 @@ def safelyDoThings[F[_]: Sync: ApplicativeLocal[?[_], TraceId]]: F[Unit] =
       .onError{case e => logger.error(e)("Something Went Wrong in safelyDoThings")}
     _ <- logger.info("Logging at end of safelyDoThings")
   } yield something).scope(TraceId("outter-id"))
+  
+def doFunctorTellThings[F[_]: Sync: FunctorTell[?[_], Chain[LogMessage]]]: F[Unit] = {
+  val logger = FunctorTellLogger[F, Chain]()
+
+  for {
+    _ <- logger.info("Logging at start of safelyDoThings")
+    something <- Sync[F].delay(println("I could do anything"))
+      .onError{case e => logger.error(e)("Something Went Wrong in safelyDoThings")}
+    _ <- logger.info("Logging at end of safelyDoThings")
+  } yield something
+}
 
 ```
