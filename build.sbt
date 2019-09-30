@@ -181,11 +181,9 @@ lazy val mimaSettings = {
 }
 
 lazy val noPublishSettings = {
-  import com.typesafe.sbt.pgp.PgpKeys.publishSigned
   Seq(
     publish := {},
     publishLocal := {},
-    publishSigned := {},
     publishArtifact := false
   )
 }
