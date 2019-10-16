@@ -3,6 +3,7 @@ package io.chrisdavenport.log4cats.slf4j.internal
 import io.chrisdavenport.log4cats._
 import cats.implicits._
 import cats.effect._
+import cats.effect.implicits._
 import org.slf4j.{Logger => JLogger}
 import org.slf4j.MDC
 
@@ -24,19 +25,19 @@ private[slf4j] object Slf4jLoggerInternal {
       logging: F[Unit]
   )(implicit F: Sync[F]): F[Unit] =
     isEnabled.ifM(
-      F.suspend {
-        val backup = MDC.getCopyOfContextMap
-        val putMDC = F.delay {
+      F.delay { MDC.getCopyOfContextMap }.bracket{ _ => 
+        F.delay {
           for {
             (k, v) <- ctx
           } MDC.put(k, v)
+        } >> logging
+      }{ backup => 
+        F.delay {
+          if (backup eq null) { println("Cleared"); MDC.clear() }
+          else {println(s"Set Backup $backup"); MDC.setContextMap(backup)}
         }
-        val clearMDC = F.delay {
-          if (backup eq null) MDC.clear()
-          else MDC.setContextMap(backup)
-        }
-        F.guarantee(putMDC *> logging)(clearMDC)
-      },
+      }
+      ,
       F.unit
     )
 
