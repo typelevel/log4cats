@@ -3,13 +3,13 @@
     <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
         <withJansi>true</withJansi>
         <encoder>
-            <pattern>[%thread] %highlight(%-5level) %cyan(%logger{15}) - %msg %n</pattern>
+            <pattern>[%thread] %highlight(%-5level) %cyan(%logger{15}) - %msg %X %n</pattern>
         </encoder>
     </appender>
 
-    <logger name="io.chrisdavenport.slf4j" level="TRACE"/>
+    <!-- <logger name="io.chrisdavenport.slf4j" level="TRACE"/> -->
 
-    <root level="ERROR">
+    <root level="TRACE">
         <appender-ref ref="STDOUT" />
     </root>
 </configuration>
