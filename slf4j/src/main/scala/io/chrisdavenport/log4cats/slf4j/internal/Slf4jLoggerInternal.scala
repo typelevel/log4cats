@@ -34,11 +34,8 @@ private[slf4j] object Slf4jLoggerInternal {
           } >> logging
         } { backup =>
           F.delay {
-            if (backup eq null) {
-              println("Cleared"); MDC.clear()
-            } else {
-              println(s"Set Backup $backup"); MDC.setContextMap(backup)
-            }
+            if (backup eq null) MDC.clear()
+            else MDC.setContextMap(backup)
           }
         },
       F.unit
