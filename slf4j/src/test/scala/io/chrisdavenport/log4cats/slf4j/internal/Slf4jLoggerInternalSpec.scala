@@ -14,7 +14,8 @@ class Slf4jLoggerInternalSpec extends Specification {
       val initial = "yellow"
       MDC.put(variable, initial)
 
-      Slf4jLogger.getLogger[IO]
+      Slf4jLogger
+        .getLogger[IO]
         .info(Map(variable -> "bar"))("A log went here")
         .unsafeRunSync
 

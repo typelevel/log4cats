@@ -25,19 +25,22 @@ private[slf4j] object Slf4jLoggerInternal {
       logging: F[Unit]
   )(implicit F: Sync[F]): F[Unit] =
     isEnabled.ifM(
-      F.delay { MDC.getCopyOfContextMap }.bracket{ _ => 
-        F.delay {
-          for {
-            (k, v) <- ctx
-          } MDC.put(k, v)
-        } >> logging
-      }{ backup => 
-        F.delay {
-          if (backup eq null) { println("Cleared"); MDC.clear() }
-          else {println(s"Set Backup $backup"); MDC.setContextMap(backup)}
-        }
-      }
-      ,
+      F.delay { MDC.getCopyOfContextMap }
+        .bracket { _ =>
+          F.delay {
+            for {
+              (k, v) <- ctx
+            } MDC.put(k, v)
+          } >> logging
+        } { backup =>
+          F.delay {
+            if (backup eq null) {
+              println("Cleared"); MDC.clear()
+            } else {
+              println(s"Set Backup $backup"); MDC.setContextMap(backup)
+            }
+          }
+        },
       F.unit
     )
 
