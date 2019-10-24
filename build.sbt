@@ -3,6 +3,7 @@ val catsV = "2.0.0"
 val catsEffectV = "2.0.0"
 val slf4jV = "1.7.28"
 val specs2V = "4.7.1"
+val logbackClassicV = "1.2.3"
 
 lazy val log4cats = project.in(file("."))
   .aggregate(
@@ -68,7 +69,8 @@ lazy val slf4j = project
     libraryDependencies ++= Seq(
       "org.slf4j"                   % "slf4j-api"                     % slf4jV,
       "org.scala-lang"              %  "scala-reflect"                % scalaVersion.value,
-      "org.typelevel"               %%% "cats-effect"                 % catsEffectV
+      "org.typelevel"               %%% "cats-effect"                 % catsEffectV,
+      "ch.qos.logback"              % "logback-classic"               % logbackClassicV   % Test,
     )
   )
 
@@ -84,7 +86,7 @@ lazy val commonSettings = Seq(
   scalaVersion := "2.13.0",
   crossScalaVersions := Seq(scalaVersion.value, "2.12.9"),
 
-  addCompilerPlugin("org.typelevel" % "kind-projector" % "0.10.3" cross CrossVersion.binary),
+  addCompilerPlugin("org.typelevel" %% "kind-projector" % "0.11.0" cross CrossVersion.full),
   addCompilerPlugin("com.olegpy" %% "better-monadic-for" % "0.3.1"),
 
   libraryDependencies ++= Seq(
