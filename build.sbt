@@ -1,8 +1,8 @@
 import sbtcrossproject.{crossProject, CrossType}
-val catsV = "2.0.0"
+val catsV = "2.1.0"
 val catsEffectV = "2.0.0"
 val slf4jV = "1.7.30"
-val specs2V = "4.8.1"
+val specs2V = "4.8.3"
 val logbackClassicV = "1.2.3"
 
 lazy val log4cats = project.in(file("."))
