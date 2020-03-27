@@ -102,7 +102,13 @@ class Slf4jLoggerInternalSpec extends Specification {
       }
 
       def getVariableOn(ec: ExecutionContext) =
-        runBlockingOn { MDC.get(variable) }(ec)
+        IO { runBlockingOn { MDC.get(variable) }(ec) }
+
+      val getVariables = (
+        getVariableOn(loggerThread),
+        getVariableOn(finalizerThread),
+        IO(MDC.get(variable))
+      ).tupled
 
       val result =
         IO {
@@ -116,14 +122,10 @@ class Slf4jLoggerInternalSpec extends Specification {
                 .start(IO.contextShift(finalizerThread))
                 .flatMap(_.join)
             ) *>
-          IO(finishedLog.await())
+          IO(finishedLog.await()) *>
+          getVariables
 
-      result.unsafeRunSync()
-
-      val out1 = getVariableOn(loggerThread)
-      val out2 = getVariableOn(finalizerThread)
-
-      val outMain = MDC.get(variable)
+      val (out1, out2, outMain) = result.unsafeRunSync()
 
       try {
         out1 must_=== initial
