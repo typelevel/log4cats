@@ -1,11 +1,12 @@
 import sbtcrossproject.{crossProject, CrossType}
-val catsV = "2.1.0"
+val catsV = "2.1.1"
 val catsEffectV = "2.1.2"
 val slf4jV = "1.7.30"
 val specs2V = "4.8.3"
 val logbackClassicV = "1.2.3"
 
-lazy val log4cats = project.in(file("."))
+lazy val log4cats = project
+  .in(file("."))
   .aggregate(
     coreJVM,
     coreJS,
@@ -14,28 +15,30 @@ lazy val log4cats = project.in(file("."))
     noopJVM,
     noopJS,
     slf4j,
-    docs,
+    docs
   )
   .settings(noPublishSettings)
   .settings(commonSettings, releaseSettings)
 
-lazy val docs = project.in(file("docs"))
+lazy val docs = project
+  .in(file("docs"))
   .settings(noPublishSettings)
   .settings(commonSettings, micrositeSettings)
   .enablePlugins(MicrositesPlugin)
   .enablePlugins(TutPlugin)
   .dependsOn(slf4j)
 
-lazy val core = crossProject(JSPlatform, JVMPlatform).in(file("core"))
+lazy val core = crossProject(JSPlatform, JVMPlatform)
+  .in(file("core"))
   .settings(commonSettings, releaseSettings, mimaSettings)
   .settings(
     name := "log4cats-core",
     libraryDependencies ++= Seq(
-      "org.typelevel"               %%% "cats-core"                  % catsV,
+      "org.typelevel" %%% "cats-core" % catsV
     )
   )
 lazy val coreJVM = core.jvm
-lazy val coreJS  = core.js
+lazy val coreJS = core.js
 
 lazy val testing = crossProject(JSPlatform, JVMPlatform)
   .in(file("testing"))
@@ -44,7 +47,7 @@ lazy val testing = crossProject(JSPlatform, JVMPlatform)
   .settings(
     name := "log4cats-testing",
     libraryDependencies ++= Seq(
-      "org.typelevel"               %%% "cats-effect"                % catsEffectV
+      "org.typelevel" %%% "cats-effect" % catsEffectV
     )
   )
 lazy val testingJVM = testing.jvm
@@ -67,30 +70,26 @@ lazy val slf4j = project
   .settings(
     name := "log4cats-slf4j",
     libraryDependencies ++= Seq(
-      "org.slf4j"                   % "slf4j-api"                     % slf4jV,
-      "org.scala-lang"              %  "scala-reflect"                % scalaVersion.value,
-      "org.typelevel"               %%% "cats-effect"                 % catsEffectV,
-      "ch.qos.logback"              % "logback-classic"               % logbackClassicV   % Test,
+      "org.slf4j"                       % "slf4j-api" % slf4jV,
+      "org.scala-lang"                  % "scala-reflect" % scalaVersion.value,
+      "org.typelevel" %%% "cats-effect" % catsEffectV,
+      "ch.qos.logback"                  % "logback-classic" % logbackClassicV % Test
     )
   )
 
-
 lazy val contributors = Seq(
   "ChristopherDavenport" -> "Christopher Davenport",
-  "lorandszakacs"        -> "Loránd Szakács"
+  "lorandszakacs" -> "Loránd Szakács"
 )
 
 lazy val commonSettings = Seq(
   organization := "io.chrisdavenport",
-
-  scalaVersion := "2.13.0",
-  crossScalaVersions := Seq(scalaVersion.value, "2.12.9"),
-
-  addCompilerPlugin("org.typelevel" %% "kind-projector" % "0.11.0" cross CrossVersion.full),
-  addCompilerPlugin("com.olegpy" %% "better-monadic-for" % "0.3.1"),
-
+  scalaVersion := "2.13.1",
+  crossScalaVersions := Seq(scalaVersion.value, "2.12.11"),
+  addCompilerPlugin("org.typelevel" %% "kind-projector"     % "0.11.0" cross CrossVersion.full),
+  addCompilerPlugin("com.olegpy"    %% "better-monadic-for" % "0.3.1"),
   libraryDependencies ++= Seq(
-    "org.specs2"                  %%% "specs2-core"                % specs2V       % Test
+    "org.specs2" %%% "specs2-core" % specs2V % Test
     // "org.specs2"                  %% "specs2-scalacheck"          % specs2V       % Test
   )
 )
@@ -112,13 +111,11 @@ lazy val releaseSettings = {
     },
     pomExtra := {
       <developers>
-        {for ((username, name) <- contributors) yield
-        <developer>
+        {for ((username, name) <- contributors) yield <developer>
           <id>{username}</id>
           <name>{name}</name>
           <url>http://github.com/{username}</url>
-        </developer>
-        }
+        </developer>}
       </developers>
     }
   )
