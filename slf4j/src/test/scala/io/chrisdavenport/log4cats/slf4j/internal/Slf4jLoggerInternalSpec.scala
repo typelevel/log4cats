@@ -5,8 +5,55 @@ import org.specs2.mutable.Specification
 import cats.effect.IO
 
 import org.slf4j.MDC
+import scala.concurrent.duration._
+import scala.concurrent.ExecutionContext
+import cats.effect.concurrent.Deferred
+import cats.effect.implicits._
+import java.util.concurrent.atomic.AtomicBoolean
+import java.util.concurrent.atomic.AtomicReference
+import java.util.concurrent.ThreadPoolExecutor
+import java.util.concurrent.BlockingQueue
+import java.util.concurrent.LinkedBlockingQueue
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.Executors
+import java.util.concurrent.ThreadFactory
+import scala.concurrent.ExecutionContextExecutorService
+import cats.implicits._
+import cats.effect.Fiber
 
 class Slf4jLoggerInternalSpec extends Specification {
+
+  object dirtyStuff {
+
+    def runBlockingOn[A >: Null](a: => A)(ec: ExecutionContext): A = {
+      val latch = new CountDownLatch(1)
+      var ref: A = null
+
+      ec.execute { () =>
+        ref = a
+        latch.countDown()
+      }
+
+      latch.await()
+      ref
+    }
+
+    def namedSingleThreadExecutionContext(name: String): ExecutionContextExecutorService =
+      ExecutionContext.fromExecutorService(
+        Executors.newSingleThreadExecutor(new ThreadFactory() {
+          def newThread(r: Runnable): Thread = new Thread(r, name)
+        })
+      )
+
+    def killThreads(threads: List[ExecutionContextExecutorService]) = threads.foreach { thread =>
+      try thread.shutdownNow()
+      catch {
+        case e: Throwable =>
+          Console.err.println("Couldn't shutdown thread")
+          e.printStackTrace()
+      }
+    }
+  }
 
   "Slf4jLoggerInternal" should {
     "reset after logging" in {
@@ -21,6 +68,68 @@ class Slf4jLoggerInternalSpec extends Specification {
 
       val out = MDC.get(variable)
       out must_=== initial
+    }
+
+    "reset on cancel" in {
+      val variable = "foo"
+      val initial = "initial"
+
+      import dirtyStuff._
+
+      //logging happens here
+      val loggerThread = namedSingleThreadExecutionContext("my-thread-1")
+
+      //restoring context would run here if IO.bracket was used
+      val finalizerThread = namedSingleThreadExecutionContext("my-thread-2")
+
+      val startedLog = new CountDownLatch(1)
+      val logCanceled = new CountDownLatch(1)
+      val finishedLog = new CountDownLatch(1)
+
+      val performLogging = Slf4jLogger
+        .getLogger[IO]
+        .info(Map(variable -> "modified")) {
+          startedLog.countDown()
+          logCanceled.await()
+          finishedLog.countDown()
+          "Heavy to compute value you're logging"
+        }
+
+      def performCancel[A](fiber: Fiber[IO, A]): IO[Unit] = {
+        IO(startedLog.await()) *>
+          fiber.cancel *>
+          IO(logCanceled.countDown())
+      }
+
+      def getVariableOn(ec: ExecutionContext) =
+        runBlockingOn { MDC.get(variable) }(ec)
+
+      val result =
+        IO {
+          runBlockingOn { MDC.put(variable, initial) }(loggerThread)
+          runBlockingOn { MDC.put(variable, initial) }(finalizerThread)
+        } *>
+          performLogging
+            .start(IO.contextShift(loggerThread))
+            .flatMap(
+              performCancel(_)
+                .start(IO.contextShift(finalizerThread))
+                .flatMap(_.join)
+            ) *>
+          IO(finishedLog.await())
+
+      result.unsafeRunSync()
+
+      val out1 = getVariableOn(loggerThread)
+      val out2 = getVariableOn(finalizerThread)
+
+      val outMain = MDC.get(variable)
+
+      try {
+        out1 must_=== initial
+        out2 must_=== initial
+        outMain must_=== null
+      } finally killThreads(List(loggerThread, finalizerThread))
     }
   }
 }
