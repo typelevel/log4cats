@@ -5,15 +5,7 @@ import org.specs2.mutable.Specification
 import cats.effect.IO
 
 import org.slf4j.MDC
-import scala.concurrent.duration._
 import scala.concurrent.ExecutionContext
-import cats.effect.concurrent.Deferred
-import cats.effect.implicits._
-import java.util.concurrent.atomic.AtomicBoolean
-import java.util.concurrent.atomic.AtomicReference
-import java.util.concurrent.ThreadPoolExecutor
-import java.util.concurrent.BlockingQueue
-import java.util.concurrent.LinkedBlockingQueue
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.Executors
 import java.util.concurrent.ThreadFactory

@@ -4,31 +4,26 @@ import cats.effect._
 import io.chrisdavenport.log4cats.SelfAwareStructuredLogger
 
 class Slf4jLoggerSimpleClassMacroTest {
-  import Hygiene._
   def loggerF[F[_]: Sync]: F[SelfAwareStructuredLogger[F]] = Slf4jLogger.create[F]
   def logger[F[_]: Sync]: SelfAwareStructuredLogger[F] = Slf4jLogger.getLogger[F]
 }
 
 class Slf4jLoggerParameterizedClassMacroTest[A] {
-  import Hygiene._
   def loggerF[F[_]: Sync]: F[SelfAwareStructuredLogger[F]] = Slf4jLogger.create[F]
   def logger[F[_]: Sync]: SelfAwareStructuredLogger[F] = Slf4jLogger.getLogger[F]
 }
 
 class Slf4jLoggerHKTMacroTest[F[_]: Sync] {
-  import Hygiene._
   def loggerF: F[SelfAwareStructuredLogger[F]] = Slf4jLogger.create[F]
   def logger: SelfAwareStructuredLogger[F] = Slf4jLogger.getLogger[F]
 }
 
 object Slf4jLoggerModuleMacroTest {
-  import Hygiene._
   def loggerF[F[_]: Sync]: F[SelfAwareStructuredLogger[F]] = Slf4jLogger.create[F]
   def logger[F[_]: Sync]: SelfAwareStructuredLogger[F] = Slf4jLogger.getLogger[F]
 }
 
 class Slf4jLoggerOuterClassMacroTest {
-  import Hygiene._
   class Slf4jLoggerInnerClassMacroTest {
     def loggerF[F[_]: Sync]: F[SelfAwareStructuredLogger[F]] = Slf4jLogger.create[F]
     def logger[F[_]: Sync]: SelfAwareStructuredLogger[F] = Slf4jLogger.getLogger[F]
