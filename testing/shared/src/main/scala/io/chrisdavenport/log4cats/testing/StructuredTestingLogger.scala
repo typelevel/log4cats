@@ -20,18 +20,38 @@ object StructuredTestingLogger {
     def throwOpt: Option[Throwable]
   }
 
-  final case class TRACE(message: String, throwOpt: Option[Throwable], ctx: Map[String, String] = Map.empty) extends LogMessage
-  final case class DEBUG(message: String, throwOpt: Option[Throwable], ctx: Map[String, String] = Map.empty) extends LogMessage
-  final case class INFO(message: String, throwOpt: Option[Throwable], ctx: Map[String, String] = Map.empty) extends LogMessage
-  final case class WARN(message: String, throwOpt: Option[Throwable], ctx: Map[String, String] = Map.empty) extends LogMessage
-  final case class ERROR(message: String, throwOpt: Option[Throwable], ctx: Map[String, String] = Map.empty) extends LogMessage
+  final case class TRACE(
+      message: String,
+      throwOpt: Option[Throwable],
+      ctx: Map[String, String] = Map.empty
+  ) extends LogMessage
+  final case class DEBUG(
+      message: String,
+      throwOpt: Option[Throwable],
+      ctx: Map[String, String] = Map.empty
+  ) extends LogMessage
+  final case class INFO(
+      message: String,
+      throwOpt: Option[Throwable],
+      ctx: Map[String, String] = Map.empty
+  ) extends LogMessage
+  final case class WARN(
+      message: String,
+      throwOpt: Option[Throwable],
+      ctx: Map[String, String] = Map.empty
+  ) extends LogMessage
+  final case class ERROR(
+      message: String,
+      throwOpt: Option[Throwable],
+      ctx: Map[String, String] = Map.empty
+  ) extends LogMessage
 
   def impl[F[_]: Sync](
-    traceEnabled: Boolean = true,
-    debugEnabled: Boolean = true,
-    infoEnabled: Boolean = true,
-    warnEnabled: Boolean = true,
-    errorEnabled: Boolean = true
+      traceEnabled: Boolean = true,
+      debugEnabled: Boolean = true,
+      infoEnabled: Boolean = true,
+      warnEnabled: Boolean = true,
+      errorEnabled: Boolean = true
   ): StructuredTestingLogger[F] = {
     val ar = new AtomicReference(Vector.empty[LogMessage])
     def appendLogMessage(m: LogMessage): F[Unit] = Sync[F].delay {
