@@ -19,10 +19,10 @@ jobs:
     # stage="test" if no stage is specified
     -
       name: test 2.13
-      scala: 2.13.0
+      scala: 2.13.2
       script: sbt ++$TRAVIS_SCALA_VERSION test
     - name: test 2.12
-      scala: 2.12.9
+      scala: 2.12.11
       script: sbt ++$TRAVIS_SCALA_VERSION test
     -
       name: mima
@@ -31,12 +31,12 @@ jobs:
       script: sbt scalafmtCheckAll
     -
       name: docs
-      scala: 2.12.9
+      scala: 2.12.11
       install:
         - rvm use 2.6.0 --install --fuzzy
         - gem update --system
         - gem install sass
-        - gem install jekyll -v 3.2.1
+        - gem install jekyll -v 4
       script: sbt ++$TRAVIS_SCALA_VERSION docs/makeMicrosite
     # run ci-release only if previous stages passed
     - stage: release
@@ -49,7 +49,7 @@ jobs:
         - rvm use 2.6.0 --install --fuzzy
         - gem update --system
         - gem install sass
-        - gem install jekyll -v 3.2.1
+        - gem install jekyll -v 4
       script: sbt ++2.12.9 docs/publishMicrosite
 
 cache:
