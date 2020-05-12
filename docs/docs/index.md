@@ -24,7 +24,7 @@ libraryDependencies ++= Seq(
 
 ## Examples
 
-```tut
+```scala mdoc
 import io.chrisdavenport.log4cats.Logger
 import io.chrisdavenport.log4cats.slf4j.Slf4jLogger
 import cats.effect.{Sync, IO}
