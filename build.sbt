@@ -2,7 +2,7 @@ import sbtcrossproject.{crossProject, CrossType}
 val catsV = "2.1.1"
 val catsEffectV = "2.1.3"
 val slf4jV = "1.7.30"
-val specs2V = "4.8.3"
+val specs2V = "4.9.4"
 val logbackClassicV = "1.2.3"
 
 lazy val log4cats = project
@@ -21,15 +21,12 @@ lazy val log4cats = project
   .settings(commonSettings, releaseSettings)
 
 lazy val docs = project
-  .in(file("docs"))
   .settings(noPublishSettings)
   .settings(commonSettings, micrositeSettings)
   .enablePlugins(MicrositesPlugin)
-  .enablePlugins(TutPlugin)
   .dependsOn(slf4j)
 
 lazy val core = crossProject(JSPlatform, JVMPlatform)
-  .in(file("core"))
   .settings(commonSettings, releaseSettings, mimaSettings)
   .settings(
     name := "log4cats-core",
@@ -41,7 +38,6 @@ lazy val coreJVM = core.jvm
 lazy val coreJS = core.js
 
 lazy val testing = crossProject(JSPlatform, JVMPlatform)
-  .in(file("testing"))
   .settings(commonSettings, releaseSettings, mimaSettings)
   .dependsOn(core)
   .settings(
@@ -54,7 +50,6 @@ lazy val testingJVM = testing.jvm
 lazy val testingJS = testing.js
 
 lazy val noop = crossProject(JSPlatform, JVMPlatform)
-  .in(file("noop"))
   .settings(commonSettings, mimaSettings, releaseSettings)
   .dependsOn(core)
   .settings(
@@ -64,7 +59,6 @@ lazy val noopJVM = noop.jvm
 lazy val noopJS = noop.js
 
 lazy val slf4j = project
-  .in(file("slf4j"))
   .settings(commonSettings, releaseSettings, mimaSettings)
   .dependsOn(coreJVM)
   .settings(
@@ -84,7 +78,7 @@ lazy val contributors = Seq(
 
 lazy val commonSettings = Seq(
   organization := "io.chrisdavenport",
-  scalaVersion := "2.13.1",
+  scalaVersion := "2.13.2",
   crossScalaVersions := Seq(scalaVersion.value, "2.12.11"),
   addCompilerPlugin("org.typelevel" %% "kind-projector"     % "0.11.0" cross CrossVersion.full),
   addCompilerPlugin("com.olegpy"    %% "better-monadic-for" % "0.3.1"),
@@ -141,8 +135,7 @@ lazy val micrositeSettings = Seq(
     "gray-lighter" -> "#F4F3F4",
     "white-color" -> "#FFFFFF"
   ),
-  fork in tut := true,
-  scalacOptions in Tut --= Seq(
+  scalacOptions --= Seq(
     "-Xfatal-warnings",
     "-Ywarn-unused-import",
     "-Ywarn-numeric-widen",
