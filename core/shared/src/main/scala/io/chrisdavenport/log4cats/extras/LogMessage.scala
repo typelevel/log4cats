@@ -1,7 +1,7 @@
 package io.chrisdavenport.log4cats.extras
 
 import cats._
-import cats.implicits._
+import cats.syntax.all._
 
 final case class LogMessage(level: LogLevel, t: Option[Throwable], message: String)
 
