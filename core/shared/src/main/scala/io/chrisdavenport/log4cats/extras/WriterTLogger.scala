@@ -19,8 +19,8 @@ object WriterTLogger {
       infoEnabled: Boolean = true,
       warnEnabled: Boolean = true,
       errorEnabled: Boolean = true
-  ): SelfAwareLogger[WriterT[F, G[LogMessage], ?]] =
-    new SelfAwareLogger[WriterT[F, G[LogMessage], ?]] {
+  ): SelfAwareLogger[WriterT[F, G[LogMessage], *]] =
+    new SelfAwareLogger[WriterT[F, G[LogMessage], *]] {
       override def isTraceEnabled: WriterT[F, G[LogMessage], Boolean] = isEnabled(traceEnabled)
       override def isDebugEnabled: WriterT[F, G[LogMessage], Boolean] = isEnabled(debugEnabled)
       override def isInfoEnabled: WriterT[F, G[LogMessage], Boolean] = isEnabled(infoEnabled)
@@ -69,8 +69,8 @@ object WriterTLogger {
         Alternative[G].algebra[LogMessage]
     }
 
-  def run[F[_]: Monad, G[_]: Foldable](l: Logger[F]): WriterT[F, G[LogMessage], ?] ~> F =
-    new ~>[WriterT[F, G[LogMessage], ?], F] {
+  def run[F[_]: Monad, G[_]: Foldable](l: Logger[F]): WriterT[F, G[LogMessage], *] ~> F =
+    new ~>[WriterT[F, G[LogMessage], *], F] {
       override def apply[A](fa: WriterT[F, G[LogMessage], A]): F[A] = {
         def logMessage(logMessage: LogMessage): F[Unit] = logMessage match {
           case LogMessage(LogLevel.Trace, Some(t), m) => l.trace(t)(m)
