@@ -2,7 +2,7 @@ package io.chrisdavenport.log4cats.extras
 
 import cats._
 import cats.data._
-import cats.implicits._
+import cats.syntax.all._
 import io.chrisdavenport.log4cats._
 
 /**

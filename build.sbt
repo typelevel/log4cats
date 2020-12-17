@@ -1,8 +1,8 @@
 import sbtcrossproject.{crossProject, CrossType}
-val catsV = "2.1.1"
+val catsV = "2.3.0"
 val catsEffectV = "2.1.3"
 val slf4jV = "1.7.30"
-val specs2V = "4.9.4"
+val specs2V = "4.10.5"
 val logbackClassicV = "1.2.3"
 
 lazy val log4cats = project
@@ -80,7 +80,7 @@ lazy val commonSettings = Seq(
   organization := "io.chrisdavenport",
   scalaVersion := "2.13.2",
   crossScalaVersions := Seq(scalaVersion.value, "2.12.11"),
-  addCompilerPlugin("org.typelevel" %% "kind-projector"     % "0.11.0" cross CrossVersion.full),
+  addCompilerPlugin("org.typelevel" %% "kind-projector"     % "0.11.2" cross CrossVersion.full),
   addCompilerPlugin("com.olegpy"    %% "better-monadic-for" % "0.3.1"),
   libraryDependencies ++= Seq(
     "org.specs2" %%% "specs2-core" % specs2V % Test
