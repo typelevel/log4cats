@@ -89,8 +89,8 @@ object WriterTLogger {
           case LogMessage(LogLevel.Error, None, m) => l.error(m)
         }
 
-        fa.run.flatMap {
-          case (toLog, out) => toLog.traverse_(logMessage).as(out)
+        fa.run.flatMap { case (toLog, out) =>
+          toLog.traverse_(logMessage).as(out)
         }
       }
     }
