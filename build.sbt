@@ -1,4 +1,5 @@
 import sbtcrossproject.{crossProject, CrossType}
+
 val catsV = "2.3.0"
 val catsEffectV = "2.3.0"
 val slf4jV = "1.7.30"
