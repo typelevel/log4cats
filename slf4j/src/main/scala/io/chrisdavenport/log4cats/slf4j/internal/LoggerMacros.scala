@@ -24,7 +24,8 @@ package io.chrisdavenport.log4cats.slf4j.internal
 import scala.annotation.tailrec
 import scala.reflect.macros.blackbox
 
-/** Macros that support the logging system.
+/**
+ * Macros that support the logging system.
  *
  *  See for handling call-by-name-parameters in macros
  *  https://issues.scala-lang.org/browse/SI-5778
@@ -110,9 +111,10 @@ private[slf4j] class GetLoggerMacros(val c: blackbox.Context) {
     @inline def isInnerClass(s: Symbol) =
       s.isClass && !(s.owner.isPackage)
 
-    val instanceByName = Slf4jLoggerInternal.singletonsByName && (cls.isModule || cls.isModuleClass) || cls.isClass && isInnerClass(
-      cls
-    )
+    val instanceByName =
+      Slf4jLoggerInternal.singletonsByName && (cls.isModule || cls.isModuleClass) || cls.isClass && isInnerClass(
+        cls
+      )
 
     if (instanceByName) {
       loggerBySymbolName(cls)

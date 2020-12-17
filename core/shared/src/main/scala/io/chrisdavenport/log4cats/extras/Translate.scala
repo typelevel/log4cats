@@ -6,7 +6,7 @@ import cats._
 /**
  * Allows for mapK or algebraic higher kinded
  * transformations
-  **/
+ */
 object Translate {
 
   @deprecated("0.4.0", "Use mapK directly on the ErrorLogger")
