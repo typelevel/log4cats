@@ -56,7 +56,7 @@ class Slf4jLoggerInternalSpec extends Specification {
       Slf4jLogger
         .getLogger[IO]
         .info(Map(variable -> "bar"))("A log went here")
-        .unsafeRunSync
+        .unsafeRunSync()
 
       val out = MDC.get(variable)
       out must_=== initial

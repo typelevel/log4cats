@@ -37,7 +37,7 @@ object TestingLogger {
       def mod(): Unit = {
         val c = ar.get
         val u = c :+ m
-        if (!ar.compareAndSet(c, u)) mod
+        if (!ar.compareAndSet(c, u)) mod()
         else ()
       }
       mod()
