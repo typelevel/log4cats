@@ -10,3 +10,4 @@ tags
 .bloop
 project/metals.sbt
 project/project
+.bsp
