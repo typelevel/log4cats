@@ -13,9 +13,9 @@ object WriterLogger {
       infoEnabled: Boolean = true,
       warnEnabled: Boolean = true,
       errorEnabled: Boolean = true
-  ): SelfAwareLogger[Writer[G[LogMessage], ?]] = {
+  ): SelfAwareLogger[Writer[G[LogMessage], *]] = {
     implicit val monoidGLogMessage = Alternative[G].algebra[LogMessage]
-    new SelfAwareLogger[Writer[G[LogMessage], ?]] {
+    new SelfAwareLogger[Writer[G[LogMessage], *]] {
       def isTraceEnabled: Writer[G[LogMessage], Boolean] =
         Writer.value[G[LogMessage], Boolean](traceEnabled)
       def isDebugEnabled: Writer[G[LogMessage], Boolean] =
@@ -68,8 +68,8 @@ object WriterLogger {
     }
   }
 
-  def run[F[_]: Applicative, G[_]: Foldable](l: Logger[F]): Writer[G[LogMessage], ?] ~> F =
-    new ~>[Writer[G[LogMessage], ?], F] {
+  def run[F[_]: Applicative, G[_]: Foldable](l: Logger[F]): Writer[G[LogMessage], *] ~> F =
+    new ~>[Writer[G[LogMessage], *], F] {
       def logMessage(logMessage: LogMessage): F[Unit] = logMessage match {
         case LogMessage(LogLevel.Error, Some(t), m) =>
           l.error(t)(m)
