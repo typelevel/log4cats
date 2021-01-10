@@ -1,3 +1,5 @@
+import sbtcrossproject.{crossProject, CrossType}
+
 val Scala213 = "2.13.4"
 val Scala212 = "2.12.12"
 
@@ -66,11 +68,13 @@ ThisBuild / githubWorkflowPublish := Seq(
   cond = Some(MicrositesCond)
 )
 
-val catsV = "2.1.1"
-val catsEffectV = "2.1.3"
+val catsV = "2.3.1"
+val catsEffectV = "2.3.1"
 val slf4jV = "1.7.30"
-val specs2V = "4.9.4"
+val specs2V = "4.10.5"
 val logbackClassicV = "1.2.3"
+
+Global / onChangedBuildSource := ReloadOnSourceChanges
 
 lazy val log4cats = project
   .in(file("."))
@@ -91,6 +95,9 @@ lazy val docs = project
   .settings(noPublishSettings)
   .settings(commonSettings, micrositeSettings)
   .enablePlugins(MicrositesPlugin)
+  .enablePlugins(MdocPlugin)
+  .enablePlugins(NoPublishPlugin)
+  .settings(mdocIn := sourceDirectory.value / "main" / "mdoc")
   .dependsOn(slf4j)
 
 lazy val core = crossProject(JSPlatform, JVMPlatform)

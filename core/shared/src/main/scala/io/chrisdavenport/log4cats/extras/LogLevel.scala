@@ -1,7 +1,6 @@
 package io.chrisdavenport.log4cats.extras
 
 import cats._
-import cats.implicits._
 
 sealed trait LogLevel
 object LogLevel {

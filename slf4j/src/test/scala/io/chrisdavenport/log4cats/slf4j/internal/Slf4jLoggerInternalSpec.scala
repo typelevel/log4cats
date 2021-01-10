@@ -94,7 +94,7 @@ class Slf4jLoggerInternalSpec extends Specification {
       }
 
       def getVariableOn(ec: ExecutionContext) =
-        IO { runBlockingOn { MDC.get(variable) }(ec) }
+        IO(runBlockingOn(MDC.get(variable))(ec))
 
       val getVariables = (
         getVariableOn(loggerThread),
@@ -104,8 +104,8 @@ class Slf4jLoggerInternalSpec extends Specification {
 
       val result =
         IO {
-          runBlockingOn { MDC.put(variable, initial) }(loggerThread)
-          runBlockingOn { MDC.put(variable, initial) }(finalizerThread)
+          runBlockingOn(MDC.put(variable, initial))(loggerThread)
+          runBlockingOn(MDC.put(variable, initial))(finalizerThread)
         } *>
           performLogging
             .start(IO.contextShift(loggerThread))

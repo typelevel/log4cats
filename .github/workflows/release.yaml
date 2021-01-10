@@ -1,0 +1,43 @@
+name: Release
+on:
+  push:
+    branches:
+      - master
+    tags: 
+      - '*'
+env:
+  CI: true
+  CI_SNAPSHOT_RELEASE: +publishSigned
+  SCALA_VERSION: 2.12.12 # Only used for publishing docs
+jobs:
+  release:
+    name: Release
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+      - uses: olafurpg/setup-scala@v7
+      - uses: olafurpg/setup-gpg@v2    
+      - uses: coursier/cache-action@v3
+      - name: Publish
+        run: |
+          csbt ci-release
+        env:
+          PGP_PASSPHRASE: ${{ secrets.PGP_PASSPHRASE }}
+          PGP_SECRET: ${{ secrets.PGP_SECRET }}
+          SONATYPE_PASSWORD: ${{ secrets.SONATYPE_PASSWORD }}
+          SONATYPE_USERNAME: ${{ secrets.SONATYPE_USERNAME }}        
+      - name: Set up Ruby 2.6
+        uses: actions/setup-ruby@v1
+        with:
+          ruby-version: 2.6
+      - name: Install Jekyll
+        run: |
+          gem install bundler
+          bundle install --gemfile=modules/docs/Gemfile
+      - name: Publish microsite
+        run: |
+          csbt ++$SCALA_VERSION docs/publishMicrosite
+        env:
+          GITHUB_TOKEN: ${{ secrets.SITE_TOKEN }}

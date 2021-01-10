@@ -2,7 +2,7 @@ package io.chrisdavenport.log4cats.extras
 
 import cats._
 import cats.data._
-import cats.implicits._
+import cats.syntax.all._
 import io.chrisdavenport.log4cats._
 
 /**
@@ -89,8 +89,8 @@ object WriterTLogger {
           case LogMessage(LogLevel.Error, None, m) => l.error(m)
         }
 
-        fa.run.flatMap {
-          case (toLog, out) => toLog.traverse_(logMessage).as(out)
+        fa.run.flatMap { case (toLog, out) =>
+          toLog.traverse_(logMessage).as(out)
         }
       }
     }

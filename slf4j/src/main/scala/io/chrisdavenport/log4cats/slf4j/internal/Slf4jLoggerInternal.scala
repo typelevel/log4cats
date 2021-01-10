@@ -1,7 +1,7 @@
 package io.chrisdavenport.log4cats.slf4j.internal
 
 import io.chrisdavenport.log4cats._
-import cats.implicits._
+import cats.syntax.all._
 import cats.effect._
 import org.slf4j.{Logger => JLogger}
 import org.slf4j.MDC
@@ -32,10 +32,8 @@ private[slf4j] object Slf4jLoggerInternal {
       } MDC.put(k, v)
 
       try logging()
-      finally {
-        if (backup eq null) MDC.clear()
-        else MDC.setContextMap(backup)
-      }
+      finally if (backup eq null) MDC.clear()
+      else MDC.setContextMap(backup)
     }
 
     isEnabled.ifM(
