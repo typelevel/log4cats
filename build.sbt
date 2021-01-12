@@ -1,5 +1,73 @@
 import sbtcrossproject.{crossProject, CrossType}
 
+val Scala213 = "2.13.4"
+val Scala212 = "2.12.12"
+
+ThisBuild / githubWorkflowSbtCommand := "csbt"
+
+ThisBuild / crossScalaVersions := Seq(Scala213, Scala212)
+ThisBuild / scalaVersion := Scala213
+
+ThisBuild / githubWorkflowJavaVersions := Seq("adopt@1.11")
+
+val MicrositesCond = s"matrix.scala == '$Scala212'"
+
+ThisBuild / githubWorkflowBuild := Seq(
+  WorkflowStep.Sbt(List("test"), name = Some("Test")),
+  WorkflowStep.Sbt(List("mimaReportBinaryIssues"), name = Some("Binary Compatibility Check"))
+)
+
+def micrositeWorkflowSteps(cond: Option[String] = None): List[WorkflowStep] = List(
+  WorkflowStep.Use(
+    "ruby",
+    "setup-ruby",
+    "v1",
+    params = Map("ruby-version" -> "2.6"),
+    cond = cond
+  ),
+  WorkflowStep.Run(List("gem update --system"), cond = cond),
+  WorkflowStep.Run(List("gem install sass"), cond = cond),
+  WorkflowStep.Run(List("gem install jekyll -v 4"), cond = cond)
+)
+
+ThisBuild / githubWorkflowAddedJobs ++= Seq(
+  WorkflowJob(
+    "scalafmt",
+    "Scalafmt",
+    githubWorkflowJobSetup.value.toList ::: List(
+      WorkflowStep.Sbt(List("scalafmtCheckAll"), name = Some("Scalafmt"))
+    ),
+    scalas = crossScalaVersions.value.toList
+  ),
+  WorkflowJob(
+    "microsite",
+    "Microsite",
+    githubWorkflowJobSetup.value.toList ::: (micrositeWorkflowSteps(None) :+ WorkflowStep
+      .Sbt(List("docs/makeMicrosite"), name = Some("Build the microsite"))),
+    scalas = List(Scala212)
+  )
+)
+
+ThisBuild / githubWorkflowTargetTags ++= Seq("v*")
+ThisBuild / githubWorkflowPublishTargetBranches := Seq(RefPredicate.StartsWith(Ref.Tag("v")))
+
+ThisBuild / githubWorkflowPublishPreamble += WorkflowStep.Use("olafurpg", "setup-gpg", "v3")
+
+ThisBuild / githubWorkflowPublish := Seq(
+  WorkflowStep.Sbt(
+    List("ci-release"),
+    env = Map(
+      "PGP_PASSPHRASE" -> "${{ secrets.PGP_PASSPHRASE }}",
+      "PGP_SECRET" -> "${{ secrets.PGP_SECRET }}",
+      "SONATYPE_PASSWORD" -> "${{ secrets.SONATYPE_PASSWORD }}",
+      "SONATYPE_USERNAME" -> "${{ secrets.SONATYPE_USERNAME }}"
+    )
+  )
+) ++ micrositeWorkflowSteps(Some(MicrositesCond)).toSeq :+ WorkflowStep.Sbt(
+  List("docs/publishMicrosite"),
+  cond = Some(MicrositesCond)
+)
+
 val catsV = "2.3.1"
 val catsEffectV = "2.3.1"
 val slf4jV = "1.7.30"
@@ -70,8 +138,8 @@ lazy val slf4j = project
   .settings(
     name := "log4cats-slf4j",
     libraryDependencies ++= Seq(
-      "org.slf4j"                       % "slf4j-api" % slf4jV,
-      "org.scala-lang"                  % "scala-reflect" % scalaVersion.value,
+      "org.slf4j"                       % "slf4j-api"       % slf4jV,
+      "org.scala-lang"                  % "scala-reflect"   % scalaVersion.value,
       "org.typelevel" %%% "cats-effect" % catsEffectV,
       "ch.qos.logback"                  % "logback-classic" % logbackClassicV % Test
     )
@@ -84,8 +152,6 @@ lazy val contributors = Seq(
 
 lazy val commonSettings = Seq(
   organization := "io.chrisdavenport",
-  scalaVersion := "2.13.3",
-  crossScalaVersions := Seq(scalaVersion.value, "2.12.11"),
   addCompilerPlugin("org.typelevel" %% "kind-projector"     % "0.11.2" cross CrossVersion.full),
   addCompilerPlugin("com.olegpy"    %% "better-monadic-for" % "0.3.1"),
   libraryDependencies ++= Seq(
@@ -111,11 +177,14 @@ lazy val releaseSettings = {
     },
     pomExtra := {
       <developers>
-        {for ((username, name) <- contributors) yield <developer>
+        {
+        for ((username, name) <- contributors)
+          yield <developer>
           <id>{username}</id>
           <name>{name}</name>
           <url>http://github.com/{username}</url>
-        </developer>}
+        </developer>
+      }
       </developers>
     }
   )
@@ -170,6 +239,8 @@ lazy val mimaSettings = {
     mimaPreviousArtifacts := (mimaVersion(version.value) map {
       organization.value % s"${moduleName.value}_${scalaBinaryVersion.value}" % _
     }).toSet,
+    // There was no 1.1.0
+    mimaPreviousArtifacts ~= { _.filter(_.revision != "1.1.0") },
     mimaBinaryIssueFilters ++= {
       import com.typesafe.tools.mima.core._
       import com.typesafe.tools.mima.core.ProblemFilters._

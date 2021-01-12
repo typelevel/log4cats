@@ -1,7 +1,7 @@
 package io.chrisdavenport.log4cats
 
 import cats._
-import cats.data.{OptionT, EitherT}
+import cats.data.{EitherT, OptionT}
 
 trait Logger[F[_]] extends MessageLogger[F] with ErrorLogger[F] {
   def withModifiedString(f: String => String): Logger[F] = Logger.withModifiedString[F](this, f)
