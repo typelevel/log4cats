@@ -1,6 +1,7 @@
 package io.chrisdavenport.log4cats
 
 import cats._
+import cats.data.{EitherT, OptionT}
 
 trait Logger[F[_]] extends MessageLogger[F] with ErrorLogger[F] {
   def withModifiedString(f: String => String): Logger[F] = Logger.withModifiedString[F](this, f)
@@ -9,6 +10,12 @@ trait Logger[F[_]] extends MessageLogger[F] with ErrorLogger[F] {
 
 object Logger {
   def apply[F[_]](implicit ev: Logger[F]) = ev
+
+  implicit def optionTLogger[F[_]: Logger: Functor]: Logger[OptionT[F, *]] =
+    Logger[F].mapK(OptionT.liftK[F])
+
+  implicit def eitherTLogger[F[_]: Logger: Functor, E]: Logger[EitherT[F, E, *]] =
+    Logger[F].mapK(EitherT.liftK[F, E])
 
   private def withModifiedString[F[_]](l: Logger[F], f: String => String): Logger[F] =
     new Logger[F] {
