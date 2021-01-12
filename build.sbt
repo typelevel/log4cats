@@ -138,8 +138,8 @@ lazy val slf4j = project
   .settings(
     name := "log4cats-slf4j",
     libraryDependencies ++= Seq(
-      "org.slf4j"                       % "slf4j-api" % slf4jV,
-      "org.scala-lang"                  % "scala-reflect" % scalaVersion.value,
+      "org.slf4j"                       % "slf4j-api"       % slf4jV,
+      "org.scala-lang"                  % "scala-reflect"   % scalaVersion.value,
       "org.typelevel" %%% "cats-effect" % catsEffectV,
       "ch.qos.logback"                  % "logback-classic" % logbackClassicV % Test
     )
@@ -157,7 +157,7 @@ lazy val commonSettings = Seq(
   libraryDependencies ++= Seq(
     "org.specs2" %%% "specs2-core" % specs2V % Test
     // "org.specs2"                  %% "specs2-scalacheck"          % specs2V       % Test
-  ),
+  )
 )
 
 lazy val releaseSettings = {
@@ -177,11 +177,14 @@ lazy val releaseSettings = {
     },
     pomExtra := {
       <developers>
-        {for ((username, name) <- contributors) yield <developer>
+        {
+        for ((username, name) <- contributors)
+          yield <developer>
           <id>{username}</id>
           <name>{name}</name>
           <url>http://github.com/{username}</url>
-        </developer>}
+        </developer>
+      }
       </developers>
     }
   )
