@@ -157,7 +157,7 @@ lazy val commonSettings = Seq(
   libraryDependencies ++= Seq(
     "org.specs2" %%% "specs2-core" % specs2V % Test
     // "org.specs2"                  %% "specs2-scalacheck"          % specs2V       % Test
-  )
+  ),
 )
 
 lazy val releaseSettings = {
@@ -236,6 +236,8 @@ lazy val mimaSettings = {
     mimaPreviousArtifacts := (mimaVersion(version.value) map {
       organization.value % s"${moduleName.value}_${scalaBinaryVersion.value}" % _
     }).toSet,
+    // There was no 1.1.0
+    mimaPreviousArtifacts ~= { _.filter(_.revision != "1.1.0") },
     mimaBinaryIssueFilters ++= {
       import com.typesafe.tools.mima.core._
       import com.typesafe.tools.mima.core.ProblemFilters._
