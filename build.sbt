@@ -5,6 +5,7 @@ val Scala212 = "2.12.12"
 
 enablePlugins(SonatypeCiReleasePlugin)
 
+ThisBuild / organization := "org.typelevel"
 ThisBuild / baseVersion := "1.2"
 ThisBuild / crossScalaVersions := Seq(Scala213, Scala212)
 ThisBuild / scalaVersion := Scala213
