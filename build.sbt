@@ -3,10 +3,15 @@ import sbtcrossproject.{crossProject, CrossType}
 val Scala213 = "2.13.4"
 val Scala212 = "2.12.12"
 
-ThisBuild / githubWorkflowSbtCommand := "csbt"
+enablePlugins(SonatypeCiReleasePlugin)
 
+ThisBuild / baseVersion := "1.2"
 ThisBuild / crossScalaVersions := Seq(Scala213, Scala212)
 ThisBuild / scalaVersion := Scala213
+ThisBuild / publishFullName := "Christopher Davenport"
+ThisBuild / publishGithubUser := "christopherdavenport"
+
+ThisBuild / githubWorkflowSbtCommand := "csbt"
 
 ThisBuild / githubWorkflowJavaVersions := Seq("adopt@1.11")
 
@@ -51,17 +56,9 @@ ThisBuild / githubWorkflowAddedJobs ++= Seq(
 ThisBuild / githubWorkflowTargetTags ++= Seq("v*")
 ThisBuild / githubWorkflowPublishTargetBranches := Seq(RefPredicate.StartsWith(Ref.Tag("v")))
 
-ThisBuild / githubWorkflowPublishPreamble += WorkflowStep.Use("olafurpg", "setup-gpg", "v3")
-
 ThisBuild / githubWorkflowPublish := Seq(
   WorkflowStep.Sbt(
-    List("ci-release"),
-    env = Map(
-      "PGP_PASSPHRASE" -> "${{ secrets.PGP_PASSPHRASE }}",
-      "PGP_SECRET" -> "${{ secrets.PGP_SECRET }}",
-      "SONATYPE_PASSWORD" -> "${{ secrets.SONATYPE_PASSWORD }}",
-      "SONATYPE_USERNAME" -> "${{ secrets.SONATYPE_USERNAME }}"
-    )
+    List("release"),
   )
 ) ++ micrositeWorkflowSteps(Some(MicrositesCond)).toSeq :+ WorkflowStep.Sbt(
   List("docs/publishMicrosite"),
@@ -88,11 +85,10 @@ lazy val log4cats = project
     slf4j,
     docs
   )
-  .settings(noPublishSettings)
+  .enablePlugins(NoPublishPlugin)
   .settings(commonSettings, releaseSettings)
 
 lazy val docs = project
-  .settings(noPublishSettings)
   .settings(commonSettings, micrositeSettings)
   .enablePlugins(MicrositesPlugin)
   .enablePlugins(MdocPlugin)
@@ -101,7 +97,7 @@ lazy val docs = project
   .dependsOn(slf4j)
 
 lazy val core = crossProject(JSPlatform, JVMPlatform)
-  .settings(commonSettings, releaseSettings, mimaSettings)
+  .settings(commonSettings, releaseSettings)
   .settings(
     name := "log4cats-core",
     libraryDependencies ++= Seq(
@@ -112,7 +108,7 @@ lazy val coreJVM = core.jvm
 lazy val coreJS = core.js
 
 lazy val testing = crossProject(JSPlatform, JVMPlatform)
-  .settings(commonSettings, releaseSettings, mimaSettings)
+  .settings(commonSettings, releaseSettings)
   .dependsOn(core)
   .settings(
     name := "log4cats-testing",
@@ -124,7 +120,7 @@ lazy val testingJVM = testing.jvm
 lazy val testingJS = testing.js
 
 lazy val noop = crossProject(JSPlatform, JVMPlatform)
-  .settings(commonSettings, mimaSettings, releaseSettings)
+  .settings(commonSettings, releaseSettings)
   .dependsOn(core)
   .settings(
     name := "log4cats-noop"
@@ -133,7 +129,7 @@ lazy val noopJVM = noop.jvm
 lazy val noopJS = noop.js
 
 lazy val slf4j = project
-  .settings(commonSettings, releaseSettings, mimaSettings)
+  .settings(commonSettings, releaseSettings)
   .dependsOn(coreJVM)
   .settings(
     name := "log4cats-slf4j",
@@ -151,12 +147,8 @@ lazy val contributors = Seq(
 )
 
 lazy val commonSettings = Seq(
-  organization := "io.chrisdavenport",
-  addCompilerPlugin("org.typelevel" %% "kind-projector"     % "0.11.2" cross CrossVersion.full),
-  addCompilerPlugin("com.olegpy"    %% "better-monadic-for" % "0.3.1"),
   libraryDependencies ++= Seq(
     "org.specs2" %%% "specs2-core" % specs2V % Test
-    // "org.specs2"                  %% "specs2-scalacheck"          % specs2V       % Test
   )
 )
 
@@ -171,10 +163,6 @@ lazy val releaseSettings = {
     ),
     homepage := Some(url("https://github.com/ChristopherDavenport/log4cats")),
     licenses := Seq("Apache-2.0" -> url("https://www.apache.org/licenses/LICENSE-2.0.html")),
-    publishMavenStyle := true,
-    pomIncludeRepository := { _ =>
-      false
-    },
     pomExtra := {
       <developers>
         {
@@ -221,38 +209,3 @@ lazy val micrositeSettings = Seq(
   micrositePushSiteWith := GitHub4s,
   micrositeGithubToken := sys.env.get("GITHUB_TOKEN")
 )
-
-// Not Used Currently
-lazy val mimaSettings = {
-  def mimaVersion(version: String) = {
-    VersionNumber(version) match {
-      case VersionNumber(Seq(major, minor, patch, _*), _, _) if patch.toInt > 0 =>
-        Some(s"${major}.${minor}.${patch.toInt - 1}")
-      case _ =>
-        None
-    }
-  }
-
-  Seq(
-    mimaFailOnProblem := mimaVersion(version.value).isDefined,
-    mimaFailOnNoPrevious in ThisBuild := false,
-    mimaPreviousArtifacts := (mimaVersion(version.value) map {
-      organization.value % s"${moduleName.value}_${scalaBinaryVersion.value}" % _
-    }).toSet,
-    // There was no 1.1.0
-    mimaPreviousArtifacts ~= { _.filter(_.revision != "1.1.0") },
-    mimaBinaryIssueFilters ++= {
-      import com.typesafe.tools.mima.core._
-      import com.typesafe.tools.mima.core.ProblemFilters._
-      Seq()
-    }
-  )
-}
-
-lazy val noPublishSettings = {
-  Seq(
-    publish := {},
-    publishLocal := {},
-    publishArtifact := false
-  )
-}
