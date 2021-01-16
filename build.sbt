@@ -12,6 +12,14 @@ ThisBuild / scalaVersion := Scala213
 ThisBuild / publishFullName := "Christopher Davenport"
 ThisBuild / publishGithubUser := "christopherdavenport"
 
+ThisBuild / versionIntroduced := Map(
+  // First versions after the Typelevel move
+  "2.12" -> "1.1.2",
+  "2.13" -> "1.1.2",
+  "3.0.0-M2" -> "1.1.2",
+  "3.0.0-M3" -> "1.1.2",
+)
+
 ThisBuild / githubWorkflowSbtCommand := "csbt"
 
 ThisBuild / githubWorkflowJavaVersions := Seq("adopt@1.8", "adopt@1.11")
