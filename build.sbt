@@ -14,7 +14,7 @@ ThisBuild / publishGithubUser := "christopherdavenport"
 
 ThisBuild / githubWorkflowSbtCommand := "csbt"
 
-ThisBuild / githubWorkflowJavaVersions := Seq("adopt@1.11")
+ThisBuild / githubWorkflowJavaVersions := Seq("adopt@1.8", "adopt@1.11")
 
 val MicrositesCond = s"matrix.scala == '$Scala212'"
 
