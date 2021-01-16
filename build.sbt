@@ -158,11 +158,11 @@ lazy val releaseSettings = {
     publishArtifact in Test := false,
     scmInfo := Some(
       ScmInfo(
-        url("https://github.com/ChristopherDavenport/log4cats"),
-        "git@github.com:ChristopherDavenport/log4cats.git"
+        url("https://github.com/typelevel/log4cats"),
+        "git@github.com:typelevel/log4cats.git"
       )
     ),
-    homepage := Some(url("https://github.com/ChristopherDavenport/log4cats")),
+    homepage := Some(url("https://github.com/typelevel/log4cats")),
     licenses := Seq("Apache-2.0" -> url("https://www.apache.org/licenses/LICENSE-2.0.html")),
     pomExtra := {
       <developers>
@@ -183,10 +183,10 @@ lazy val micrositeSettings = Seq(
   micrositeName := "log4cats",
   micrositeDescription := "Functional Logging",
   micrositeAuthor := "Christopher Davenport",
-  micrositeGithubOwner := "ChristopherDavenport",
+  micrositeGithubOwner := "typelevel",
   micrositeGithubRepo := "log4cats",
   micrositeBaseUrl := "/log4cats",
-  micrositeDocumentationUrl := "https://christopherdavenport.github.io/log4cats",
+  micrositeDocumentationUrl := "https://typelevel.github.io/log4cats",
   micrositeFooterText := None,
   micrositeHighlightTheme := "atom-one-light",
   micrositePalette := Map(

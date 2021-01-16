@@ -7,7 +7,7 @@
         </encoder>
     </appender>
 
-    <!-- <logger name="io.chrisdavenport.slf4j" level="TRACE"/> -->
+    <!-- <logger name="org.typelevel.slf4j" level="TRACE"/> -->
 
     <root level="TRACE">
         <appender-ref ref="STDOUT" />
