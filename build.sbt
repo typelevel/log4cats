@@ -12,14 +12,6 @@ ThisBuild / scalaVersion := Scala213
 ThisBuild / publishFullName := "Christopher Davenport"
 ThisBuild / publishGithubUser := "christopherdavenport"
 
-ThisBuild / versionIntroduced := Map(
-  // First versions after the Typelevel move
-  "2.12" -> "1.1.2",
-  "2.13" -> "1.1.2",
-  "3.0.0-M2" -> "1.1.2",
-  "3.0.0-M3" -> "1.1.2",
-)
-
 ThisBuild / githubWorkflowSbtCommand := "csbt"
 
 ThisBuild / githubWorkflowJavaVersions := Seq("adopt@1.8", "adopt@1.11")
@@ -144,10 +136,13 @@ lazy val slf4j = project
     name := "log4cats-slf4j",
     libraryDependencies ++= Seq(
       "org.slf4j"                       % "slf4j-api"       % slf4jV,
-      "org.scala-lang"                  % "scala-reflect"   % scalaVersion.value,
       "org.typelevel" %%% "cats-effect" % catsEffectV,
       "ch.qos.logback"                  % "logback-classic" % logbackClassicV % Test
-    )
+    ),
+    libraryDependencies ++= {
+      if (isDotty.value) Seq.empty
+      else Seq("org.scala-lang" % "scala-reflect" % scalaVersion.value % Provided)
+    }
   )
 
 lazy val contributors = Seq(
@@ -157,7 +152,7 @@ lazy val contributors = Seq(
 
 lazy val commonSettings = Seq(
   libraryDependencies ++= Seq(
-    "org.specs2" %%% "specs2-core" % specs2V % Test
+    "org.specs2" %%% "specs2-core" % specs2V % Test withDottyCompat scalaVersion.value
   )
 )
 
