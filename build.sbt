@@ -7,7 +7,7 @@ enablePlugins(SonatypeCiReleasePlugin)
 
 ThisBuild / organization := "org.typelevel"
 ThisBuild / baseVersion := "1.2"
-ThisBuild / crossScalaVersions := Seq(Scala213, Scala212)
+ThisBuild / crossScalaVersions := Seq(Scala213, Scala212, "3.0.0-M2", "3.0.0-M3")
 ThisBuild / scalaVersion := Scala213
 ThisBuild / publishFullName := "Christopher Davenport"
 ThisBuild / publishGithubUser := "christopherdavenport"
