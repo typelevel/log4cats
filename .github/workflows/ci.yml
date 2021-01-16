@@ -12,10 +12,13 @@ on:
     branches: ['*']
   push:
     branches: ['*']
-    tags: [v*]
+    tags: [v*, v*]
 
 env:
   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  SONATYPE_USERNAME: ${{ secrets.SONATYPE_USERNAME }}
+  SONATYPE_PASSWORD: ${{ secrets.SONATYPE_PASSWORD }}
+  PGP_SECRET: ${{ secrets.PGP_SECRET }}
 
 jobs:
   build:
@@ -24,7 +27,7 @@ jobs:
       matrix:
         os: [ubuntu-latest]
         scala: [2.13.4, 2.12.12]
-        java: [adopt@1.11]
+        java: [adopt@1.8, adopt@1.11]
     runs-on: ${{ matrix.os }}
     steps:
       - name: Checkout current branch (full)
@@ -75,7 +78,7 @@ jobs:
       matrix:
         os: [ubuntu-latest]
         scala: [2.13.4]
-        java: [adopt@1.11]
+        java: [adopt@1.8]
     runs-on: ${{ matrix.os }}
     steps:
       - name: Checkout current branch (full)
@@ -120,14 +123,10 @@ jobs:
           tar xf targets.tar
           rm targets.tar
 
-      - uses: olafurpg/setup-gpg@v3
+      - name: Import signing key
+        run: echo $PGP_SECRET | base64 -d | gpg --import
 
-      - env:
-          PGP_PASSPHRASE: ${{ secrets.PGP_PASSPHRASE }}
-          PGP_SECRET: ${{ secrets.PGP_SECRET }}
-          SONATYPE_PASSWORD: ${{ secrets.SONATYPE_PASSWORD }}
-          SONATYPE_USERNAME: ${{ secrets.SONATYPE_USERNAME }}
-        run: csbt ++${{ matrix.scala }} ci-release
+      - run: csbt ++${{ matrix.scala }} release
 
       - if: matrix.scala == '2.12.12'
         uses: ruby/setup-ruby@v1
