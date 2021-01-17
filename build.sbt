@@ -153,7 +153,9 @@ lazy val contributors = Seq(
 lazy val commonSettings = Seq(
   libraryDependencies ++= Seq(
     "org.specs2" %%% "specs2-core" % specs2V % Test withDottyCompat scalaVersion.value
-  )
+  ),
+  // Hacking around bug in sbt-spiewak
+  mimaPreviousArtifacts ~= { _.filterNot(_.revision.startsWith("1.1.")).filterNot(_.revision.startsWith("1.0.")) }
 )
 
 lazy val releaseSettings = {
