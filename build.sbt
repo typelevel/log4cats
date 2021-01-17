@@ -43,7 +43,8 @@ ThisBuild / githubWorkflowAddedJobs ++= Seq(
     githubWorkflowJobSetup.value.toList ::: List(
       WorkflowStep.Sbt(List("scalafmtCheckAll"), name = Some("Scalafmt"))
     ),
-    scalas = crossScalaVersions.value.toList
+    // Awaiting release of https://github.com/scalameta/scalafmt/pull/2324/files
+    scalas = crossScalaVersions.value.toList.filter(_.startsWith("2."))
   ),
   WorkflowJob(
     "microsite",
@@ -155,7 +156,7 @@ lazy val commonSettings = Seq(
     "org.specs2" %%% "specs2-core" % specs2V % Test withDottyCompat scalaVersion.value
   ),
   // Hacking around bug in sbt-spiewak
-  mimaPreviousArtifacts ~= { _.filterNot(_.revision.startsWith("1.1.")).filterNot(_.revision.startsWith("1.0.")) }
+  mimaPreviousArtifacts ~= { _.filterNot(_.revision.startsWith("1.1.")).filterNot(_.revision.startsWith("1.0")) }
 )
 
 lazy val releaseSettings = {
