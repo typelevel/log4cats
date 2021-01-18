@@ -76,7 +76,7 @@ ThisBuild / githubWorkflowPublish := Seq(
 val catsV = "2.3.1"
 val catsEffectV = "2.3.1"
 val slf4jV = "1.7.30"
-val specs2V = "4.10.6"
+val munitCatsEffectV = "0.12.0"
 val logbackClassicV = "1.2.3"
 
 Global / onChangedBuildSource := ReloadOnSourceChanges
@@ -159,8 +159,9 @@ lazy val contributors = Seq(
 
 lazy val commonSettings = Seq(
   libraryDependencies ++= Seq(
-    "org.specs2" %%% "specs2-core" % specs2V % Test withDottyCompat scalaVersion.value
+    "org.typelevel" %%% "munit-cats-effect-2" % munitCatsEffectV % Test,
   ),
+  testFrameworks += new TestFramework("munit.Framework"),
 )
 
 lazy val releaseSettings = {
