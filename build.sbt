@@ -1,4 +1,5 @@
 import sbtcrossproject.{crossProject, CrossType}
+import sbtghactions.UseRef
 
 val Scala213 = "2.13.4"
 val Scala212 = "2.12.12"
@@ -16,6 +17,13 @@ ThisBuild / githubWorkflowSbtCommand := "csbt"
 
 ThisBuild / githubWorkflowJavaVersions := Seq("adopt@1.8", "adopt@1.11")
 
+ThisBuild / versionIntroduced := Map(
+  "2.12" -> "1.2.0",
+  "2.13" -> "1.2.0",
+  "3.0.0-M2" -> "1.2.0",
+  "3.0.0-M3" -> "1.2.0",
+)
+
 val MicrositesCond = s"matrix.scala == '$Scala212'"
 
 ThisBuild / githubWorkflowBuild := Seq(
@@ -25,9 +33,7 @@ ThisBuild / githubWorkflowBuild := Seq(
 
 def micrositeWorkflowSteps(cond: Option[String] = None): List[WorkflowStep] = List(
   WorkflowStep.Use(
-    "ruby",
-    "setup-ruby",
-    "v1",
+    UseRef.Public("ruby", "setup-ruby", "v1"),
     params = Map("ruby-version" -> "2.6"),
     cond = cond
   ),
@@ -155,8 +161,6 @@ lazy val commonSettings = Seq(
   libraryDependencies ++= Seq(
     "org.specs2" %%% "specs2-core" % specs2V % Test withDottyCompat scalaVersion.value
   ),
-  // Hacking around bug in sbt-spiewak
-  mimaPreviousArtifacts ~= { _.filterNot(_.revision.startsWith("1.1.")).filterNot(_.revision.startsWith("1.0")) }
 )
 
 lazy val releaseSettings = {
