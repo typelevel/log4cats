@@ -76,8 +76,6 @@ class Slf4jLoggerInternalSuite extends CatsEffectSuite {
   test("Slf4jLoggerInternal resets on cancel") {
     val variable = "foo"
     val initial = "initial"
-    val mainInitial = "main initial"
-    MDC.put(variable, mainInitial)
 
     import dirtyStuff._
 
@@ -86,6 +84,8 @@ class Slf4jLoggerInternalSuite extends CatsEffectSuite {
 
     //restoring context would run here if IO.bracket was used
     val finalizerThread = namedSingleThreadExecutionContext("my-thread-2")
+
+    val mainThread = namedSingleThreadExecutionContext("main-thread")
 
     val startedLog = new CountDownLatch(1)
     val logCanceled = new CountDownLatch(1)
@@ -109,10 +109,11 @@ class Slf4jLoggerInternalSuite extends CatsEffectSuite {
     def getVariableOn(ec: ExecutionContext) =
       IO(runBlockingOn(MDC.get(variable))(ec))
 
-    (IO {
-      runBlockingOn(MDC.put(variable, initial))(loggerThread)
-      runBlockingOn(MDC.put(variable, initial))(finalizerThread)
-    } *>
+    (IO.contextShift(mainThread).shift *>
+      IO {
+        runBlockingOn(MDC.put(variable, initial))(loggerThread)
+        runBlockingOn(MDC.put(variable, initial))(finalizerThread)
+      } *>
       performLogging
         .start(IO.contextShift(loggerThread))
         .flatMap(
@@ -121,9 +122,11 @@ class Slf4jLoggerInternalSuite extends CatsEffectSuite {
             .flatMap(_.join)
         ) *>
       IO(finishedLog.await()) *>
+      // getVariableOn locks if called from its own EC
+      IO.contextShift(mainThread).shift *>
       getVariableOn(loggerThread).assertEquals(initial) *>
       getVariableOn(finalizerThread).assertEquals(initial) *>
-      IO(MDC.get(variable)).assertEquals(mainInitial))
-      .guarantee(IO(killThreads(List(loggerThread, finalizerThread))))
+      IO(MDC.get(variable)).assertEquals(null))
+      .guarantee(IO(killThreads(List(loggerThread, finalizerThread, mainThread))))
   }
 }
