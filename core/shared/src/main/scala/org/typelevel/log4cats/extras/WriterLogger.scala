@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 Christopher Davenport
+ * Copyright 2018 Christopher Davenport
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,7 +30,7 @@ object WriterLogger {
       warnEnabled: Boolean = true,
       errorEnabled: Boolean = true
   ): SelfAwareLogger[Writer[G[LogMessage], *]] = {
-    implicit val monoidGLogMessage = Alternative[G].algebra[LogMessage]
+    implicit val monoidGLogMessage: Monoid[G[LogMessage]] = Alternative[G].algebra[LogMessage]
     new SelfAwareLogger[Writer[G[LogMessage], *]] {
       def isTraceEnabled: Writer[G[LogMessage], Boolean] =
         Writer.value[G[LogMessage], Boolean](traceEnabled)
