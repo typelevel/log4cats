@@ -4,6 +4,15 @@ This file summarizes **notable** changes for each release, but does not describe
 
 ----
 
+# <a name="1.2.0-RC1"></a>New and Noteworthy for Version 1.2.0-RC1
+
+- Now published under `org.typelevel`
+- Root package changed to `org.typelevel.log4cats`
+- Add implicits for `EitherT` and `OptionT` transformers
+- Depends on cats-2.3.1 and cats-effect-2.3.1
+- Publish for ScalaJS-1.4.0
+- Add Dotty crossbuilds for Scala 3.0.0-M2 and 3.0.0-M3
+
 # <a name="1.0.0-RC1"></a>New and Noteworthy for Version 1.0.0-RC1
 
 Many thanks to **Loránd Szakács**, **mr-git**, and **Taylor Brown** for their contributions to this release.
