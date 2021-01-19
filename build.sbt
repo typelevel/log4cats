@@ -1,4 +1,5 @@
 import sbtcrossproject.{crossProject, CrossType}
+import sbtghactions.UseRef
 
 val Scala213 = "2.13.4"
 val Scala212 = "2.12.12"
@@ -7,22 +8,21 @@ enablePlugins(SonatypeCiReleasePlugin)
 
 ThisBuild / organization := "org.typelevel"
 ThisBuild / baseVersion := "1.2"
-ThisBuild / crossScalaVersions := Seq(Scala213, Scala212)
+ThisBuild / crossScalaVersions := Seq(Scala213, Scala212, "3.0.0-M2", "3.0.0-M3")
 ThisBuild / scalaVersion := Scala213
 ThisBuild / publishFullName := "Christopher Davenport"
 ThisBuild / publishGithubUser := "christopherdavenport"
 
-ThisBuild / versionIntroduced := Map(
-  // First versions after the Typelevel move
-  "2.12" -> "1.1.2",
-  "2.13" -> "1.1.2",
-  "3.0.0-M2" -> "1.1.2",
-  "3.0.0-M3" -> "1.1.2",
-)
-
 ThisBuild / githubWorkflowSbtCommand := "csbt"
 
 ThisBuild / githubWorkflowJavaVersions := Seq("adopt@1.8", "adopt@1.11")
+
+ThisBuild / versionIntroduced := Map(
+  "2.12" -> "1.2.0",
+  "2.13" -> "1.2.0",
+  "3.0.0-M2" -> "1.2.0",
+  "3.0.0-M3" -> "1.2.0",
+)
 
 val MicrositesCond = s"matrix.scala == '$Scala212'"
 
@@ -33,9 +33,7 @@ ThisBuild / githubWorkflowBuild := Seq(
 
 def micrositeWorkflowSteps(cond: Option[String] = None): List[WorkflowStep] = List(
   WorkflowStep.Use(
-    "ruby",
-    "setup-ruby",
-    "v1",
+    UseRef.Public("ruby", "setup-ruby", "v1"),
     params = Map("ruby-version" -> "2.6"),
     cond = cond
   ),
@@ -51,7 +49,8 @@ ThisBuild / githubWorkflowAddedJobs ++= Seq(
     githubWorkflowJobSetup.value.toList ::: List(
       WorkflowStep.Sbt(List("scalafmtCheckAll"), name = Some("Scalafmt"))
     ),
-    scalas = crossScalaVersions.value.toList
+    // Awaiting release of https://github.com/scalameta/scalafmt/pull/2324/files
+    scalas = crossScalaVersions.value.toList.filter(_.startsWith("2."))
   ),
   WorkflowJob(
     "microsite",
@@ -77,7 +76,7 @@ ThisBuild / githubWorkflowPublish := Seq(
 val catsV = "2.3.1"
 val catsEffectV = "2.3.1"
 val slf4jV = "1.7.30"
-val specs2V = "4.10.6"
+val munitCatsEffectV = "0.12.0"
 val logbackClassicV = "1.2.3"
 
 Global / onChangedBuildSource := ReloadOnSourceChanges
@@ -144,10 +143,13 @@ lazy val slf4j = project
     name := "log4cats-slf4j",
     libraryDependencies ++= Seq(
       "org.slf4j"                       % "slf4j-api"       % slf4jV,
-      "org.scala-lang"                  % "scala-reflect"   % scalaVersion.value,
       "org.typelevel" %%% "cats-effect" % catsEffectV,
       "ch.qos.logback"                  % "logback-classic" % logbackClassicV % Test
-    )
+    ),
+    libraryDependencies ++= {
+      if (isDotty.value) Seq.empty
+      else Seq("org.scala-lang" % "scala-reflect" % scalaVersion.value % Provided)
+    }
   )
 
 lazy val contributors = Seq(
@@ -157,8 +159,9 @@ lazy val contributors = Seq(
 
 lazy val commonSettings = Seq(
   libraryDependencies ++= Seq(
-    "org.specs2" %%% "specs2-core" % specs2V % Test
-  )
+    "org.typelevel" %%% "munit-cats-effect-2" % munitCatsEffectV % Test,
+  ),
+  testFrameworks += new TestFramework("munit.Framework"),
 )
 
 lazy val releaseSettings = {
@@ -172,6 +175,7 @@ lazy val releaseSettings = {
     ),
     homepage := Some(url("https://github.com/typelevel/log4cats")),
     licenses := Seq("Apache-2.0" -> url("https://www.apache.org/licenses/LICENSE-2.0.html")),
+    startYear := Some(2018),
     pomExtra := {
       <developers>
         {
