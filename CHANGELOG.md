@@ -4,7 +4,7 @@ This file summarizes **notable** changes for each release, but does not describe
 
 ----
 
-# <a name="1.2.0-RC1"></a>New and Noteworthy for Version 1.2.0-RC1
+# <a name="1.2.0-RC2"></a>New and Noteworthy for Version 1.2.0-RC1
 
 - Now published under `org.typelevel`
 - Root package changed to `org.typelevel.log4cats`

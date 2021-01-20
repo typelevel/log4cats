@@ -152,11 +152,6 @@ lazy val slf4j = project
     }
   )
 
-lazy val contributors = Seq(
-  "ChristopherDavenport" -> "Christopher Davenport",
-  "lorandszakacs" -> "Loránd Szakács"
-)
-
 lazy val commonSettings = Seq(
   libraryDependencies ++= Seq(
     "org.typelevel" %%% "munit-cats-effect-2" % munitCatsEffectV % Test,
@@ -176,18 +171,10 @@ lazy val releaseSettings = {
     homepage := Some(url("https://github.com/typelevel/log4cats")),
     licenses := Seq("Apache-2.0" -> url("https://www.apache.org/licenses/LICENSE-2.0.html")),
     startYear := Some(2018),
-    pomExtra := {
-      <developers>
-        {
-        for ((username, name) <- contributors)
-          yield <developer>
-          <id>{username}</id>
-          <name>{name}</name>
-          <url>http://github.com/{username}</url>
-        </developer>
-      }
-      </developers>
-    }
+    developers := List(
+      Developer("christopherdavenport", "Christopher Davenport", "chris@christopherdavenport.tech", new java.net.URL("https://christopherdavenport.github.io/")),
+      Developer("lorandszakacs", "Loránd Szakács", "lorandszakacs@users.noreply.github.com", new java.net.URL("https://github.com/lorandszakacs")),
+    ),
   )
 }
 
