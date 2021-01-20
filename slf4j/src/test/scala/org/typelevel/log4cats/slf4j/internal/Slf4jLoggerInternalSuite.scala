@@ -17,7 +17,7 @@
 package org.typelevel.log4cats.slf4j
 package internal
 
-import cats.effect.Fiber
+import cats.effect.FiberIO
 import cats.effect.IO
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.Executors
@@ -30,19 +30,6 @@ import scala.concurrent.ExecutionContextExecutorService
 class Slf4jLoggerInternalSuite extends CatsEffectSuite {
 
   object dirtyStuff {
-
-    def runBlockingOn[A >: Null](a: => A)(ec: ExecutionContext): A = {
-      val latch = new CountDownLatch(1)
-      var ref: A = null
-
-      ec.execute { () =>
-        ref = a
-        latch.countDown()
-      }
-
-      latch.await()
-      ref
-    }
 
     def namedSingleThreadExecutionContext(name: String): ExecutionContextExecutorService =
       ExecutionContext.fromExecutorService(
@@ -100,30 +87,29 @@ class Slf4jLoggerInternalSuite extends CatsEffectSuite {
         "Heavy to compute value you're logging"
       }
 
-    def performCancel[A](fiber: Fiber[IO, A]): IO[Unit] = {
+    def performCancel[A](fiber: FiberIO[A]): IO[Unit] = {
       IO(startedLog.await()) *>
         fiber.cancel *>
         IO(logCanceled.countDown())
     }
 
     def getVariableOn(ec: ExecutionContext) =
-      IO(runBlockingOn(MDC.get(variable))(ec))
+      IO(MDC.get(variable)).evalOn(ec)
 
-    (IO.contextShift(mainThread).shift *>
-      IO {
-        runBlockingOn(MDC.put(variable, initial))(loggerThread)
-        runBlockingOn(MDC.put(variable, initial))(finalizerThread)
-      } *>
+    (IO {
+      IO(MDC.put(variable, initial)).evalOn(loggerThread)
+      IO(MDC.put(variable, initial)).evalOn(finalizerThread)
+    } *>
       performLogging
-        .start(IO.contextShift(loggerThread))
+        .evalOn(loggerThread)
+        .start
         .flatMap(
           performCancel(_)
-            .start(IO.contextShift(finalizerThread))
+            .evalOn(finalizerThread)
+            .start
             .flatMap(_.join)
         ) *>
       IO(finishedLog.await()) *>
-      // getVariableOn locks if called from its own EC
-      IO.contextShift(mainThread).shift *>
       getVariableOn(loggerThread).assertEquals(initial) *>
       getVariableOn(finalizerThread).assertEquals(initial) *>
       IO(MDC.get(variable)).assertEquals(null))
