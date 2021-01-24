@@ -17,9 +17,7 @@
 package org.typelevel.log4cats.slf4j
 package internal
 
-import cats.effect.Fiber
 import cats.effect.IO
-import java.util.concurrent.CountDownLatch
 import java.util.concurrent.Executors
 import java.util.concurrent.ThreadFactory
 import org.slf4j.MDC
@@ -30,19 +28,6 @@ import scala.concurrent.ExecutionContextExecutorService
 class Slf4jLoggerInternalSuite extends CatsEffectSuite {
 
   object dirtyStuff {
-
-    def runBlockingOn[A >: Null](a: => A)(ec: ExecutionContext): A = {
-      val latch = new CountDownLatch(1)
-      var ref: A = null
-
-      ec.execute { () =>
-        ref = a
-        latch.countDown()
-      }
-
-      latch.await()
-      ref
-    }
 
     def namedSingleThreadExecutionContext(name: String): ExecutionContextExecutorService =
       ExecutionContext.fromExecutorService(
@@ -71,62 +56,5 @@ class Slf4jLoggerInternalSuite extends CatsEffectSuite {
       .info(Map(variable -> "bar"))("A log went here")
       .as(MDC.get(variable))
       .assertEquals(initial)
-  }
-
-  test("Slf4jLoggerInternal resets on cancel") {
-    val variable = "foo"
-    val initial = "initial"
-
-    import dirtyStuff._
-
-    //logging happens here
-    val loggerThread = namedSingleThreadExecutionContext("my-thread-1")
-
-    //restoring context would run here if IO.bracket was used
-    val finalizerThread = namedSingleThreadExecutionContext("my-thread-2")
-
-    val mainThread = namedSingleThreadExecutionContext("main-thread")
-
-    val startedLog = new CountDownLatch(1)
-    val logCanceled = new CountDownLatch(1)
-    val finishedLog = new CountDownLatch(1)
-
-    val performLogging = Slf4jLogger
-      .getLogger[IO]
-      .info(Map(variable -> "modified")) {
-        startedLog.countDown()
-        logCanceled.await()
-        finishedLog.countDown()
-        "Heavy to compute value you're logging"
-      }
-
-    def performCancel[A](fiber: Fiber[IO, A]): IO[Unit] = {
-      IO(startedLog.await()) *>
-        fiber.cancel *>
-        IO(logCanceled.countDown())
-    }
-
-    def getVariableOn(ec: ExecutionContext) =
-      IO(runBlockingOn(MDC.get(variable))(ec))
-
-    (IO.contextShift(mainThread).shift *>
-      IO {
-        runBlockingOn(MDC.put(variable, initial))(loggerThread)
-        runBlockingOn(MDC.put(variable, initial))(finalizerThread)
-      } *>
-      performLogging
-        .start(IO.contextShift(loggerThread))
-        .flatMap(
-          performCancel(_)
-            .start(IO.contextShift(finalizerThread))
-            .flatMap(_.join)
-        ) *>
-      IO(finishedLog.await()) *>
-      // getVariableOn locks if called from its own EC
-      IO.contextShift(mainThread).shift *>
-      getVariableOn(loggerThread).assertEquals(initial) *>
-      getVariableOn(finalizerThread).assertEquals(initial) *>
-      IO(MDC.get(variable)).assertEquals(null))
-      .guarantee(IO(killThreads(List(loggerThread, finalizerThread, mainThread))))
   }
 }

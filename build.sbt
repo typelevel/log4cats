@@ -74,7 +74,7 @@ ThisBuild / githubWorkflowPublish := Seq(
 )
 
 val catsV = "2.3.1"
-val catsEffectV = "2.3.1"
+val catsEffectV = "3.0.0-M5"
 val slf4jV = "1.7.30"
 val munitCatsEffectV = "0.12.0"
 val logbackClassicV = "1.2.3"
@@ -154,7 +154,7 @@ lazy val slf4j = project
 
 lazy val commonSettings = Seq(
   libraryDependencies ++= Seq(
-    "org.typelevel" %%% "munit-cats-effect-2" % munitCatsEffectV % Test,
+    "org.typelevel" %%% "munit-cats-effect-3" % munitCatsEffectV % Test,
   ),
   testFrameworks += new TestFramework("munit.Framework"),
 )
