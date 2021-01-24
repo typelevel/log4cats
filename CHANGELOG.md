@@ -4,7 +4,7 @@ This file summarizes **notable** changes for each release, but does not describe
 
 ----
 
-# <a name="2.0.0-RC1"></a>New and Noteworthy for Version 2.0.0-RC1
+# <a name="2.0.0-M1"></a>New and Noteworthy for Version 2.0.0-M1
 
 - Depends on cats-effect-3.0.0-M5
 
