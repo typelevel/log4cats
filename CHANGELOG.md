@@ -3,10 +3,19 @@
 This file summarizes **notable** changes for each release, but does not describe internal changes unless they are particularly exciting.
 
 ----
+# <a name="2.0.0-M2"></a>New and Noteworthy for Version 2.0.0-M2
+
+- removed deprecated `org.typelevel.log4cats.extras.Translate` object
+- remove deprecated `unsafe*` constructors
 
 # <a name="2.0.0-M1"></a>New and Noteworthy for Version 2.0.0-M1
 
 - Depends on cats-effect-3.0.0-M5
+
+# <a name="1.2.0-RC3"></a>New and Noteworthy for Version 1.2.0-RC3
+
+- add `LogLevel.fromString` method  [#343](https://github.com/typelevel/log4cats/pull/343) thanks to [@Daenyth](https://github.com/Daenyth)
+- add `NoOpLogger.apply` constructor  [#344](https://github.com/typelevel/log4cats/pull/344) thanks to [@bplommer](https://github.com/bplommer)
 
 # <a name="1.2.0-RC2"></a>New and Noteworthy for Version 1.2.0-RC1
 
