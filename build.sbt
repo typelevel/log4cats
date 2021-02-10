@@ -172,7 +172,7 @@ lazy val releaseSettings = {
     startYear := Some(2018),
     developers := List(
       Developer("christopherdavenport", "Christopher Davenport", "chris@christopherdavenport.tech", new java.net.URL("https://christopherdavenport.github.io/")),
-      Developer("lorandszakacs", "Loránd Szakács", "lorandszakacs@users.noreply.github.com", new java.net.URL("https://github.com/lorandszakacs")),
+      Developer("lorandszakacs", "Loránd Szakács", "lorand.szakacs@protonmail.com", new java.net.URL("https://github.com/lorandszakacs")),
     ),
   )
 }
