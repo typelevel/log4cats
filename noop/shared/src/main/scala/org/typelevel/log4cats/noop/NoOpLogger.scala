@@ -23,8 +23,8 @@ object NoOpLogger {
   def apply[F[_]: Applicative]: SelfAwareStructuredLogger[F] = impl[F]
   def impl[F[_]: Applicative]: SelfAwareStructuredLogger[F] = new SelfAwareStructuredLogger[F] {
 
-    val no = Applicative[F].pure(false)
-    val unit = Applicative[F].pure(())
+    val no: F[Boolean] = Applicative[F].pure(false)
+    val unit: F[Unit] = Applicative[F].pure(())
     @inline override def isTraceEnabled: F[Boolean] = no
     @inline override def isDebugEnabled: F[Boolean] = no
     @inline override def isInfoEnabled: F[Boolean] = no
