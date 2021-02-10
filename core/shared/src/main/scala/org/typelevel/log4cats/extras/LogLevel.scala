@@ -25,14 +25,19 @@ object LogLevel {
   case object Info extends LogLevel
   case object Debug extends LogLevel
   case object Trace extends LogLevel
-  
+
   def fromString(s: String): Option[LogLevel] = s.toLowerCase match {
     case "error" => Some(LogLevel.Error)
-    case "warn"  => Some(LogLevel.Warn)
-    case "info"  => Some(LogLevel.Info)
+    case "warn" => Some(LogLevel.Warn)
+    case "info" => Some(LogLevel.Info)
     case "debug" => Some(LogLevel.Debug)
     case "trace" => Some(LogLevel.Trace)
-    case _       => None
+    case "loglevel.error" => Some(LogLevel.Error)
+    case "loglevel.warn" => Some(LogLevel.Warn)
+    case "loglevel.info" => Some(LogLevel.Info)
+    case "loglevel.debug" => Some(LogLevel.Debug)
+    case "loglevel.trace" => Some(LogLevel.Trace)
+    case _ => None
   }
 
   implicit val logLevelShow: Show[LogLevel] = Show.show[LogLevel] {
