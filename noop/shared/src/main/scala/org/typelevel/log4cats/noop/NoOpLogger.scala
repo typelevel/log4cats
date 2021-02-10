@@ -20,6 +20,7 @@ import cats.Applicative
 import org.typelevel.log4cats.SelfAwareStructuredLogger
 
 object NoOpLogger {
+  def apply[F[_]: Applicative]: SelfAwareStructuredLogger[F] = impl[F]
   def impl[F[_]: Applicative]: SelfAwareStructuredLogger[F] = new SelfAwareStructuredLogger[F] {
 
     val no = Applicative[F].pure(false)
