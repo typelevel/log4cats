@@ -73,7 +73,7 @@ ThisBuild / githubWorkflowPublish := Seq(
   cond = Some(MicrositesCond)
 )
 
-val catsV = "2.3.1"
+val catsV = "2.4.0"
 val catsEffectV = "3.0.0-M5"
 val slf4jV = "1.7.30"
 val munitCatsEffectV = "0.13.0"
