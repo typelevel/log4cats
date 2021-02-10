@@ -1,4 +1,3 @@
-import sbtcrossproject.{crossProject, CrossType}
 import sbtghactions.UseRef
 
 val Scala213 = "2.13.4"
