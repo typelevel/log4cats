@@ -32,7 +32,7 @@ object SelfAwareStructuredLogger {
     new ModifiedContextSelfAwareStructuredLogger[F](sl)(ctx ++ _)
 
   private class ModifiedContextSelfAwareStructuredLogger[F[_]](sl: SelfAwareStructuredLogger[F])(
-    modify: Map[String, String] => Map[String, String]
+      modify: Map[String, String] => Map[String, String]
   ) extends SelfAwareStructuredLogger[F] {
     private lazy val defaultCtx: Map[String, String] = modify(Map.empty)
     def error(message: => String): F[Unit] = sl.error(defaultCtx)(message)
