@@ -37,22 +37,22 @@ object StructuredLogger {
   def apply[F[_]](implicit ev: StructuredLogger[F]): StructuredLogger[F] = ev
 
   def withContext[F[_]](sl: StructuredLogger[F])(ctx: Map[String, String]): StructuredLogger[F] =
-    new ModifiedContextStructuredLogger[F](sl)(_ ++ ctx)
+    new ModifiedContextStructuredLogger[F](sl)(ctx ++ _)
 
   def withModifiedContext[F[_]](
       sl: StructuredLogger[F]
-  )(modifyCtx: Endo[Map[String, String]]): StructuredLogger[F] =
+  )(modifyCtx: Map[String, String] => Map[String, String]): StructuredLogger[F] =
     new ModifiedContextStructuredLogger[F](sl)(modifyCtx)
 
   private class ModifiedContextStructuredLogger[F[_]](sl: StructuredLogger[F])(
-      modify: Endo[Map[String, String]]
+      modify: Map[String, String] => Map[String, String]
   ) extends StructuredLogger[F] {
-    private def whenEmpty: Map[String, String] = modify(Map.empty)
-    def error(message: => String): F[Unit] = sl.error(whenEmpty)(message)
-    def warn(message: => String): F[Unit] = sl.warn(whenEmpty)(message)
-    def info(message: => String): F[Unit] = sl.info(whenEmpty)(message)
-    def debug(message: => String): F[Unit] = sl.debug(whenEmpty)(message)
-    def trace(message: => String): F[Unit] = sl.trace(whenEmpty)(message)
+    private lazy val defaultCtx: Map[String, String] = modify(Map.empty)
+    def error(message: => String): F[Unit] = sl.error(defaultCtx)(message)
+    def warn(message: => String): F[Unit] = sl.warn(defaultCtx)(message)
+    def info(message: => String): F[Unit] = sl.info(defaultCtx)(message)
+    def debug(message: => String): F[Unit] = sl.debug(defaultCtx)(message)
+    def trace(message: => String): F[Unit] = sl.trace(defaultCtx)(message)
     def trace(ctx: Map[String, String])(msg: => String): F[Unit] =
       sl.trace(modify(ctx))(msg)
     def debug(ctx: Map[String, String])(msg: => String): F[Unit] =
@@ -65,15 +65,15 @@ object StructuredLogger {
       sl.error(modify(ctx))(msg)
 
     def error(t: Throwable)(message: => String): F[Unit] =
-      sl.error(whenEmpty, t)(message)
+      sl.error(defaultCtx, t)(message)
     def warn(t: Throwable)(message: => String): F[Unit] =
-      sl.warn(whenEmpty, t)(message)
+      sl.warn(defaultCtx, t)(message)
     def info(t: Throwable)(message: => String): F[Unit] =
-      sl.info(whenEmpty, t)(message)
+      sl.info(defaultCtx, t)(message)
     def debug(t: Throwable)(message: => String): F[Unit] =
-      sl.debug(whenEmpty, t)(message)
+      sl.debug(defaultCtx, t)(message)
     def trace(t: Throwable)(message: => String): F[Unit] =
-      sl.trace(whenEmpty, t)(message)
+      sl.trace(defaultCtx, t)(message)
 
     def error(ctx: Map[String, String], t: Throwable)(message: => String): F[Unit] =
       sl.error(modify(ctx), t)(message)
