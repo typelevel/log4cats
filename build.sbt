@@ -1,8 +1,7 @@
-import sbtcrossproject.{crossProject, CrossType}
 import sbtghactions.UseRef
 
 val Scala213 = "2.13.4"
-val Scala212 = "2.12.12"
+val Scala212 = "2.12.13"
 
 enablePlugins(SonatypeCiReleasePlugin)
 
@@ -173,7 +172,7 @@ lazy val releaseSettings = {
     startYear := Some(2018),
     developers := List(
       Developer("christopherdavenport", "Christopher Davenport", "chris@christopherdavenport.tech", new java.net.URL("https://christopherdavenport.github.io/")),
-      Developer("lorandszakacs", "Loránd Szakács", "lorandszakacs@users.noreply.github.com", new java.net.URL("https://github.com/lorandszakacs")),
+      Developer("lorandszakacs", "Loránd Szakács", "lorand.szakacs@protonmail.com", new java.net.URL("https://github.com/lorandszakacs")),
     ),
   )
 }

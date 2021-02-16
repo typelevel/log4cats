@@ -26,30 +26,14 @@ object Slf4jLogger {
   def getLogger[F[_]: Sync]: SelfAwareStructuredLogger[F] =
     macro GetLoggerMacros.unsafeCreateImpl[F[_]]
 
-  @deprecated("0.3.0", "Use getLogger instead")
-  def unsafeCreate[F[_]: Sync]: SelfAwareStructuredLogger[F] =
-    macro GetLoggerMacros.unsafeCreateImpl[F[_]]
-
   def getLoggerFromName[F[_]: Sync](name: String): SelfAwareStructuredLogger[F] =
     getLoggerFromSlf4j(org.slf4j.LoggerFactory.getLogger(name))
-
-  @deprecated("0.3.0", "Use getLoggerFromName")
-  def unsafeFromName[F[_]: Sync](name: String): SelfAwareStructuredLogger[F] =
-    getLoggerFromName[F](name)
 
   def getLoggerFromClass[F[_]: Sync](clazz: Class[_]): SelfAwareStructuredLogger[F] =
     getLoggerFromSlf4j[F](org.slf4j.LoggerFactory.getLogger(clazz))
 
-  @deprecated("0.3.0", "Use getLoggerFromClass")
-  def unsafeFromClass[F[_]: Sync](clazz: Class[_]): SelfAwareStructuredLogger[F] =
-    getLoggerFromClass[F](clazz)
-
   def getLoggerFromSlf4j[F[_]: Sync](logger: JLogger): SelfAwareStructuredLogger[F] =
     new Slf4jLoggerInternal.Slf4jLogger(logger)
-
-  @deprecated("0.3.0", "Use getLoggerFromSlf4J instead")
-  def unsafeFromSlf4j[F[_]: Sync](logger: JLogger): SelfAwareStructuredLogger[F] =
-    getLoggerFromSlf4j[F](logger)
 
   def create[F[_]: Sync]: F[SelfAwareStructuredLogger[F]] =
     macro GetLoggerMacros.safeCreateImpl[F[_]]
