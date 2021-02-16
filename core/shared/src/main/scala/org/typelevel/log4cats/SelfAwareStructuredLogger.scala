@@ -29,27 +29,27 @@ object SelfAwareStructuredLogger {
   def withContext[F[_]](
       sl: SelfAwareStructuredLogger[F]
   )(ctx: Map[String, String]): SelfAwareStructuredLogger[F] =
-    new ExtraContextSelfAwareStructuredLogger[F](sl)(ctx)
+    new ModifiedContextSelfAwareStructuredLogger[F](sl)(ctx ++ _)
 
-  private class ExtraContextSelfAwareStructuredLogger[F[_]](sl: SelfAwareStructuredLogger[F])(
-      ctx: Map[String, String]
+  private class ModifiedContextSelfAwareStructuredLogger[F[_]](sl: SelfAwareStructuredLogger[F])(
+      modify: Map[String, String] => Map[String, String]
   ) extends SelfAwareStructuredLogger[F] {
-    private val outer = ctx
-    def error(message: => String): F[Unit] = sl.error(outer)(message)
-    def warn(message: => String): F[Unit] = sl.warn(outer)(message)
-    def info(message: => String): F[Unit] = sl.info(outer)(message)
-    def debug(message: => String): F[Unit] = sl.debug(outer)(message)
-    def trace(message: => String): F[Unit] = sl.trace(outer)(message)
+    private lazy val defaultCtx: Map[String, String] = modify(Map.empty)
+    def error(message: => String): F[Unit] = sl.error(defaultCtx)(message)
+    def warn(message: => String): F[Unit] = sl.warn(defaultCtx)(message)
+    def info(message: => String): F[Unit] = sl.info(defaultCtx)(message)
+    def debug(message: => String): F[Unit] = sl.debug(defaultCtx)(message)
+    def trace(message: => String): F[Unit] = sl.trace(defaultCtx)(message)
     def trace(ctx: Map[String, String])(msg: => String): F[Unit] =
-      sl.trace(outer ++ ctx)(msg)
+      sl.trace(modify(ctx))(msg)
     def debug(ctx: Map[String, String])(msg: => String): F[Unit] =
-      sl.debug(outer ++ ctx)(msg)
+      sl.debug(modify(ctx))(msg)
     def info(ctx: Map[String, String])(msg: => String): F[Unit] =
-      sl.info(outer ++ ctx)(msg)
+      sl.info(modify(ctx))(msg)
     def warn(ctx: Map[String, String])(msg: => String): F[Unit] =
-      sl.warn(outer ++ ctx)(msg)
+      sl.warn(modify(ctx))(msg)
     def error(ctx: Map[String, String])(msg: => String): F[Unit] =
-      sl.error(outer ++ ctx)(msg)
+      sl.error(modify(ctx))(msg)
 
     def isTraceEnabled: F[Boolean] = sl.isTraceEnabled
     def isDebugEnabled: F[Boolean] = sl.isDebugEnabled
@@ -58,26 +58,26 @@ object SelfAwareStructuredLogger {
     def isErrorEnabled: F[Boolean] = sl.isErrorEnabled
 
     def error(t: Throwable)(message: => String): F[Unit] =
-      sl.error(outer, t)(message)
+      sl.error(defaultCtx, t)(message)
     def warn(t: Throwable)(message: => String): F[Unit] =
-      sl.warn(outer, t)(message)
+      sl.warn(defaultCtx, t)(message)
     def info(t: Throwable)(message: => String): F[Unit] =
-      sl.info(outer, t)(message)
+      sl.info(defaultCtx, t)(message)
     def debug(t: Throwable)(message: => String): F[Unit] =
-      sl.debug(outer, t)(message)
+      sl.debug(defaultCtx, t)(message)
     def trace(t: Throwable)(message: => String): F[Unit] =
-      sl.trace(outer, t)(message)
+      sl.trace(defaultCtx, t)(message)
 
     def error(ctx: Map[String, String], t: Throwable)(message: => String): F[Unit] =
-      sl.error(outer ++ ctx, t)(message)
+      sl.error(modify(ctx), t)(message)
     def warn(ctx: Map[String, String], t: Throwable)(message: => String): F[Unit] =
-      sl.warn(outer ++ ctx, t)(message)
+      sl.warn(modify(ctx), t)(message)
     def info(ctx: Map[String, String], t: Throwable)(message: => String): F[Unit] =
-      sl.info(outer ++ ctx, t)(message)
+      sl.info(modify(ctx), t)(message)
     def debug(ctx: Map[String, String], t: Throwable)(message: => String): F[Unit] =
-      sl.debug(outer ++ ctx, t)(message)
+      sl.debug(modify(ctx), t)(message)
     def trace(ctx: Map[String, String], t: Throwable)(message: => String): F[Unit] =
-      sl.trace(outer ++ ctx, t)(message)
+      sl.trace(modify(ctx), t)(message)
   }
 
   private def mapK[G[_], F[_]](
