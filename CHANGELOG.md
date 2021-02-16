@@ -7,6 +7,12 @@ This file summarizes **notable** changes for each release, but does not describe
 
 - removed deprecated `org.typelevel.log4cats.extras.Translate` object
 - remove deprecated `unsafe*` constructors
+- Depends on cats-effect-3.0.0-RC1
+
+Forward ports from `1.2.0-RC3`:
+- add `LogLevel.fromString` method [#343](https://github.com/typelevel/log4cats/pull/343) thanks to [@Daenyth](https://github.com/Daenyth)
+- add `NoOpLogger.apply` constructor [#344](https://github.com/typelevel/log4cats/pull/344) thanks to [@bplommer](https://github.com/bplommer)
+- add `StructuredLogger.withModifiedContext`method [#361](https://github.com/typelevel/log4cats/pull/361) thanks to [@ivan-klass](https://github.com/ivan-klass)
 
 # <a name="2.0.0-M1"></a>New and Noteworthy for Version 2.0.0-M1
 
@@ -14,8 +20,9 @@ This file summarizes **notable** changes for each release, but does not describe
 
 # <a name="1.2.0-RC3"></a>New and Noteworthy for Version 1.2.0-RC3
 
-- add `LogLevel.fromString` method  [#343](https://github.com/typelevel/log4cats/pull/343) thanks to [@Daenyth](https://github.com/Daenyth)
-- add `NoOpLogger.apply` constructor  [#344](https://github.com/typelevel/log4cats/pull/344) thanks to [@bplommer](https://github.com/bplommer)
+- add `LogLevel.fromString` method [#343](https://github.com/typelevel/log4cats/pull/343) thanks to [@Daenyth](https://github.com/Daenyth)
+- add `NoOpLogger.apply` constructor [#344](https://github.com/typelevel/log4cats/pull/344) thanks to [@bplommer](https://github.com/bplommer)
+- add `StructuredLogger.withModifiedContext`method [#361](https://github.com/typelevel/log4cats/pull/361) thanks to [@ivan-klass](https://github.com/ivan-klass)
 
 # <a name="1.2.0-RC2"></a>New and Noteworthy for Version 1.2.0-RC1
 
