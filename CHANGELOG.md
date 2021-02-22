@@ -13,7 +13,7 @@ Forward ports from `1.2.0`:
 - add `LogLevel.fromString` method [#343](https://github.com/typelevel/log4cats/pull/343) thanks to [@Daenyth](https://github.com/Daenyth)
 - add `NoOpLogger.apply` constructor [#344](https://github.com/typelevel/log4cats/pull/344) thanks to [@bplommer](https://github.com/bplommer)
 - add `StructuredLogger.withModifiedContext`method [#361](https://github.com/typelevel/log4cats/pull/361) thanks to [@ivan-klass](https://github.com/ivan-klass)
-- depends on cats-2.4.2
+- depends on cats-2.4.2 and cats-effect-3.0.0-RC2
 - built with Scala.js 1.5.0
 - adds Dotty crossbuild for Scala 3.0.0-RC1
 - drops Dotty crossbuild for Scala 3.0.0-RC1
