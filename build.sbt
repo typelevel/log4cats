@@ -1,6 +1,6 @@
 import sbtghactions.UseRef
 
-val Scala213 = "2.13.4"
+val Scala213 = "2.13.5"
 val Scala212 = "2.12.13"
 
 enablePlugins(SonatypeCiReleasePlugin)
@@ -60,6 +60,7 @@ ThisBuild / githubWorkflowAddedJobs ++= Seq(
   )
 )
 
+ThisBuild / githubWorkflowTargetBranches := List("*", "series/*")
 ThisBuild / githubWorkflowTargetTags ++= Seq("v*")
 ThisBuild / githubWorkflowPublishTargetBranches := Seq(RefPredicate.StartsWith(Ref.Tag("v")))
 

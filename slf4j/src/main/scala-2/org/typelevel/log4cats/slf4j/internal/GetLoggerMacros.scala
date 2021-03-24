@@ -32,7 +32,7 @@
 
 package org.typelevel.log4cats.slf4j.internal
 
-import scala.annotation.tailrec
+import scala.annotation.{nowarn, tailrec}
 import scala.reflect.macros.blackbox
 
 /**
@@ -50,6 +50,7 @@ private[slf4j] class GetLoggerMacros(val c: blackbox.Context) {
   final def unsafeCreateImpl[F: c.WeakTypeTag](f: c.Expr[F]) = getLoggerImpl[F](f, false)
 
   /** Get a logger by reflecting the enclosing class name. */
+  @nowarn("cat=unused")
   private def getLoggerImpl[F: c.WeakTypeTag](f: c.Expr[F], delayed: Boolean) = {
     import c.universe._
 
