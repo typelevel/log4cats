@@ -1,7 +1,7 @@
 import sbtcrossproject.{crossProject, CrossType}
 import sbtghactions.UseRef
 
-val Scala213 = "2.13.4"
+val Scala213 = "2.13.5"
 val Scala212 = "2.12.12"
 
 enablePlugins(SonatypeCiReleasePlugin)
@@ -61,6 +61,7 @@ ThisBuild / githubWorkflowAddedJobs ++= Seq(
   )
 )
 
+ThisBuild / githubWorkflowTargetBranches := List("*", "series/*")
 ThisBuild / githubWorkflowTargetTags ++= Seq("v*")
 ThisBuild / githubWorkflowPublishTargetBranches := Seq(RefPredicate.StartsWith(Ref.Tag("v")))
 
@@ -74,7 +75,7 @@ ThisBuild / githubWorkflowPublish := Seq(
 )
 
 val catsV = "2.4.2"
-val catsEffectV = "2.3.3"
+val catsEffectV = "2.4.0"
 val slf4jV = "1.7.30"
 val munitCatsEffectV = "0.13.1"
 val logbackClassicV = "1.2.3"
