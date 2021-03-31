@@ -8,7 +8,7 @@ enablePlugins(SonatypeCiReleasePlugin)
 
 ThisBuild / organization := "org.typelevel"
 ThisBuild / baseVersion := "1.2"
-ThisBuild / crossScalaVersions := Seq(Scala213, Scala212, "3.0.0-M3", "3.0.0-RC1")
+ThisBuild / crossScalaVersions := Seq(Scala213, Scala212, "3.0.0-RC2", "3.0.0-RC1")
 ThisBuild / scalaVersion := Scala213
 ThisBuild / publishFullName := "Christopher Davenport"
 ThisBuild / publishGithubUser := "christopherdavenport"
@@ -74,10 +74,10 @@ ThisBuild / githubWorkflowPublish := Seq(
   cond = Some(MicrositesCond)
 )
 
-val catsV = "2.4.2"
-val catsEffectV = "2.4.0"
+val catsV = "2.5.0"
+val catsEffectV = "2.4.1"
 val slf4jV = "1.7.30"
-val munitCatsEffectV = "0.13.1"
+val munitCatsEffectV = "1.0.1"
 val logbackClassicV = "1.2.3"
 
 Global / onChangedBuildSource := ReloadOnSourceChanges
