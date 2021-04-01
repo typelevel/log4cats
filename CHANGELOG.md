@@ -3,8 +3,27 @@
 This file summarizes **notable** changes for each release, but does not describe internal changes unless they are particularly exciting.
 
 ----
+# <a name="1.2.2"></a>New and Noteworthy for Version 1.2.2
+- cats-effect-2.4.1
+- cats 2.5.0
+- add Scala 3.0.0-RC2 build
+- drop Scala 3.0.0-M3 build
 
-# <a name="1.2.0-RC2"></a>New and Noteworthy for Version 1.2.0-RC1
+# <a name="1.2.1"></a>New and Noteworthy for Version 1.2.1
+- cats-effect-2.4.0
+
+# <a name="1.2.0"></a>New and Noteworthy for Version 1.2.0
+
+- add LogLevel.fromString method #343 thanks to @Daenyth
+- add NoOpLogger.apply constructor #344 thanks to @bplommer
+- add StructuredLogger.withModifiedContextmethod #361 thanks to @ivan-klass
+- add Scala 3.0.0-RC1 build
+- drop Scala 3.0.0-M2 build
+- cats-2.4.2
+- cats-effect-2.3.3
+- scalajs-1.5.0
+
+# <a name="1.2.0-RC1"></a>New and Noteworthy for Version 1.2.0-RC1
 
 - Now published under `org.typelevel`
 - Root package changed to `org.typelevel.log4cats`
