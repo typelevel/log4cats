@@ -123,22 +123,22 @@ jobs:
           tar xf targets.tar
           rm targets.tar
 
-      - name: Download target directories (3.0.0-RC2)
-        uses: actions/download-artifact@v2
-        with:
-          name: target-${{ matrix.os }}-3.0.0-RC2-${{ matrix.java }}
-
-      - name: Inflate target directories (3.0.0-RC2)
-        run: |
-          tar xf targets.tar
-          rm targets.tar
-
       - name: Download target directories (3.0.0-RC1)
         uses: actions/download-artifact@v2
         with:
           name: target-${{ matrix.os }}-3.0.0-RC1-${{ matrix.java }}
 
       - name: Inflate target directories (3.0.0-RC1)
+        run: |
+          tar xf targets.tar
+          rm targets.tar
+
+      - name: Download target directories (3.0.0-RC2)
+        uses: actions/download-artifact@v2
+        with:
+          name: target-${{ matrix.os }}-3.0.0-RC2-${{ matrix.java }}
+
+      - name: Inflate target directories (3.0.0-RC2)
         run: |
           tar xf targets.tar
           rm targets.tar
