@@ -17,7 +17,7 @@
 package org.typelevel
 
 package object log4cats {
-  type Logging[F[_]] = LoggingGen[F, SelfAwareStructuredLogger[F]]
-  type LoggingId[F[_]] = LoggingGenId[F, SelfAwareStructuredLogger[F]]
-  type LoggingF[F[_]] = LoggingGenF[F, SelfAwareStructuredLogger[F]]
+  type Logging[F[_]] = GenLogging[F, SelfAwareStructuredLogger[F]]
+  type LoggingId[F[_]] = GenLoggingId[F, SelfAwareStructuredLogger[F]]
+  type LoggingF[F[_]] = GenLoggingF[F, SelfAwareStructuredLogger[F]]
 }
