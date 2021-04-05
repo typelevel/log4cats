@@ -21,7 +21,7 @@ import cats.syntax.all._
 import cats.Applicative
 import org.typelevel.log4cats._
 
-trait NoopLogging[F[_]] extends Logging[F] {
+trait NoOpLogging[F[_]] extends Logging[F] {
   implicit protected def applicative: Applicative[F]
 
   override def getLogger(implicit enc: Enclosure): SelfAwareStructuredLogger[F] = NoOpLogger.impl[F]
@@ -41,9 +41,9 @@ trait NoopLogging[F[_]] extends Logging[F] {
 
 }
 
-object NoopLogging {
-  def apply[F[_]](implicit logging: NoopLogging[F]): NoopLogging[F] = logging
-  def create[F[_]](implicit F: Applicative[F]) = new NoopLogging[F] {
+object NoOpLogging {
+  def apply[F[_]](implicit logging: NoOpLogging[F]): NoOpLogging[F] = logging
+  def create[F[_]](implicit F: Applicative[F]) = new NoOpLogging[F] {
     override implicit protected val applicative: Applicative[F] = F
   }
 }
