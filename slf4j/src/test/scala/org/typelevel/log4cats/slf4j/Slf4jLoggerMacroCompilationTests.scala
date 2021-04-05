@@ -71,3 +71,11 @@ object LoggingBaseline {
   val errorCM = logger[IO].error(Map.empty[String, String])("")
 
 }
+
+object LoggingCapabilityTest {
+  val t = new Throwable
+  implicit val logging: Slf4jLogging[IO] = Slf4jLogging.createForSync[IO]
+
+  val explicit = logging.getLogger.trace("")
+  val summoned = Slf4jLogging[IO].getLogger.trace(t)("")
+}
