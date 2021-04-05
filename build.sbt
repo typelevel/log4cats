@@ -80,6 +80,7 @@ val catsEffectV = "2.4.1"
 val slf4jV = "1.7.30"
 val munitCatsEffectV = "1.0.1"
 val logbackClassicV = "1.2.3"
+val enclosureV      = "0.1.0"
 
 Global / onChangedBuildSource := ReloadOnSourceChanges
 
@@ -111,7 +112,8 @@ lazy val core = crossProject(JSPlatform, JVMPlatform)
   .settings(
     name := "log4cats-core",
     libraryDependencies ++= Seq(
-      "org.typelevel" %%% "cats-core" % catsV
+      "org.typelevel" %%% "cats-core" % catsV,
+      "com.lorandszakacs" %%% "enclosure" % enclosureV,
     )
   )
 lazy val coreJVM = core.jvm
