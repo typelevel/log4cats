@@ -33,14 +33,12 @@ import com.lorandszakacs.enclosure.Enclosure
  *     that also send logs to some external providers by giving an implementation to this
  *     trait.
  */
-trait LoggingGen[F[_], LoggerType <: Logger[F]]
+trait LoggingGen[F[_], LoggerType]
     extends LoggingGenId[F, LoggerType]
     with LoggingGenF[F, LoggerType]
 
 object LoggingGen {
-  def apply[F[_], LoggerType <: Logger[F]](implicit
-      l: LoggingGen[F, LoggerType]
-  ): LoggingGen[F, LoggerType] = l
+  def apply[F[_], LoggerType](implicit l: LoggingGen[F, LoggerType]): LoggingGen[F, LoggerType] = l
 }
 
 /**
@@ -49,7 +47,7 @@ object LoggingGen {
  * If you need to various side effects (init some state, make external calss, etc)
  * when instantiating a logger then use [[LoggingGenF]] instead.
  */
-trait LoggingGenId[F[_], LoggerType <: Logger[F]] {
+trait LoggingGenId[F[_], LoggerType] {
   def getLoggerFromName(name: String): LoggerType
 
   def getLogger(implicit enc: Enclosure): LoggerType =
@@ -60,12 +58,12 @@ trait LoggingGenId[F[_], LoggerType <: Logger[F]] {
 }
 
 object LoggingGenId {
-  def apply[F[_], LoggerType <: Logger[F]](implicit
+  def apply[F[_], LoggerType](implicit
       l: LoggingGenId[F, LoggerType]
   ): LoggingGenId[F, LoggerType] = l
 }
 
-trait LoggingGenF[F[_], LoggerType <: Logger[F]] {
+trait LoggingGenF[F[_], LoggerType] {
   def fromName(name: String): F[LoggerType]
 
   def create(implicit enc: Enclosure): F[LoggerType] =
@@ -76,9 +74,8 @@ trait LoggingGenF[F[_], LoggerType <: Logger[F]] {
 }
 
 object LoggingGenF {
-  def apply[F[_], LoggerType <: Logger[F]](implicit
-      l: LoggingGenF[F, LoggerType]
-  ): LoggingGenF[F, LoggerType] = l
+  def apply[F[_], LoggerType](implicit l: LoggingGenF[F, LoggerType]): LoggingGenF[F, LoggerType] =
+    l
 }
 
 object Logging {
