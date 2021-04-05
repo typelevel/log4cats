@@ -20,32 +20,18 @@ import org.slf4j.{Logger => JLogger}
 import cats.effect.Sync
 import org.typelevel.log4cats._
 
-import com.lorandszakacs.enclosure.Enclosure
-
 trait Slf4jLogging[F[_]] extends Logging[F] {
 
   implicit protected def sync: Sync[F]
 
-  override def getLogger(implicit enc: Enclosure): SelfAwareStructuredLogger[F] =
-    Slf4jLogger.getLoggerFromName[F](enc.fullModuleName)
-
   override def getLoggerFromName(name: String): SelfAwareStructuredLogger[F] =
     Slf4jLogger.getLoggerFromName[F](name)
-
-  override def getLoggerFromClass(clazz: Class[_]): SelfAwareStructuredLogger[F] =
-    Slf4jLogger.getLoggerFromClass[F](clazz)
 
   def getLoggerFromSlf4j(logger: JLogger): SelfAwareStructuredLogger[F] =
     Slf4jLogger.getLoggerFromSlf4j[F](logger)
 
-  override def create(implicit enc: Enclosure): F[SelfAwareStructuredLogger[F]] =
-    Slf4jLogger.fromName[F](enc.fullModuleName)
-
   override def fromName(name: String): F[SelfAwareStructuredLogger[F]] =
     Slf4jLogger.fromName[F](name)
-
-  override def fromClass(clazz: Class[_]): F[SelfAwareStructuredLogger[F]] =
-    Slf4jLogger.fromClass[F](clazz)
 
   def fromSlf4j(logger: JLogger): F[SelfAwareStructuredLogger[F]] =
     Slf4jLogger.fromSlf4j[F](logger)

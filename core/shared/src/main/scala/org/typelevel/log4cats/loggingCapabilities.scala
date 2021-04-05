@@ -50,11 +50,13 @@ object LoggingGen {
  * when instantiating a logger then use [[LoggingGenF]] instead.
  */
 trait LoggingGenId[F[_], LoggerType <: Logger[F]] {
-  def getLogger(implicit enc: Enclosure): LoggerType
-
   def getLoggerFromName(name: String): LoggerType
 
-  def getLoggerFromClass(clazz: Class[_]): LoggerType
+  def getLogger(implicit enc: Enclosure): LoggerType =
+    getLoggerFromName(enc.fullModuleName)
+
+  def getLoggerFromClass(clazz: Class[_]): LoggerType =
+    getLoggerFromName(clazz.getName()) //N.B. .getCanonicalName does not exist on scala JS.
 }
 
 object LoggingGenId {
@@ -64,11 +66,13 @@ object LoggingGenId {
 }
 
 trait LoggingGenF[F[_], LoggerType <: Logger[F]] {
-  def create(implicit enc: Enclosure): F[LoggerType]
-
   def fromName(name: String): F[LoggerType]
 
-  def fromClass(clazz: Class[_]): F[LoggerType]
+  def create(implicit enc: Enclosure): F[LoggerType] =
+    fromName(enc.fullModuleName)
+
+  def fromClass(clazz: Class[_]): F[LoggerType] =
+    fromName(clazz.getName) //N.B. .getCanonicalName does not exist on scala JS.
 }
 
 object LoggingGenF {
