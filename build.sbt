@@ -12,8 +12,6 @@ ThisBuild / scalaVersion := Scala213
 ThisBuild / publishFullName := "Christopher Davenport"
 ThisBuild / publishGithubUser := "christopherdavenport"
 
-ThisBuild / githubWorkflowSbtCommand := "csbt"
-
 ThisBuild / githubWorkflowJavaVersions := Seq("adopt@1.8", "adopt@1.11")
 
 ThisBuild / versionIntroduced := Map(

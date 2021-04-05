@@ -53,13 +53,13 @@ jobs:
           key: ${{ runner.os }}-sbt-cache-v2-${{ hashFiles('**/*.sbt') }}-${{ hashFiles('project/build.properties') }}
 
       - name: Check that workflows are up to date
-        run: csbt ++${{ matrix.scala }} githubWorkflowCheck
+        run: sbt ++${{ matrix.scala }} githubWorkflowCheck
 
       - name: Test
-        run: csbt ++${{ matrix.scala }} test
+        run: sbt ++${{ matrix.scala }} test
 
       - name: Binary Compatibility Check
-        run: csbt ++${{ matrix.scala }} mimaReportBinaryIssues
+        run: sbt ++${{ matrix.scala }} mimaReportBinaryIssues
 
       - name: Compress target directories
         run: tar cf targets.tar testing/jvm/target noop/jvm/target docs/target target core/js/target testing/js/target noop/js/target core/jvm/target slf4j/target project/target
@@ -146,7 +146,7 @@ jobs:
       - name: Import signing key
         run: echo $PGP_SECRET | base64 -d | gpg --import
 
-      - run: csbt ++${{ matrix.scala }} release
+      - run: sbt ++${{ matrix.scala }} release
 
       - if: matrix.scala == '2.12.13'
         uses: ruby/setup-ruby@v1
@@ -163,7 +163,7 @@ jobs:
         run: gem install jekyll -v 4
 
       - if: matrix.scala == '2.12.13'
-        run: csbt ++${{ matrix.scala }} docs/publishMicrosite
+        run: sbt ++${{ matrix.scala }} docs/publishMicrosite
 
   scalafmt:
     name: Scalafmt
@@ -197,7 +197,7 @@ jobs:
           key: ${{ runner.os }}-sbt-cache-v2-${{ hashFiles('**/*.sbt') }}-${{ hashFiles('project/build.properties') }}
 
       - name: Scalafmt
-        run: csbt ++${{ matrix.scala }} scalafmtCheckAll
+        run: sbt ++${{ matrix.scala }} scalafmtCheckAll
 
   microsite:
     name: Microsite
@@ -241,4 +241,4 @@ jobs:
       - run: gem install jekyll -v 4
 
       - name: Build the microsite
-        run: csbt ++${{ matrix.scala }} docs/makeMicrosite
+        run: sbt ++${{ matrix.scala }} docs/makeMicrosite
