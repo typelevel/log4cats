@@ -12,8 +12,6 @@ ThisBuild / scalaVersion := Scala213
 ThisBuild / publishFullName := "Christopher Davenport"
 ThisBuild / publishGithubUser := "christopherdavenport"
 
-ThisBuild / githubWorkflowSbtCommand := "csbt"
-
 ThisBuild / githubWorkflowJavaVersions := Seq("adopt@1.8", "adopt@1.11")
 
 ThisBuild / versionIntroduced := Map(
@@ -156,13 +154,12 @@ lazy val slf4j = project
 lazy val commonSettings = Seq(
   libraryDependencies ++= Seq(
     "org.typelevel" %%% "munit-cats-effect-3" % munitCatsEffectV % Test,
-  ),
-  testFrameworks += new TestFramework("munit.Framework"),
+  )
 )
 
 lazy val releaseSettings = {
   Seq(
-    publishArtifact in Test := false,
+    Test / publishArtifact := false,
     scmInfo := Some(
       ScmInfo(
         url("https://github.com/typelevel/log4cats"),
