@@ -166,6 +166,20 @@ lazy val commonSettings = Seq(
     "org.typelevel" %%% "munit-cats-effect-2" % munitCatsEffectV % Test,
   ),
   testFrameworks += new TestFramework("munit.Framework"),
+  // major scala version folders do not work properly for shared sources between JS/JVM
+  // see: https://github.com/sbt/sbt/issues/5895#issuecomment-739510744
+  Compile / unmanagedSourceDirectories ++= {
+    val major = if (isDotty.value) "-3" else "-2"
+    List(CrossType.Pure, CrossType.Full).flatMap(
+      _.sharedSrcDir(baseDirectory.value, "main").toList.map(f => file(f.getPath + major))
+    )
+  },
+  Test / unmanagedSourceDirectories ++= {
+    val major = if (isDotty.value) "-3" else "-2"
+    List(CrossType.Pure, CrossType.Full).flatMap(
+      _.sharedSrcDir(baseDirectory.value, "test").toList.map(f => file(f.getPath + major))
+    )
+  }
 )
 
 lazy val releaseSettings = {
