@@ -33,7 +33,7 @@ import com.lorandszakacs.enclosure.Enclosure
  *     that also send logs to some external providers by giving an implementation to this
  *     trait.
  *
- * @tparam F[_]
+ * @tparam G[_]
  *   the effect type in which the loggers are constructed.
  *   e.g. make cats.Id if logger creation can be done as a pure computation
  */
@@ -51,12 +51,10 @@ object GenLogging {
     l
 }
 
-// N.B made it a trait, because otherwise on Scala 3 the implicitNotFound annotation would not be picked up :/
-@scala.annotation.implicitNotFound(
-  "Not found for Logging[${F}], keep in mind that, that ${F} is the effect in which logging is done. e.g. `Logging[${F}].create.info(message) : ${F}[Unit]`.\nAdditionally Logging[${F}] is defined as creating only loggers of type SelfAwareStructuredLogger[${F}].\nThe Logging[${F}] type itself described logging creation to be pure, i.e. cats.Id.\nSo your problem might be:\n\t1) you only have a GenLogger[G[_], ...] for some G[_] type other than cats.Id\n\t2) you do actually have a GenLogger[Id, L], but where L is not SelfAwareStructuredLogger[${F}].\nIf you are unsure how to create a Logging[${F}], then you need to look at the `log4cats-slf4j` module, or `log4cats-noop` for concrete implementations. Example for slf4j:\nimplicit val logging: Logging[IO] = Slf4jLogging.forSync[IO] // we create out Logging[IO]\nLogging[IO].create //we summon our instance, and create a SelfAwareStructuredLogger[${F}]."
-)
-trait Logging[F[_]] extends GenLogging[cats.Id, SelfAwareStructuredLogger[F]]
-
 object Logging {
   def apply[F[_]](implicit l: Logging[F]): Logging[F] = l
+}
+
+object LoggingF {
+  def apply[F[_]](implicit l: LoggingF[F]): LoggingF[F] = l
 }

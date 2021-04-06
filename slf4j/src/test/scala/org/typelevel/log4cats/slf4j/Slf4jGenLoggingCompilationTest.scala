@@ -16,11 +16,14 @@
 
 package org.typelevel.log4cats.slf4j
 
+import org.typelevel.log4cats._
 import cats.effect._
 
 object Slf4jGenLoggingCompilationTest {
   implicit val slf4jGenLogging: Slf4jGenLogging[IO, IO] = Slf4jGenLogging.forSync[IO, IO]
   implicit val slf4jLogging: Slf4jLogging[IO] = Slf4jLogging.forSync[IO]
+  implicit val loggingF: LoggingF[IO] = slf4jGenLogging
+  implicit val logging: Logging[IO] = slf4jLogging
 
   def justCompile: IO[Unit] = {
     for {
