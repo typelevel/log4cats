@@ -16,19 +16,16 @@
 
 package org.typelevel.log4cats.noop
 
-import cats.syntax.all._
 import cats.Applicative
 import org.typelevel.log4cats._
 
 trait NoOpLogging[F[_]] extends Logging[F] {
-  implicit protected def applicative: Applicative[F]
-  override def getLoggerFromName(name: String): SelfAwareStructuredLogger[F] = NoOpLogger.impl[F]
-  override def fromName(name: String): F[SelfAwareStructuredLogger[F]] = NoOpLogger.impl[F].pure[F]
+  override def fromName(name: String): SelfAwareStructuredLogger[F]
 }
 
 object NoOpLogging {
   def apply[F[_]](implicit logging: NoOpLogging[F]): NoOpLogging[F] = logging
-  def create[F[_]](implicit F: Applicative[F]) = new NoOpLogging[F] {
-    override implicit protected val applicative: Applicative[F] = F
+  def create[F[_]: Applicative] = new NoOpLogging[F] {
+    override def fromName(name: String): SelfAwareStructuredLogger[F] = NoOpLogger[F]
   }
 }

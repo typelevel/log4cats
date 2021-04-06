@@ -32,60 +32,31 @@ import com.lorandszakacs.enclosure.Enclosure
  *     custom functionality you need for your own applications here. e.g. create loggers
  *     that also send logs to some external providers by giving an implementation to this
  *     trait.
- */
-trait GenLogging[F[_], LoggerType]
-    extends GenLoggingId[F, LoggerType]
-    with GenLoggingF[F, LoggerType]
-
-object GenLogging {
-  def apply[F[_], LoggerType](implicit l: GenLogging[F, LoggerType]): GenLogging[F, LoggerType] = l
-}
-
-/**
- * Use when the creation of your loggers can be a pure operation.
  *
- * If you need to various side effects (init some state, make external calss, etc)
- * when instantiating a logger then use [[LoggingGenF]] instead.
+ * @tparam F[_]
+ *   the effect type in which the loggers are constructed.
+ *   e.g. make cats.Id if logger creation can be done as a pure computation
  */
-trait GenLoggingId[F[_], LoggerType] {
-  def getLoggerFromName(name: String): LoggerType
+trait GenLogging[G[_], LoggerType] {
+  def fromName(name: String): G[LoggerType]
 
-  def getLogger(implicit enc: Enclosure): LoggerType =
-    getLoggerFromName(enc.fullModuleName)
+  def create(implicit enc: Enclosure): G[LoggerType] = fromName(enc.fullModuleName)
 
-  def getLoggerFromClass(clazz: Class[_]): LoggerType =
-    getLoggerFromName(clazz.getName()) //N.B. .getCanonicalName does not exist on scala JS.
-}
-
-object GenLoggingId {
-  def apply[F[_], LoggerType](implicit
-      l: GenLoggingId[F, LoggerType]
-  ): GenLoggingId[F, LoggerType] = l
-}
-
-trait GenLoggingF[F[_], LoggerType] {
-  def fromName(name: String): F[LoggerType]
-
-  def create(implicit enc: Enclosure): F[LoggerType] =
-    fromName(enc.fullModuleName)
-
-  def fromClass(clazz: Class[_]): F[LoggerType] =
+  def fromClass(clazz: Class[_]): G[LoggerType] =
     fromName(clazz.getName) //N.B. .getCanonicalName does not exist on scala JS.
 }
 
-object GenLoggingF {
-  def apply[F[_], LoggerType](implicit l: GenLoggingF[F, LoggerType]): GenLoggingF[F, LoggerType] =
+object GenLogging {
+  def apply[G[_], LoggerType](implicit l: GenLogging[G, LoggerType]): GenLogging[G, LoggerType] =
     l
 }
 
+// N.B made it a trait, because otherwise on Scala 3 the implicitNotFound annotation would not be picked up :/
+@scala.annotation.implicitNotFound(
+  "Not found for Logging[${F}], keep in mind that, that ${F} is the effect in which logging is done. e.g. `Logging[${F}].create.info(message) : ${F}[Unit]`.\nAdditionally Logging[${F}] is defined as creating only loggers of type SelfAwareStructuredLogger[${F}].\nThe Logging[${F}] type itself described logging creation to be pure, i.e. cats.Id.\nSo your problem might be:\n\t1) you only have a GenLogger[G[_], ...] for some G[_] type other than cats.Id\n\t2) you do actually have a GenLogger[Id, L], but where L is not SelfAwareStructuredLogger[${F}].\nIf you are unsure how to create a Logging[${F}], then you need to look at the `log4cats-slf4j` module, or `log4cats-noop` for concrete implementations. Example for slf4j:\nimplicit val logging: Logging[IO] = Slf4jLogging.forSync[IO] // we create out Logging[IO]\nLogging[IO].create //we summon our instance, and create a SelfAwareStructuredLogger[${F}]."
+)
+trait Logging[F[_]] extends GenLogging[cats.Id, SelfAwareStructuredLogger[F]]
+
 object Logging {
   def apply[F[_]](implicit l: Logging[F]): Logging[F] = l
-}
-
-object LoggingId {
-  def apply[F[_]](implicit l: LoggingId[F]): LoggingId[F] = l
-}
-
-object LoggingF {
-  def apply[F[_]](implicit l: LoggingF[F]): LoggingF[F] = l
 }

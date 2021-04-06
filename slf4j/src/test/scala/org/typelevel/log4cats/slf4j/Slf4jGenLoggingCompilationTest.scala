@@ -14,10 +14,21 @@
  * limitations under the License.
  */
 
-package org.typelevel
+package org.typelevel.log4cats.slf4j
 
-package object log4cats {
-  type Logging[F[_]] = GenLogging[F, SelfAwareStructuredLogger[F]]
-  type LoggingId[F[_]] = GenLoggingId[F, SelfAwareStructuredLogger[F]]
-  type LoggingF[F[_]] = GenLoggingF[F, SelfAwareStructuredLogger[F]]
+import cats.effect._
+
+object Slf4jGenLoggingCompilationTest {
+  implicit val slf4jGenLogging: Slf4jGenLogging[IO, IO] = Slf4jGenLogging.forSync[IO, IO]
+  implicit val slf4jLogging: Slf4jLogging[IO] = Slf4jLogging.forSync[IO]
+
+  def justCompile: IO[Unit] = {
+    for {
+      _ <- slf4jGenLogging.create.flatMap(_.info("it compiled!"))
+      _ <- Slf4jGenLogging[IO, IO].create.flatMap(_.info("it compiled!"))
+      _ <- slf4jLogging.create.info("it compiled!")
+      _ <- Slf4jLogging[IO].create.info("it compiled!")
+    } yield ()
+  }
+
 }

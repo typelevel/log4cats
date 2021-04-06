@@ -117,7 +117,12 @@ lazy val core = crossProject(JSPlatform, JVMPlatform)
     )
   )
 lazy val coreJVM = core.jvm
-lazy val coreJS = core.js
+lazy val coreJS = core
+  .settings(dottyJsSettings(ThisBuild / crossScalaVersions))
+  .jsSettings(
+    scalaJSLinkerConfig ~= (_.withModuleKind(ModuleKind.CommonJSModule))
+  )
+  .js
 
 lazy val testing = crossProject(JSPlatform, JVMPlatform)
   .settings(commonSettings, releaseSettings)

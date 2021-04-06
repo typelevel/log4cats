@@ -17,7 +17,7 @@
 package org.typelevel.log4cats.slf4j
 
 import cats.effect._
-import org.typelevel.log4cats.SelfAwareStructuredLogger
+import org.typelevel.log4cats._
 
 class Slf4jLoggerSimpleClassMacroTest {
   def loggerF[F[_]: Sync]: F[SelfAwareStructuredLogger[F]] = Slf4jLogger.create[F]
@@ -70,12 +70,4 @@ object LoggingBaseline {
   val errorTM = logger[IO].error(t)("")
   val errorCM = logger[IO].error(Map.empty[String, String])("")
 
-}
-
-object LoggingCapabilityTest {
-  val t = new Throwable
-  implicit val logging: Slf4jLogging[IO] = Slf4jLogging.createForSync[IO]
-
-  val explicit = logging.getLogger.trace("")
-  val summoned = Slf4jLogging[IO].getLogger.trace(t)("")
 }
