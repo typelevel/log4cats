@@ -19,7 +19,7 @@ package org.typelevel.log4cats.slf4j
 import org.slf4j.{Logger => JLogger}
 import cats.effect.Sync
 import org.typelevel.log4cats._
-import cats.{Applicative, Id, Defer}
+import cats.{Applicative, Defer, Id}
 
 // format: off
 trait Slf4jGenLogging[G[_], F[_]] extends GenLogging[G, SelfAwareStructuredLogger[F]] {
