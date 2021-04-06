@@ -19,13 +19,30 @@ package org.typelevel.log4cats
 // TODO: figure out why the implicitNotFound annotation does not work on Scala 3.
 class LoggingImplicitNotFoundTests extends munit.FunSuite {
 
-  test("receive proper implicitNotFound error message on Logging type") {
+  test("receive proper implicitNotFound error message on Logging") {
     val errors = compileErrors(
-      "import cats.effect.IO;import org.typelevel.log4cats.Logging;Logging[IO].create"
+      "import cats.effect.IO;import org.typelevel.log4cats.Logging;Logging[IO]"
     )
     assert(
       errors.contains(
-        "you do actually have a GenLogger[Id, L], but where L is not SelfAwareStructuredLogger"
+        "you didn't create a Logging[cats.effect.IO] to begin with, or didn't mark it as implicit"
+      ),
+      clue = s"""|Actual compiler error was:
+                 |
+                 |$errors
+                 |
+                 |
+                 |""".stripMargin
+    )
+  }
+
+  test("receive proper implicitNotFound error message on LoggingF") {
+    val errors = compileErrors(
+      "import cats.effect.IO;import org.typelevel.log4cats.LoggingF;LoggingF[IO]"
+    )
+    assert(
+      errors.contains(
+        "you didn't create a LoggingF[cats.effect.IO] to begin with, or didn't mark it as implicit"
       ),
       clue = s"""|Actual compiler error was:
                  |
