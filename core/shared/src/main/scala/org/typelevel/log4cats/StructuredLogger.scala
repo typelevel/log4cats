@@ -31,6 +31,9 @@ trait StructuredLogger[F[_]] extends Logger[F] {
   def error(ctx: Map[String, String], t: Throwable)(msg: => String): F[Unit]
   override def mapK[G[_]](fk: F ~> G): StructuredLogger[G] =
     StructuredLogger.mapK(fk)(this)
+
+  override def withModifiedString(f: String => String): StructuredLogger[F] =
+    StructuredLogger.withModifiedString[F](this, f)
 }
 
 object StructuredLogger {
@@ -86,6 +89,38 @@ object StructuredLogger {
     def trace(ctx: Map[String, String], t: Throwable)(message: => String): F[Unit] =
       sl.trace(modify(ctx), t)(message)
   }
+
+  private def withModifiedString[F[_]](
+      l: StructuredLogger[F],
+      f: String => String
+  ): StructuredLogger[F] =
+    new StructuredLogger[F] {
+      override def trace(ctx: Map[String, String])(msg: => String): F[Unit] = l.trace(ctx)(f(msg))
+      override def trace(ctx: Map[String, String], t: Throwable)(msg: => String): F[Unit] =
+        l.trace(ctx, t)(f(msg))
+      override def debug(ctx: Map[String, String])(msg: => String): F[Unit] = l.debug(ctx)(f(msg))
+      override def debug(ctx: Map[String, String], t: Throwable)(msg: => String): F[Unit] =
+        l.debug(ctx, t)(f(msg))
+      override def info(ctx: Map[String, String])(msg: => String): F[Unit] = l.info(ctx)(f(msg))
+      override def info(ctx: Map[String, String], t: Throwable)(msg: => String): F[Unit] =
+        l.info(ctx, t)(f(msg))
+      override def warn(ctx: Map[String, String])(msg: => String): F[Unit] = l.warn(ctx)(f(msg))
+      override def warn(ctx: Map[String, String], t: Throwable)(msg: => String): F[Unit] =
+        l.warn(ctx, t)(f(msg))
+      override def error(ctx: Map[String, String])(msg: => String): F[Unit] = l.error(ctx)(f(msg))
+      override def error(ctx: Map[String, String], t: Throwable)(msg: => String): F[Unit] =
+        l.error(ctx, t)(f(msg))
+      override def error(message: => String): F[Unit] = l.error(f(message))
+      override def error(t: Throwable)(message: => String): F[Unit] = l.error(t)(f(message))
+      override def warn(message: => String): F[Unit] = l.warn(f(message))
+      override def warn(t: Throwable)(message: => String): F[Unit] = l.warn(t)(f(message))
+      override def info(message: => String): F[Unit] = l.info(f(message))
+      override def info(t: Throwable)(message: => String): F[Unit] = l.info(t)(f(message))
+      override def debug(message: => String): F[Unit] = l.debug(f(message))
+      override def debug(t: Throwable)(message: => String): F[Unit] = l.debug(t)(f(message))
+      override def trace(message: => String): F[Unit] = l.trace(f(message))
+      override def trace(t: Throwable)(message: => String): F[Unit] = l.trace(t)(f(message))
+    }
 
   private def mapK[G[_], F[_]](f: G ~> F)(logger: StructuredLogger[G]): StructuredLogger[F] =
     new StructuredLogger[F] {
