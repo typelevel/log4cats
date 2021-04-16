@@ -21,7 +21,8 @@ import cats.{Applicative, Defer}
 import org.typelevel.log4cats.slf4j._
 
 trait Slf4jLoggingInstances {
-  implicit def log4catsSummonSLF4jLoggingForSync[F[_]: Sync]: Slf4jLogging[F] = Slf4jLogging.forSync[F]
+  implicit def log4catsSummonSLF4jLoggingForSync[F[_]: Sync]: Slf4jLogging[F] =
+    Slf4jLogging.forSync[F]
 
   implicit def log4catsSummonSLF4jGenLoggingForSync[
       G[_]: Applicative: Defer,

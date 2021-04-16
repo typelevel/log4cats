@@ -50,8 +50,23 @@ object Slf4jLogging {
 
   // format: off
   def forSync[F[_]](implicit F: Sync[F]): Slf4jLogging[F] = new Slf4jLogging[F] {
+    override protected val syncF: Sync[F] = F
     override protected def lift(f: => SelfAwareStructuredLogger[F]): Id[SelfAwareStructuredLogger[F]] = f
-    override protected def syncF: Sync[F] = F
+
+  }
+  // format: on
+}
+
+trait Slf4jLoggingF[F[_]] extends Slf4jGenLogging[F, F]
+
+object Slf4jLoggingF {
+  def apply[F[_]](implicit logging: Slf4jLoggingF[F]): Slf4jLoggingF[F] = logging
+
+  // format: off
+  def forSync[F[_]](implicit F: Sync[F]): Slf4jLoggingF[F] = new Slf4jLoggingF[F] {
+    override protected val syncF: Sync[F] = F
+    override protected def lift(f: => SelfAwareStructuredLogger[F]): F[SelfAwareStructuredLogger[F]] = F.defer(F.pure(f))
+  
   }
   // format: on
 }
