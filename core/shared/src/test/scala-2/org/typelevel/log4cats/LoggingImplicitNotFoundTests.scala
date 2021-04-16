@@ -25,7 +25,7 @@ class LoggingImplicitNotFoundTests extends munit.FunSuite {
     )
     assert(
       errors.contains(
-        "you didn't create a Logging[cats.effect.IO] to begin with, or didn't mark it as implicit"
+        "Logging[cats.effect.IO] is defined as creating _only_ loggers of type SelfAwareStructuredLogger[cats.effect.IO]"
       ),
       clue = s"""|Actual compiler error was:
                  |
@@ -42,7 +42,7 @@ class LoggingImplicitNotFoundTests extends munit.FunSuite {
     )
     assert(
       errors.contains(
-        "you didn't create a LoggingF[cats.effect.IO] to begin with, or didn't mark it as implicit"
+        "val loggerF: cats.effect.IO[SelfAwareStructuredLogger] = Logging[cats.effect.IO].create"
       ),
       clue = s"""|Actual compiler error was:
                  |
