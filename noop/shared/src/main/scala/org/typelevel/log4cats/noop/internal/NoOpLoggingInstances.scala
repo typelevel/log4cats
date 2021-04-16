@@ -14,18 +14,14 @@
  * limitations under the License.
  */
 
-package org.typelevel.log4cats.noop
+package org.typelevel.log4cats.noop.internal
 
 import cats.Applicative
-import org.typelevel.log4cats._
+import org.typelevel.log4cats.noop._
 
-trait NoOpLogging[F[_]] extends Logging[F] {
-  override def fromName(name: String): SelfAwareStructuredLogger[F]
-}
-
-object NoOpLogging {
-  def apply[F[_]](implicit logging: NoOpLogging[F]): NoOpLogging[F] = logging
-  def create[F[_]: Applicative] = new NoOpLogging[F] {
-    override def fromName(name: String): SelfAwareStructuredLogger[F] = NoOpLogger[F]
-  }
+trait NoOpLoggingInstances {
+  implicit def log4catsSummonNoOpGenLogging[G[_]: Applicative, F[_]: Applicative]: NoOpLoggingGen[
+    G,
+    F
+  ] = NoOpLoggingGen[G, F]
 }
