@@ -8,7 +8,7 @@ enablePlugins(SonatypeCiReleasePlugin)
 
 ThisBuild / organization := "org.typelevel"
 ThisBuild / baseVersion := "1.2"
-ThisBuild / crossScalaVersions := Seq(Scala213, Scala212, "3.0.0-RC1", "3.0.0-RC2")
+ThisBuild / crossScalaVersions := Seq(Scala213, Scala212, "3.0.0-RC2", "3.0.0-RC3")
 ThisBuild / scalaVersion := Scala213
 ThisBuild / publishFullName := "Christopher Davenport"
 ThisBuild / publishGithubUser := "christopherdavenport"
@@ -20,7 +20,8 @@ ThisBuild / versionIntroduced := Map(
   "2.13" -> "1.2.0",
   "3.0.0-M3" -> "1.2.0",
   "3.0.0-RC1" -> "1.2.0",
-  "3.0.0-RC2" -> "1.2.2"
+  "3.0.0-RC2" -> "1.2.2",
+  "3.0.0-RC3" -> "1.2.3"
 )
 
 val MicrositesCond = s"matrix.scala == '$Scala212'"
