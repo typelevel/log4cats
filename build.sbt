@@ -8,7 +8,7 @@ enablePlugins(SonatypeCiReleasePlugin)
 
 ThisBuild / organization := "org.typelevel"
 ThisBuild / baseVersion := "1.2"
-ThisBuild / crossScalaVersions := Seq(Scala213, Scala212, "3.0.0-RC1", "3.0.0-RC2")
+ThisBuild / crossScalaVersions := Seq(Scala213, Scala212, "3.0.0-RC2", "3.0.0-RC3")
 ThisBuild / scalaVersion := Scala213
 ThisBuild / publishFullName := "Christopher Davenport"
 ThisBuild / publishGithubUser := "christopherdavenport"
@@ -20,7 +20,8 @@ ThisBuild / versionIntroduced := Map(
   "2.13" -> "1.2.0",
   "3.0.0-M3" -> "1.2.0",
   "3.0.0-RC1" -> "1.2.0",
-  "3.0.0-RC2" -> "1.2.2"
+  "3.0.0-RC2" -> "1.2.2",
+  "3.0.0-RC3" -> "1.2.3"
 )
 
 val MicrositesCond = s"matrix.scala == '$Scala212'"
@@ -73,10 +74,10 @@ ThisBuild / githubWorkflowPublish := Seq(
   cond = Some(MicrositesCond)
 )
 
-val catsV = "2.5.0"
-val catsEffectV = "2.4.1"
+val catsV = "2.6.0"
+val catsEffectV = "2.5.0"
 val slf4jV = "1.7.30"
-val munitCatsEffectV = "1.0.1"
+val munitCatsEffectV = "1.0.2"
 val logbackClassicV = "1.2.3"
 
 Global / onChangedBuildSource := ReloadOnSourceChanges
@@ -161,7 +162,7 @@ lazy val commonSettings = Seq(
 
 lazy val releaseSettings = {
   Seq(
-    publishArtifact in Test := false,
+    Test / publishArtifact := false,
     scmInfo := Some(
       ScmInfo(
         url("https://github.com/typelevel/log4cats"),

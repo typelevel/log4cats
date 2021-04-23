@@ -3,6 +3,17 @@
 This file summarizes **notable** changes for each release, but does not describe internal changes unless they are particularly exciting.
 
 ----
+# <a name="unreleased"></a>New and Noteworthy Unreleased changes
+
+# <a name="1.3.0"></a>New and Noteworthy for Version 1.3.0
+
+- cats 2.6.0
+- cats-effect 2.5.0
+- add Scala 3.0.0-RC3 build
+- drop Scala 3.0.0-RC1 build
+- Add fluent combinators for adding context to structured loggers #425 (thanks to @nigredo-tori)
+- bugfix: Add missing `withModifiedString` overrides in `Logger[F]` subclasses #430
+
 # <a name="1.2.2"></a>New and Noteworthy for Version 1.2.2
 - cats-effect-2.4.1
 - cats 2.5.0
