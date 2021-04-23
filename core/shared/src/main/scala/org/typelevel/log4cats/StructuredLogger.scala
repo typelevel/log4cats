@@ -17,6 +17,7 @@
 package org.typelevel.log4cats
 
 import cats._
+import cats.Show.Shown
 
 trait StructuredLogger[F[_]] extends Logger[F] {
   def trace(ctx: Map[String, String])(msg: => String): F[Unit]
@@ -31,6 +32,16 @@ trait StructuredLogger[F[_]] extends Logger[F] {
   def error(ctx: Map[String, String], t: Throwable)(msg: => String): F[Unit]
   override def mapK[G[_]](fk: F ~> G): StructuredLogger[G] =
     StructuredLogger.mapK(fk)(this)
+
+  def addContext(ctx: Map[String, String]): StructuredLogger[F] =
+    StructuredLogger.withContext(this)(ctx)
+
+  def addContext(
+      pairs: (String, Shown)*
+  ): StructuredLogger[F] =
+    StructuredLogger.withContext(this)(
+      pairs.map { case (k, v) => (k, v.toString) }.toMap
+    )
 
   override def withModifiedString(f: String => String): StructuredLogger[F] =
     StructuredLogger.withModifiedString[F](this, f)
