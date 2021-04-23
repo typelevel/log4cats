@@ -20,7 +20,7 @@ ThisBuild / versionIntroduced := Map(
   "3.0.0-M3" -> "1.2.0",
   "3.0.0-RC1" -> "1.2.0",
   "3.0.0-RC2" -> "1.2.2",
-  "3.0.0-RC3" -> "1.2.3"
+  "3.0.0-RC3" -> "1.3.0"
 )
 
 val MicrositesCond = s"matrix.scala == '$Scala212'"
