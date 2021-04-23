@@ -39,4 +39,17 @@ object LoggerSyntaxCompilation {
   def selfAwareStructuredLoggerMapK[F[_], G[_]](l: SelfAwareStructuredLogger[F])(f: F ~> G) =
     l.mapK(f)
 
+  def loggerSyntaxWithModifiedString[F[_]](l: Logger[F]): Logger[F] = l.withModifiedString(identity)
+
+  def selfAwareLoggerSyntaxWithModifiedString[F[_]](l: SelfAwareLogger[F]): SelfAwareLogger[F] =
+    l.withModifiedString(identity)
+
+  def structuredLoggerSyntaxWithModifiedString[F[_]](l: StructuredLogger[F]): StructuredLogger[F] =
+    l.withModifiedString(identity)
+
+  def selfAwareStructuredLoggerSyntaxWithModifiedString[F[_]](
+      l: SelfAwareStructuredLogger[F]
+  ): SelfAwareStructuredLogger[F] =
+    l.withModifiedString(identity)
+
 }

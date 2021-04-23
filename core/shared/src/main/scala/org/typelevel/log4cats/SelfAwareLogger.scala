@@ -25,6 +25,9 @@ trait SelfAwareLogger[F[_]] extends Logger[F] {
   def isWarnEnabled: F[Boolean]
   def isErrorEnabled: F[Boolean]
   override def mapK[G[_]](fk: F ~> G): SelfAwareLogger[G] = SelfAwareLogger.mapK(fk)(this)
+
+  override def withModifiedString(f: String => String): SelfAwareLogger[F] =
+    SelfAwareLogger.withModifiedString[F](this, f)
 }
 object SelfAwareLogger {
   def apply[F[_]](implicit ev: SelfAwareLogger[F]): SelfAwareLogger[F] = ev
@@ -62,5 +65,28 @@ object SelfAwareLogger {
         f(logger.debug(message))
       def trace(message: => String): F[Unit] =
         f(logger.trace(message))
+    }
+
+  private def withModifiedString[F[_]](
+      l: SelfAwareLogger[F],
+      f: String => String
+  ): SelfAwareLogger[F] =
+    new SelfAwareLogger[F] {
+      override def isTraceEnabled: F[Boolean] = l.isTraceEnabled
+      override def isDebugEnabled: F[Boolean] = l.isDebugEnabled
+      override def isInfoEnabled: F[Boolean] = l.isInfoEnabled
+      override def isWarnEnabled: F[Boolean] = l.isWarnEnabled
+      override def isErrorEnabled: F[Boolean] = l.isErrorEnabled
+
+      override def error(message: => String): F[Unit] = l.error(f(message))
+      override def error(t: Throwable)(message: => String): F[Unit] = l.error(t)(f(message))
+      override def warn(message: => String): F[Unit] = l.warn(f(message))
+      override def warn(t: Throwable)(message: => String): F[Unit] = l.warn(t)(f(message))
+      override def info(message: => String): F[Unit] = l.info(f(message))
+      override def info(t: Throwable)(message: => String): F[Unit] = l.info(t)(f(message))
+      override def debug(message: => String): F[Unit] = l.debug(f(message))
+      override def debug(t: Throwable)(message: => String): F[Unit] = l.debug(t)(f(message))
+      override def trace(message: => String): F[Unit] = l.trace(f(message))
+      override def trace(t: Throwable)(message: => String): F[Unit] = l.trace(t)(f(message))
     }
 }
