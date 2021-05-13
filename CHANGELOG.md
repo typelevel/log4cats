@@ -5,6 +5,13 @@ This file summarizes **notable** changes for each release, but does not describe
 ----
 # <a name="unreleased"></a>New and Noteworthy Unreleased changes
 
+# <a name="1.3.1"></a>New and Noteworthy for Version 1.3.1
+
+- cats 2.6.1
+- cats-effect 2.5.1
+- add Scala 3.0.0 build
+- drop Scala 3.0.0-RC3, 3.0.0-RC2 builds
+
 # <a name="1.3.0"></a>New and Noteworthy for Version 1.3.0
 
 - cats 2.6.0
