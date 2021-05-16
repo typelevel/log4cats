@@ -9,7 +9,7 @@ enablePlugins(SonatypeCiReleasePlugin)
 
 ThisBuild / organization := "org.typelevel"
 ThisBuild / baseVersion := "1.3"
-ThisBuild / crossScalaVersions := Seq(Scala3, Scala213, Scala212)
+ThisBuild / crossScalaVersions := Seq(Scala213, Scala212, Scala3)
 ThisBuild / scalaVersion := Scala213
 ThisBuild / publishFullName := "Christopher Davenport"
 ThisBuild / publishGithubUser := "christopherdavenport"
@@ -19,10 +19,6 @@ ThisBuild / githubWorkflowJavaVersions := Seq("adopt@1.8", "adopt@1.11")
 ThisBuild / versionIntroduced := Map(
   "2.12" -> "1.2.0",
   "2.13" -> "1.2.0",
-  "3.0.0-M3" -> "1.2.0",
-  "3.0.0-RC1" -> "1.2.0",
-  "3.0.0-RC2" -> "1.2.2",
-  "3.0.0-RC3" -> "1.3.0",
   "3.0.0" -> "1.3.1",
 )
 
