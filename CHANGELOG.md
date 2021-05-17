@@ -5,10 +5,17 @@ This file summarizes **notable** changes for each release, but does not describe
 ----
 # <a name="unreleased"></a>New and Noteworthy Unreleased changes
 
+# <a name="2.1.1"></a>New and Noteworthy for Version 2.1.1
+
+- cats 2.6.1
+- cats-effect 3.1.1
+- add Scala 3.0.0 build
+- drop Scala 3.0.0-RC2, 3.0.0-RC3 builds
+
 # <a name="2.1.0"></a>New and Noteworthy for Version 2.1.0
 
 - cats 2.6.0
-- cats-effect 2.5.0
+- cats-effect 3.1.0
 - add Scala 3.0.0-RC3 build
 - drop Scala 3.0.0-RC1 build
 - Add fluent combinators for adding context to structured loggers #425 (thanks to @nigredo-tori)
@@ -46,7 +53,13 @@ Forward ports from `1.2.0`:
 # <a name="2.0.0-M1"></a>New and Noteworthy for Version 2.0.0-M1
 
 - Depends on cats-effect-3.0.0-M5
-# <a name="unreleased"></a>New and Noteworthy Unreleased changes
+
+# <a name="1.3.1"></a>New and Noteworthy for Version 1.3.1
+
+- cats 2.6.1
+- cats-effect 2.5.1
+- add Scala 3.0.0 build
+- drop Scala 3.0.0-RC3, 3.0.0-RC2 builds
 
 # <a name="1.3.0"></a>New and Noteworthy for Version 1.3.0
 

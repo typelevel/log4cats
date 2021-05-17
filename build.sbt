@@ -2,12 +2,13 @@ import sbtghactions.UseRef
 
 val Scala213 = "2.13.5"
 val Scala212 = "2.12.13"
+val Scala3   = "3.0.0"
 
 enablePlugins(SonatypeCiReleasePlugin)
 
 ThisBuild / organization := "org.typelevel"
 ThisBuild / baseVersion := "2.1"
-ThisBuild / crossScalaVersions := Seq(Scala213, Scala212, "3.0.0-RC2", "3.0.0-RC3")
+ThisBuild / crossScalaVersions := Seq(Scala213, Scala212, Scala3)
 ThisBuild / scalaVersion := Scala213
 ThisBuild / publishFullName := "Christopher Davenport"
 ThisBuild / publishGithubUser := "christopherdavenport"
@@ -17,10 +18,7 @@ ThisBuild / githubWorkflowJavaVersions := Seq("adopt@1.8", "adopt@1.11")
 ThisBuild / versionIntroduced := Map(
   "2.12" -> "1.2.0",
   "2.13" -> "1.2.0",
-  "3.0.0-M3" -> "1.2.0",
-  "3.0.0-RC1" -> "1.2.0",
-  "3.0.0-RC2" -> "1.2.2",
-  "3.0.0-RC3" -> "1.3.0"
+  "3.0.0" -> "1.3.1",
 )
 
 val MicrositesCond = s"matrix.scala == '$Scala212'"
@@ -73,10 +71,10 @@ ThisBuild / githubWorkflowPublish := Seq(
   cond = Some(MicrositesCond)
 )
 
-val catsV = "2.6.0"
+val catsV = "2.6.1"
 val catsEffectV = "3.1.0"
 val slf4jV = "1.7.30"
-val munitCatsEffectV = "1.0.2"
+val munitCatsEffectV = "1.0.3"
 val logbackClassicV = "1.2.3"
 
 Global / onChangedBuildSource := ReloadOnSourceChanges
