@@ -3,6 +3,8 @@ target/
 # vim
 *.sw?
 
+.vscode
+
 # Ignore [ce]tags files
 tags
 
