@@ -73,7 +73,7 @@ ThisBuild / githubWorkflowPublish := Seq(
 
 val catsV = "2.6.1"
 val catsEffectV = "3.1.1"
-val slf4jV = "1.7.31"
+val slf4jV = "1.7.32"
 val munitCatsEffectV = "1.0.5"
 val logbackClassicV = "1.2.4"
 
