@@ -3,7 +3,7 @@ import sbtghactions.UseRef
 
 val Scala213 = "2.13.6"
 val Scala212 = "2.12.13"
-val Scala3   = "3.0.0"
+val Scala3 = "3.0.0"
 
 enablePlugins(SonatypeCiReleasePlugin)
 
@@ -19,7 +19,7 @@ ThisBuild / githubWorkflowJavaVersions := Seq("adopt@1.8", "adopt@1.11")
 ThisBuild / versionIntroduced := Map(
   "2.12" -> "1.2.0",
   "2.13" -> "1.2.0",
-  "3.0.0" -> "1.3.1",
+  "3.0.0" -> "1.3.1"
 )
 
 val MicrositesCond = s"matrix.scala == '$Scala212'"
@@ -65,7 +65,7 @@ ThisBuild / githubWorkflowPublishTargetBranches := Seq(RefPredicate.StartsWith(R
 
 ThisBuild / githubWorkflowPublish := Seq(
   WorkflowStep.Sbt(
-    List("release"),
+    List("release")
   )
 ) ++ micrositeWorkflowSteps(Some(MicrositesCond)).toSeq :+ WorkflowStep.Sbt(
   List("docs/publishMicrosite"),
@@ -75,7 +75,7 @@ ThisBuild / githubWorkflowPublish := Seq(
 val catsV = "2.6.1"
 val catsEffectV = "2.5.1"
 val slf4jV = "1.7.30"
-val munitCatsEffectV = "1.0.3"
+val munitCatsEffectV = "1.0.6"
 val logbackClassicV = "1.2.3"
 
 Global / onChangedBuildSource := ReloadOnSourceChanges
@@ -153,9 +153,9 @@ lazy val slf4j = project
 
 lazy val commonSettings = Seq(
   libraryDependencies ++= Seq(
-    "org.typelevel" %%% "munit-cats-effect-2" % munitCatsEffectV % Test,
+    "org.typelevel" %%% "munit-cats-effect-2" % munitCatsEffectV % Test
   ),
-  testFrameworks += new TestFramework("munit.Framework"),
+  testFrameworks += new TestFramework("munit.Framework")
 )
 
 lazy val releaseSettings = {
@@ -171,9 +171,19 @@ lazy val releaseSettings = {
     licenses := Seq("Apache-2.0" -> url("https://www.apache.org/licenses/LICENSE-2.0.html")),
     startYear := Some(2018),
     developers := List(
-      Developer("christopherdavenport", "Christopher Davenport", "chris@christopherdavenport.tech", new java.net.URL("https://christopherdavenport.github.io/")),
-      Developer("lorandszakacs", "Loránd Szakács", "lorandszakacs@users.noreply.github.com", new java.net.URL("https://github.com/lorandszakacs")),
-    ),
+      Developer(
+        "christopherdavenport",
+        "Christopher Davenport",
+        "chris@christopherdavenport.tech",
+        new java.net.URL("https://christopherdavenport.github.io/")
+      ),
+      Developer(
+        "lorandszakacs",
+        "Loránd Szakács",
+        "lorandszakacs@users.noreply.github.com",
+        new java.net.URL("https://github.com/lorandszakacs")
+      )
+    )
   )
 }
 
