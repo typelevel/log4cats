@@ -3,7 +3,7 @@ import sbtghactions.UseRef
 
 val Scala213 = "2.13.6"
 val Scala212 = "2.12.13"
-val Scala3 = "3.0.2"
+val Scala3 = "3.0.0"
 
 enablePlugins(SonatypeCiReleasePlugin)
 
@@ -74,7 +74,7 @@ ThisBuild / githubWorkflowPublish := Seq(
 
 val catsV = "2.6.1"
 val catsEffectV = "2.5.1"
-val slf4jV = "1.7.30"
+val slf4jV = "1.7.32"
 val munitCatsEffectV = "1.0.3"
 val logbackClassicV = "1.2.3"
 
