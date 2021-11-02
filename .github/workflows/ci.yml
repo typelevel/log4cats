@@ -152,7 +152,7 @@ jobs:
       - if: matrix.scala == '2.12.15'
         run: gem install jekyll -v 4
 
-      - if: matrix.scala == '2.12.13'
+      - if: matrix.scala == '2.12.15'
         run: sbt ++${{ matrix.scala }} docs/publishMicrosite
 
   scalafmt:
