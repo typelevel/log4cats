@@ -26,7 +26,7 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest]
-        scala: [2.13.6, 2.12.13, 3.1.0]
+        scala: [2.13.6, 2.12.15, 3.0.2]
         java: [adopt@1.8, adopt@1.11]
     runs-on: ${{ matrix.os }}
     steps:
@@ -113,12 +113,12 @@ jobs:
           tar xf targets.tar
           rm targets.tar
 
-      - name: Download target directories (2.12.13)
+      - name: Download target directories (2.12.15)
         uses: actions/download-artifact@v2
         with:
-          name: target-${{ matrix.os }}-2.12.13-${{ matrix.java }}
+          name: target-${{ matrix.os }}-2.12.15-${{ matrix.java }}
 
-      - name: Inflate target directories (2.12.13)
+      - name: Inflate target directories (2.12.15)
         run: |
           tar xf targets.tar
           rm targets.tar
@@ -138,21 +138,21 @@ jobs:
 
       - run: sbt ++${{ matrix.scala }} release
 
-      - if: matrix.scala == '2.12.13'
+      - if: matrix.scala == '2.12.15'
         uses: ruby/setup-ruby@v1
         with:
           ruby-version: 2.6
 
-      - if: matrix.scala == '2.12.13'
+      - if: matrix.scala == '2.12.15'
         run: gem update --system
 
-      - if: matrix.scala == '2.12.13'
+      - if: matrix.scala == '2.12.15'
         run: gem install sass
 
-      - if: matrix.scala == '2.12.13'
+      - if: matrix.scala == '2.12.15'
         run: gem install jekyll -v 4
 
-      - if: matrix.scala == '2.12.13'
+      - if: matrix.scala == '2.12.15'
         run: sbt ++${{ matrix.scala }} docs/publishMicrosite
 
   scalafmt:
@@ -160,7 +160,7 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest]
-        scala: [2.13.6, 2.12.13]
+        scala: [2.13.6, 2.12.15]
         java: [adopt@1.8]
     runs-on: ${{ matrix.os }}
     steps:
@@ -194,7 +194,7 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest]
-        scala: [2.12.13]
+        scala: [2.12.15]
         java: [adopt@1.8]
     runs-on: ${{ matrix.os }}
     steps:
