@@ -39,13 +39,16 @@ private class PagingSelfAwareStructuredLogger[F[_]: Monad](pageSize: Int)(
         if (length <= pageContentSize)
           loggingOp(msg)
         else {
-          val pl = msg.grouped(pageContentSize).toList.zip(LazyList from 1)
-          val numOfPages = pl.length
-          pl.traverse(msgIndexTuple =>
+          val msgWithIndices = msg.grouped(pageContentSize).toList.zip(
+            (1 until length).toList
+          )
+          val numOfPages = msgWithIndices.length
+          msgWithIndices.traverse(mi =>
             loggingOp(
               show"""
-                  |Page ${msgIndexTuple._2} / $numOfPages
-                  |${msgIndexTuple._1}""".stripMargin
+                  |~~~ Page ${mi._2} / $numOfPages ~~~
+                  |${mi._1}
+                  |~~~ Page ${mi._2} / $numOfPages ~~~""".stripMargin
             )
           )
         }
