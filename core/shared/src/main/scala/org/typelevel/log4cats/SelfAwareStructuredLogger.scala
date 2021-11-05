@@ -40,6 +40,11 @@ trait SelfAwareStructuredLogger[F[_]] extends SelfAwareLogger[F] with Structured
 object SelfAwareStructuredLogger {
   def apply[F[_]](implicit ev: SelfAwareStructuredLogger[F]): SelfAwareStructuredLogger[F] = ev
 
+  def withPaging[F[_]: Monad](pageSize: Int)(
+      logger: SelfAwareStructuredLogger[F]
+  ): SelfAwareStructuredLogger[F] =
+    new PagingSelfAwareStructuredLogger(pageSize)(logger)
+
   def withContext[F[_]](
       sl: SelfAwareStructuredLogger[F]
   )(ctx: Map[String, String]): SelfAwareStructuredLogger[F] =
