@@ -20,10 +20,19 @@ import cats._
 import cats.implicits._
 
 object PagingSelfAwareStructuredLogger {
-  def withPaging[F[_]: Monad](pageSize: Int)(
+  /**
+   * Wrap a SelfAwareStructuredLogger adding paging functionality.
+   *
+   * @param pageSizeK The size (unit is kilobyte) of the chunk of message in each page; this does not include the
+   *                  page header and footer, and tracing data.
+   * @param logger The SelfAwareStructuredLogger to be used to do the actual logging.
+   * @tparam F Effect type class.
+   * @return SelfAwareStructuredLogger with paging.
+   */
+  def withPaging[F[_]: Monad](pageSizeK: Int)(
     logger: SelfAwareStructuredLogger[F]
   ): SelfAwareStructuredLogger[F] =
-    new PagingSelfAwareStructuredLogger[F](pageSize)(logger)
+    new PagingSelfAwareStructuredLogger[F](pageSizeK)(logger)
 
   private class PagingSelfAwareStructuredLogger[F[_]: Monad](pageSizeK: Int)(
     sl: SelfAwareStructuredLogger[F]
