@@ -20,6 +20,7 @@ import cats._
 import cats.implicits._
 
 object PagingSelfAwareStructuredLogger {
+
   /**
    * Wrap a SelfAwareStructuredLogger adding paging functionality.
    *
