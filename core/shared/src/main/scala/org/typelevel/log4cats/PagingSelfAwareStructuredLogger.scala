@@ -66,10 +66,10 @@ object PagingSelfAwareStructuredLogger {
               .traverse { mi =>
                 val pageHeaderFooter = s"~~~~~~~~~~ Page ${mi._2} / $numOfPages ~~~~~~~~~~ log-split-id=$correlationId "
                 loggingOp(show"""$pageHeaderFooter
-                                 |
-                                 |${mi._1}
-                                 |
-                                 |$pageHeaderFooter""".stripMargin)
+                                |
+                                |${mi._1}
+                                |
+                                |$pageHeaderFooter""".stripMargin)
               }
               .map(_ => ())
           }
