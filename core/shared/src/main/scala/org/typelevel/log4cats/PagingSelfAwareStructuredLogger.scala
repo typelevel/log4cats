@@ -19,57 +19,58 @@ package org.typelevel.log4cats
 import cats._
 import cats.implicits._
 
+import java.util.UUID
+
 object PagingSelfAwareStructuredLogger {
 
   /**
-   * Wrap a SelfAwareStructuredLogger adding paging functionality.
+   * Wrap a SelfAwareStructuredLogger adding pagination functionality.
    *
    * @param pageSizeK The size (unit is kilobyte) of the chunk of message in each page; this does not include the
    *                  page header and footer, and tracing data.
    * @param logger The SelfAwareStructuredLogger to be used to do the actual logging.
    * @tparam F Effect type class.
-   * @return SelfAwareStructuredLogger with paging.
+   * @return SelfAwareStructuredLogger with pagination.
    */
   def withPaging[F[_]: Monad](pageSizeK: Int)(
-    logger: SelfAwareStructuredLogger[F]
+      logger: SelfAwareStructuredLogger[F]
   ): SelfAwareStructuredLogger[F] =
     new PagingSelfAwareStructuredLogger[F](pageSizeK)(logger)
 
   private class PagingSelfAwareStructuredLogger[F[_]: Monad](pageSizeK: Int)(
-    sl: SelfAwareStructuredLogger[F]
+      sl: SelfAwareStructuredLogger[F]
   ) extends SelfAwareStructuredLogger[F] {
-    private def paging(
-                        loggingLevelChk: => F[Boolean],
-                        loggingOp: (=> String) => F[Unit],
-                        msg: => String
-                      ): F[Unit] = {
+
+    private def pagedLogging(
+        loggingLevelChk: => F[Boolean],
+        loggingOp: (=> String) => F[Unit],
+        msg: => String
+    ): F[Unit] = {
       loggingLevelChk.ifM(
         {
-          val length          = msg.getBytes().length
-          val decorationSize  = 256
-          val pageContentSize = pageSizeK * 1000 - decorationSize
-          if (length <= pageContentSize)
+          val pageSize = pageSizeK * 1000
+          val length   = msg.getBytes().length
+          if (length <= pageSize)
             loggingOp(msg)
           else {
+            val decorationSize  = 256
+            val pageContentSize = pageSize - decorationSize
+            val pageList        = msg.grouped(pageContentSize).toList
+            val numOfPages      = pageList.length
             val msgWithIndices: Seq[(String, Int)] =
-              msg
-                .grouped(pageContentSize)
-                .toList
-                .zip(
-                  (1 until length).toList
-                )
-            val numOfPages = msgWithIndices.length
-            msgWithIndices
-              .traverse(mi =>
-                loggingOp(
-                  show"""
-                        |~~~ Page ${mi._2} / $numOfPages ~~~
-                        |
-                        |${mi._1}
-                        |
-                        |~~~ Page ${mi._2} / $numOfPages ~~~""".stripMargin
-                )
+              pageList.zip(
+                (1 to numOfPages).toList
               )
+            val correlationId = UUID.randomUUID()
+            msgWithIndices
+              .traverse { mi =>
+                val pageHeaderFooter = s"~~~~~~~~~~ Page ${mi._2} / $numOfPages ~~~~~~~~~~ log-split-id=$correlationId "
+                loggingOp(show"""$pageHeaderFooter
+                                 |
+                                 |${mi._1}
+                                 |
+                                 |$pageHeaderFooter""".stripMargin)
+              }
               .map(_ => ())
           }
         },
@@ -78,34 +79,34 @@ object PagingSelfAwareStructuredLogger {
     }
 
     override def trace(ctx: Map[String, String])(msg: => String): F[Unit] =
-      paging(isTraceEnabled, sl.trace(ctx), msg)
+      pagedLogging(isTraceEnabled, sl.trace(ctx), msg)
 
     override def trace(ctx: Map[String, String], t: Throwable)(msg: => String): F[Unit] =
-      paging(isTraceEnabled, sl.trace(ctx, t), msg)
+      pagedLogging(isTraceEnabled, sl.trace(ctx, t), msg)
 
     override def debug(ctx: Map[String, String])(msg: => String): F[Unit] =
-      paging(isDebugEnabled, sl.debug(ctx), msg)
+      pagedLogging(isDebugEnabled, sl.debug(ctx), msg)
 
     override def debug(ctx: Map[String, String], t: Throwable)(msg: => String): F[Unit] =
-      paging(isDebugEnabled, sl.debug(ctx, t), msg)
+      pagedLogging(isDebugEnabled, sl.debug(ctx, t), msg)
 
     override def info(ctx: Map[String, String])(msg: => String): F[Unit] =
-      paging(isInfoEnabled, sl.info(ctx), msg)
+      pagedLogging(isInfoEnabled, sl.info(ctx), msg)
 
     override def info(ctx: Map[String, String], t: Throwable)(msg: => String): F[Unit] =
-      paging(isInfoEnabled, sl.info(ctx, t), msg)
+      pagedLogging(isInfoEnabled, sl.info(ctx, t), msg)
 
     override def warn(ctx: Map[String, String])(msg: => String): F[Unit] =
-      paging(isWarnEnabled, sl.warn(ctx), msg)
+      pagedLogging(isWarnEnabled, sl.warn(ctx), msg)
 
     override def warn(ctx: Map[String, String], t: Throwable)(msg: => String): F[Unit] =
-      paging(isWarnEnabled, sl.warn(ctx, t), msg)
+      pagedLogging(isWarnEnabled, sl.warn(ctx, t), msg)
 
     override def error(ctx: Map[String, String])(msg: => String): F[Unit] =
-      paging(isErrorEnabled, sl.error(ctx), msg)
+      pagedLogging(isErrorEnabled, sl.error(ctx), msg)
 
     override def error(ctx: Map[String, String], t: Throwable)(msg: => String): F[Unit] =
-      paging(isErrorEnabled, sl.error(ctx, t), msg)
+      pagedLogging(isErrorEnabled, sl.error(ctx, t), msg)
 
     override def isTraceEnabled: F[Boolean] = sl.isTraceEnabled
 
@@ -118,33 +119,33 @@ object PagingSelfAwareStructuredLogger {
     override def isErrorEnabled: F[Boolean] = sl.isErrorEnabled
 
     override def error(message: => String): F[Unit] =
-      paging(isErrorEnabled, sl.error, message)
+      pagedLogging(isErrorEnabled, sl.error, message)
 
     override def warn(message: => String): F[Unit] =
-      paging(isWarnEnabled, sl.warn, message)
+      pagedLogging(isWarnEnabled, sl.warn, message)
 
     override def info(message: => String): F[Unit] =
-      paging(isInfoEnabled, sl.info, message)
+      pagedLogging(isInfoEnabled, sl.info, message)
 
     override def debug(message: => String): F[Unit] =
-      paging(isDebugEnabled, sl.debug, message)
+      pagedLogging(isDebugEnabled, sl.debug, message)
 
     override def trace(message: => String): F[Unit] =
-      paging(isTraceEnabled, sl.trace, message)
+      pagedLogging(isTraceEnabled, sl.trace, message)
 
     override def error(t: Throwable)(message: => String): F[Unit] =
-      paging(isErrorEnabled, sl.error(t), message)
+      pagedLogging(isErrorEnabled, sl.error(t), message)
 
     override def warn(t: Throwable)(message: => String): F[Unit] =
-      paging(isWarnEnabled, sl.warn(t), message)
+      pagedLogging(isWarnEnabled, sl.warn(t), message)
 
     override def info(t: Throwable)(message: => String): F[Unit] =
-      paging(isInfoEnabled, sl.info(t), message)
+      pagedLogging(isInfoEnabled, sl.info(t), message)
 
     override def debug(t: Throwable)(message: => String): F[Unit] =
-      paging(isDebugEnabled, sl.debug(t), message)
+      pagedLogging(isDebugEnabled, sl.debug(t), message)
 
     override def trace(t: Throwable)(message: => String): F[Unit] =
-      paging(isTraceEnabled, sl.trace(t), message)
+      pagedLogging(isTraceEnabled, sl.trace(t), message)
   }
 }

@@ -13,3 +13,6 @@ tags
 project/metals.sbt
 project/project
 .bsp
+
+ # mac
+.DS_Store
