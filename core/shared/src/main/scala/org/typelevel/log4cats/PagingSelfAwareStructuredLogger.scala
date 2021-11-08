@@ -28,35 +28,35 @@ object PagingSelfAwareStructuredLogger {
    *
    * @param pageSizeK The size (unit is kilobyte) of the chunk of message in each page; this does not include the
    *                  page header and footer, and tracing data.
-   * @param logger The SelfAwareStructuredLogger to be used to do the actual logging.
+   * @param logger    The SelfAwareStructuredLogger to be used to do the actual logging.
    * @tparam F Effect type class.
    * @return SelfAwareStructuredLogger with pagination.
    */
-  def withPaging[F[_]: Monad](pageSizeK: Int)(
-      logger: SelfAwareStructuredLogger[F]
+  def withPaging[F[_] : Monad](pageSizeK: Int)(
+    logger: SelfAwareStructuredLogger[F]
   ): SelfAwareStructuredLogger[F] =
     new PagingSelfAwareStructuredLogger[F](pageSizeK)(logger)
 
-  private class PagingSelfAwareStructuredLogger[F[_]: Monad](pageSizeK: Int)(
-      sl: SelfAwareStructuredLogger[F]
+  private class PagingSelfAwareStructuredLogger[F[_] : Monad](pageSizeK: Int)(
+    sl: SelfAwareStructuredLogger[F]
   ) extends SelfAwareStructuredLogger[F] {
 
     private def pagedLogging(
-        loggingLevelChk: => F[Boolean],
-        loggingOp: (=> String) => F[Unit],
-        msg: => String
-    ): F[Unit] = {
+                              loggingLevelChk: => F[Boolean],
+                              loggingOp: (=> String) => F[Unit],
+                              msg: => String
+                            ): F[Unit] = {
       loggingLevelChk.ifM(
         {
           val pageSize = pageSizeK * 1000
-          val length   = msg.getBytes().length
+          val length = msg.getBytes().length
           if (length <= pageSize)
             loggingOp(msg)
           else {
-            val decorationSize  = 256
+            val decorationSize = 256
             val pageContentSize = pageSize - decorationSize
-            val pageList        = msg.grouped(pageContentSize).toList
-            val numOfPages      = pageList.length
+            val pageList = msg.grouped(pageContentSize).toList
+            val numOfPages = pageList.length
             val msgWithIndices: Seq[(String, Int)] =
               pageList.zip(
                 (1 to numOfPages).toList
@@ -64,12 +64,14 @@ object PagingSelfAwareStructuredLogger {
             val correlationId = UUID.randomUUID()
             msgWithIndices
               .traverse { mi =>
-                val pageHeaderFooter = s"~~~~~~~~~~ Page ${mi._2} / $numOfPages ~~~~~~~~~~ log-split-id=$correlationId "
-                loggingOp(show"""$pageHeaderFooter
-                                |
-                                |${mi._1}
-                                |
-                                |$pageHeaderFooter""".stripMargin)
+                val pageHeaderFooter =
+                  s"~~~~~ Page ${mi._2} / $numOfPages ~~~~~ paging-size=${pageSizeK}K, log-split-id=$correlationId "
+                loggingOp(
+                  show"""$pageHeaderFooter
+                        |
+                        |${mi._1}
+                        |
+                        |$pageHeaderFooter""".stripMargin)
               }
               .map(_ => ())
           }
