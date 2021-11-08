@@ -28,24 +28,25 @@ object PagingSelfAwareStructuredLogger {
    *
    * @param pageSizeK The size (unit is kilobyte) of the chunk of message in each page; this does not include the
    *                  page header and footer, and tracing data.
-   * @param logger    The SelfAwareStructuredLogger to be used to do the actual logging.
+   * @param logger The SelfAwareStructuredLogger to be used to do the actual logging.
    * @tparam F Effect type class.
    * @return SelfAwareStructuredLogger with pagination.
    */
-  def withPaging[F[_] : Monad](pageSizeK: Int)(
-    logger: SelfAwareStructuredLogger[F]
+  def withPaging[F[_]: Monad](pageSizeK: Int, maxPageNeeded: Int)(
+      logger: SelfAwareStructuredLogger[F]
   ): SelfAwareStructuredLogger[F] =
-    new PagingSelfAwareStructuredLogger[F](pageSizeK)(logger)
+    new PagingSelfAwareStructuredLogger[F](pageSizeK, maxPageNeeded)(logger)
 
-  private class PagingSelfAwareStructuredLogger[F[_] : Monad](pageSizeK: Int)(
-    sl: SelfAwareStructuredLogger[F]
+  private class PagingSelfAwareStructuredLogger[F[_]: Monad](pageSizeK: Int, maxPageNeeded: Int)(
+      sl: SelfAwareStructuredLogger[F]
   ) extends SelfAwareStructuredLogger[F] {
+    private val pageIndices = 1 to maxPageNeeded
 
     private def pagedLogging(
-                              loggingLevelChk: => F[Boolean],
-                              loggingOp: (=> String) => F[Unit],
-                              msg: => String
-                            ): F[Unit] = {
+        loggingLevelChk: => F[Boolean],
+        loggingOp: (=> String) => F[Unit],
+        msg: => String
+    ): F[Unit] = {
       loggingLevelChk.ifM(
         {
           val pageSize = pageSizeK * 1000
@@ -57,23 +58,18 @@ object PagingSelfAwareStructuredLogger {
             val pageContentSize = pageSize - decorationSize
             val pageList = msg.grouped(pageContentSize).toList
             val numOfPages = pageList.length
-            val msgWithIndices: Seq[(String, Int)] =
-              pageList.zip(
-                (1 to numOfPages).toList
-              )
+            val msgWithIndices = pageList.zip(pageIndices)
             val correlationId = UUID.randomUUID()
             msgWithIndices
-              .traverse { mi =>
+              .traverse_ { mi =>
                 val pageHeaderFooter =
                   s"~~~~~ Page ${mi._2} / $numOfPages ~~~~~ paging-size=${pageSizeK}K, log-split-id=$correlationId "
-                loggingOp(
-                  show"""$pageHeaderFooter
-                        |
-                        |${mi._1}
-                        |
-                        |$pageHeaderFooter""".stripMargin)
+                loggingOp(show"""$pageHeaderFooter
+                                |
+                                |${mi._1}
+                                |
+                                |$pageHeaderFooter""".stripMargin)
               }
-              .map(_ => ())
           }
         },
         Applicative[F].unit
