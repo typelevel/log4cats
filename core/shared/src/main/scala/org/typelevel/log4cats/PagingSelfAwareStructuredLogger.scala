@@ -50,7 +50,7 @@ object PagingSelfAwareStructuredLogger {
       loggingLevelChk.ifM(
         {
           val pageSize = pageSizeK * 1000
-          val length = msg.getBytes().length
+          val length = msg.getBytes(StandardCharsets.UTF_8).length
           if (length <= pageSize)
             loggingOp(msg)
           else {
