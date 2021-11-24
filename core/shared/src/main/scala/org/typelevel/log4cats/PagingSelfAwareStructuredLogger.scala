@@ -56,7 +56,7 @@ object PagingSelfAwareStructuredLogger {
           else {
             val decorationSize = 256
             val pageContentSize = pageSize - decorationSize
-            val pageList = msg.grouped(pageContentSize).toList
+            val pageList = msg.grouped(pageContentSize).take(maxPageNeeded).toList
             val numOfPages = pageList.length
             val msgWithIndices = pageList.zip(pageIndices)
             val correlationId = UUID.randomUUID()
