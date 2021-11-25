@@ -76,6 +76,7 @@ val catsEffectV = "3.2.9"
 val slf4jV = "1.7.32"
 val munitCatsEffectV = "1.0.5"
 val logbackClassicV = "1.2.7"
+val specs2V = "4.12.1"
 
 Global / onChangedBuildSource := ReloadOnSourceChanges
 
@@ -119,7 +120,9 @@ lazy val testing = crossProject(JSPlatform, JVMPlatform)
   .settings(
     name := "log4cats-testing",
     libraryDependencies ++= Seq(
-      "org.typelevel" %%% "cats-effect" % catsEffectV
+      "org.typelevel" %%% "cats-effect" % catsEffectV,
+      "ch.qos.logback"  % "logback-classic" % logbackClassicV % Test,
+      "org.specs2"     %% "specs2-core"     % specs2V         % Test
     )
   )
 lazy val testingJVM = testing.jvm
