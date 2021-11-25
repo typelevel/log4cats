@@ -50,36 +50,37 @@ object PagingSelfAwareStructuredLogger {
   @SuppressWarnings(Array("org.wartremover.warts.DefaultArguments"))
   def withPaging[F[_]: Monad](pageSizeK: Int = 64, maxPageNeeded: Int = 999)(
       logger: SelfAwareStructuredLogger[F]
-  ): SelfAwareStructuredLogger[F] = {
-    assert(pageSizeK > 0)
-    assert(maxPageNeeded > 0)
+  ): SelfAwareStructuredLogger[F] =
     new PagingSelfAwareStructuredLogger[F](pageSizeK, maxPageNeeded)(logger)
-  }
 
   private class PagingSelfAwareStructuredLogger[F[_]: Monad](pageSizeK: Int, maxPageNeeded: Int)(
       sl: SelfAwareStructuredLogger[F]
   ) extends SelfAwareStructuredLogger[F] {
+    assert(pageSizeK > 0)
+    assert(maxPageNeeded > 0)
+
     private val pageIndices = (1 to maxPageNeeded).toList
     private val logSplitIdN = "log_split_id"
+    private val pageSize = pageSizeK * 1024
 
     private def pagedLogging(
         loggingOp: (=> String) => F[Unit],
         logSplitId: String,
         msg: => String
     ): F[Unit] = {
-      val pageSize = pageSizeK * 1024
       val msgLength = msg.length
-      if (msgLength <= pageSize)
+      val numOfPagesRaw = (msgLength - 1) / pageSize + 1
+      val numOfPages = Math.min(numOfPagesRaw, maxPageNeeded)
+      if (numOfPages <= 1)
         loggingOp(msg)
       else {
-        val numOfPages = Math.min(maxPageNeeded, (msgLength - 1) / pageSize + 1)
         val logSplitIdPart1 = logSplitId.split('-').head
         pageIndices
           .take(numOfPages)
           .traverse_ { pi =>
             val pageHeader = s"Page $pi/$numOfPages $logSplitIdPart1"
             val pageFooter =
-              s"Page $pi/$numOfPages $logSplitIdN=$logSplitId page_size=${pageSizeK}K"
+              s"Page $pi/$numOfPages $logSplitIdN=$logSplitId page_size=$pageSizeK Kb"
             val beginIndex = (pi - 1) * pageSize
             val pageContent =
               if (pi < numOfPages)
@@ -134,15 +135,12 @@ object PagingSelfAwareStructuredLogger {
         ctx: Map[String, String] = Map()
     ): F[Unit] = {
       loggingLevelChk.ifM(
-        {
-          val stackTrace = printStackTrace(t)
-          doLogging(loggingLevelChk, logOpWithCtx, s"$msg\n$stackTrace", ctx)
-        },
+        doLogging(loggingLevelChk, logOpWithCtx, s"$msg\n${getStackTrace(t)}", ctx),
         Applicative[F].unit
       )
     }
 
-    def printStackTrace(t: Throwable): String = {
+    def getStackTrace(t: Throwable): String = {
       val bos = new ByteArrayOutputStream()
       val ps = new PrintStream(bos)
       t.printStackTrace(ps)

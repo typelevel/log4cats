@@ -120,7 +120,7 @@ lazy val testing = crossProject(JSPlatform, JVMPlatform)
   .settings(
     name := "log4cats-testing",
     libraryDependencies ++= Seq(
-      "org.typelevel" %%% "cats-effect" % catsEffectV,
+      "org.typelevel" %%% "cats-effect"     % catsEffectV,
       "ch.qos.logback"  % "logback-classic" % logbackClassicV % Test,
       "org.specs2"     %% "specs2-core"     % specs2V         % Test
     )
