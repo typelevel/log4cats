@@ -50,8 +50,11 @@ object PagingSelfAwareStructuredLogger {
   @SuppressWarnings(Array("org.wartremover.warts.DefaultArguments"))
   def withPaging[F[_]: Monad](pageSizeK: Int = 64, maxPageNeeded: Int = 999)(
       logger: SelfAwareStructuredLogger[F]
-  ): SelfAwareStructuredLogger[F] =
+  ): SelfAwareStructuredLogger[F] = {
+    assert(pageSizeK > 0)
+    assert(maxPageNeeded > 0)
     new PagingSelfAwareStructuredLogger[F](pageSizeK, maxPageNeeded)(logger)
+  }
 
   private class PagingSelfAwareStructuredLogger[F[_]: Monad](pageSizeK: Int, maxPageNeeded: Int)(
       sl: SelfAwareStructuredLogger[F]
