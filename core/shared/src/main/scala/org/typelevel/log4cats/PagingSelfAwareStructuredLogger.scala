@@ -69,7 +69,7 @@ object PagingSelfAwareStructuredLogger {
       if (msgLength <= pageSize)
         loggingOp(msg)
       else {
-        val numOfPages = (msgLength - 1) / pageSize + 1
+        val numOfPages = Math.min(maxPageNeeded, (msgLength - 1) / pageSize + 1)
         val logSplitIdPart1 = logSplitId.split('-').head
         pageIndices
           .take(numOfPages)
