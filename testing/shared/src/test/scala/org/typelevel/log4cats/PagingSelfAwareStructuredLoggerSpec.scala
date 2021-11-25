@@ -47,6 +47,7 @@ class PagingSelfAwareStructuredLoggerSpec extends Specification with BeforeAfter
 
   def runTest(
       pageSizeK: Int,
+      maxPageNeeded: Int,
       expectedNumOfPage: Int,
       logLevel: String,
       logTest: SelfAwareStructuredLogger[IO] => IO[Unit],
@@ -54,9 +55,9 @@ class PagingSelfAwareStructuredLoggerSpec extends Specification with BeforeAfter
       caseName: String = ""
   ): Either[Throwable, Vector[StructuredTestingLogger.LogMessage]] = {
     val stl = StructuredTestingLogger.impl[IO]()
-    val pl: SelfAwareStructuredLogger[IO] =
-      PagingSelfAwareStructuredLogger.withPaging[IO](pageSizeK, 10)(stl)
-    val logResult: IO[Unit] = logTest(pl)
+    val pagingStl: SelfAwareStructuredLogger[IO] =
+      PagingSelfAwareStructuredLogger.withPaging[IO](pageSizeK, maxPageNeeded)(stl)
+    val logResult: IO[Unit] = logTest(pagingStl)
 
     val test = logResult >> stl.logged.attempt
     val logged = test.unsafeRunSync()
@@ -67,7 +68,7 @@ class PagingSelfAwareStructuredLoggerSpec extends Specification with BeforeAfter
         if (loggedVec.size != expectedNumOfPage) {
           // Print out actual log entries when assertion fails along with suite and case names
           println(s"\nFailed: $suiteName - $caseName - $logLevel")
-          println(s"loggedVec.size=${loggedVec.size}")
+          println(s"loggedVec.size=${loggedVec.size}, expectedNumOfPage=$expectedNumOfPage")
           println(s"loggedVec=$loggedVec")
         }
         loggedVec.size must_== expectedNumOfPage
@@ -83,27 +84,27 @@ class PagingSelfAwareStructuredLoggerSpec extends Specification with BeforeAfter
   singlePageSuite1 should {
     val case1 = "At trace level"
     case1 in {
-      runTest(3, 1, "trace", _.trace(msg), singlePageSuite1, case1) must beRight
+      runTest(3, 10, 1, "trace", _.trace(msg), singlePageSuite1, case1) must beRight
     }
 
     val case2 = "At debug level"
     case2 in {
-      runTest(3, 1, "debug", _.debug(msg), singlePageSuite1, case2) must beRight
+      runTest(3, 10, 1, "debug", _.debug(msg), singlePageSuite1, case2) must beRight
     }
 
     val case3 = "At info level"
     case3 in {
-      runTest(3, 1, "info", _.info(msg), singlePageSuite1, case3) must beRight
+      runTest(3, 10, 1, "info", _.info(msg), singlePageSuite1, case3) must beRight
     }
 
     val case4 = "At warn level"
     case4 in {
-      runTest(3, 1, "warn", _.warn(msg), singlePageSuite1, case4) must beRight
+      runTest(3, 10, 1, "warn", _.warn(msg), singlePageSuite1, case4) must beRight
     }
 
     val case5 = "At error level"
     case5 in {
-      runTest(3, 1, "error", _.error(msg), singlePageSuite1, case5) must beRight
+      runTest(3, 10, 1, "error", _.error(msg), singlePageSuite1, case5) must beRight
     }
   }
 
@@ -113,27 +114,27 @@ class PagingSelfAwareStructuredLoggerSpec extends Specification with BeforeAfter
   singlePageSuite2 should {
     val case1 = "At trace level"
     case1 in {
-      runTest(10, 1, "trace", _.trace(excptn)(msg), singlePageSuite2, case1) must beRight
+      runTest(10, 10, 1, "trace", _.trace(excptn)(msg), singlePageSuite2, case1) must beRight
     }
 
     val case2 = "At debug level"
     case2 in {
-      runTest(10, 1, "debug", _.debug(excptn)(msg), singlePageSuite2, case2) must beRight
+      runTest(10, 10, 1, "debug", _.debug(excptn)(msg), singlePageSuite2, case2) must beRight
     }
 
     val case3 = "At info level"
     case3 in {
-      runTest(10, 1, "info", _.info(excptn)(msg), singlePageSuite2, case3) must beRight
+      runTest(10, 10, 1, "info", _.info(excptn)(msg), singlePageSuite2, case3) must beRight
     }
 
     val case4 = "At warn level"
     case4 in {
-      runTest(10, 1, "warn", _.warn(excptn)(msg), singlePageSuite2, case4) must beRight
+      runTest(10, 10, 1, "warn", _.warn(excptn)(msg), singlePageSuite2, case4) must beRight
     }
 
     val case5 = "At error level"
     case5 in {
-      runTest(10, 1, "error", _.error(excptn)(msg), singlePageSuite2, case5) must beRight
+      runTest(10, 10, 1, "error", _.error(excptn)(msg), singlePageSuite2, case5) must beRight
     }
   }
 
@@ -143,27 +144,27 @@ class PagingSelfAwareStructuredLoggerSpec extends Specification with BeforeAfter
   singlePageSuite3 should {
     val case1 = "At trace level"
     case1 in {
-      runTest(3, 1, "trace", _.trace(ctx)(msg), singlePageSuite3, case1) must beRight
+      runTest(3, 10, 1, "trace", _.trace(ctx)(msg), singlePageSuite3, case1) must beRight
     }
 
     val case2 = "At debug level"
     case2 in {
-      runTest(3, 1, "debug", _.debug(ctx)(msg), singlePageSuite3, case2) must beRight
+      runTest(3, 10, 1, "debug", _.debug(ctx)(msg), singlePageSuite3, case2) must beRight
     }
 
     val case3 = "At info level"
     case3 in {
-      runTest(3, 1, "info", _.info(ctx)(msg), singlePageSuite3, case3) must beRight
+      runTest(3, 10, 1, "info", _.info(ctx)(msg), singlePageSuite3, case3) must beRight
     }
 
     val case4 = "At warn level"
     case4 in {
-      runTest(3, 1, "warn", _.warn(ctx)(msg), singlePageSuite3, case4) must beRight
+      runTest(3, 10, 1, "warn", _.warn(ctx)(msg), singlePageSuite3, case4) must beRight
     }
 
     val case5 = "At error level"
     case5 in {
-      runTest(3, 1, "error", _.error(ctx)(msg), singlePageSuite3, case5) must beRight
+      runTest(3, 10, 1, "error", _.error(ctx)(msg), singlePageSuite3, case5) must beRight
     }
   }
 
@@ -173,27 +174,27 @@ class PagingSelfAwareStructuredLoggerSpec extends Specification with BeforeAfter
   singlePageSuite4 should {
     val case1 = "At trace level"
     case1 in {
-      runTest(10, 1, "trace", _.trace(ctx, excptn)(msg), singlePageSuite4, case1) must beRight
+      runTest(10, 10, 1, "trace", _.trace(ctx, excptn)(msg), singlePageSuite4, case1) must beRight
     }
 
     val case2 = "At debug level"
     case2 in {
-      runTest(10, 1, "debug", _.debug(ctx, excptn)(msg), singlePageSuite4, case2) must beRight
+      runTest(10, 10, 1, "debug", _.debug(ctx, excptn)(msg), singlePageSuite4, case2) must beRight
     }
 
     val case3 = "At info level"
     case3 in {
-      runTest(10, 1, "info", _.info(ctx, excptn)(msg), singlePageSuite4, case3) must beRight
+      runTest(10, 10, 1, "info", _.info(ctx, excptn)(msg), singlePageSuite4, case3) must beRight
     }
 
     val case4 = "At warn level"
     case4 in {
-      runTest(10, 1, "warn", _.warn(ctx, excptn)(msg), singlePageSuite4, case4) must beRight
+      runTest(10, 10, 1, "warn", _.warn(ctx, excptn)(msg), singlePageSuite4, case4) must beRight
     }
 
     val case5 = "At error level"
     case5 in {
-      runTest(10, 1, "error", _.error(ctx, excptn)(msg), singlePageSuite4, case5) must beRight
+      runTest(10, 10, 1, "error", _.error(ctx, excptn)(msg), singlePageSuite4, case5) must beRight
     }
   }
 
@@ -203,27 +204,27 @@ class PagingSelfAwareStructuredLoggerSpec extends Specification with BeforeAfter
   multiplePageSuite1 should {
     val case1 = "At trace level"
     case1 in {
-      runTest(1, 2, "trace", _.trace(msg), multiplePageSuite1, case1) must beRight
+      runTest(1, 10, 2, "trace", _.trace(msg), multiplePageSuite1, case1) must beRight
     }
 
     val case2 = "At debug level"
     case2 in {
-      runTest(1, 2, "debug", _.debug(msg), multiplePageSuite1, case2) must beRight
+      runTest(1, 10, 2, "debug", _.debug(msg), multiplePageSuite1, case2) must beRight
     }
 
     val case3 = "At info level"
     case3 in {
-      runTest(1, 2, "info", _.info(msg), multiplePageSuite1, case3) must beRight
+      runTest(1, 10, 2, "info", _.info(msg), multiplePageSuite1, case3) must beRight
     }
 
     val case4 = "At warn level"
     case4 in {
-      runTest(1, 2, "warn", _.warn(msg), multiplePageSuite1, case4) must beRight
+      runTest(1, 10, 2, "warn", _.warn(msg), multiplePageSuite1, case4) must beRight
     }
 
     val case5 = "At error level"
     case5 in {
-      runTest(1, 2, "error", _.error(msg), multiplePageSuite1, case5) must beRight
+      runTest(1, 10, 2, "error", _.error(msg), multiplePageSuite1, case5) must beRight
     }
   }
 
@@ -233,27 +234,27 @@ class PagingSelfAwareStructuredLoggerSpec extends Specification with BeforeAfter
   multiplePageSuite2 should {
     val case1 = "At trace level"
     case1 in {
-      runTest(3, 3, "trace", _.trace(excptn)(msg), multiplePageSuite2, case1) must beRight
+      runTest(3, 10, 3, "trace", _.trace(excptn)(msg), multiplePageSuite2, case1) must beRight
     }
 
     val case2 = "At debug level"
     case2 in {
-      runTest(3, 3, "debug", _.debug(excptn)(msg), multiplePageSuite2, case2) must beRight
+      runTest(3, 10, 3, "debug", _.debug(excptn)(msg), multiplePageSuite2, case2) must beRight
     }
 
     val case3 = "At info level"
     case3 in {
-      runTest(3, 3, "info", _.info(excptn)(msg), multiplePageSuite2, case3) must beRight
+      runTest(3, 10, 3, "info", _.info(excptn)(msg), multiplePageSuite2, case3) must beRight
     }
 
     val case4 = "At warn level"
     case4 in {
-      runTest(3, 3, "warn", _.warn(excptn)(msg), multiplePageSuite2, case4) must beRight
+      runTest(3, 10, 3, "warn", _.warn(excptn)(msg), multiplePageSuite2, case4) must beRight
     }
 
     val case5 = "At error level"
     case5 in {
-      runTest(3, 3, "error", _.error(excptn)(msg), multiplePageSuite2, case5) must beRight
+      runTest(3, 10, 3, "error", _.error(excptn)(msg), multiplePageSuite2, case5) must beRight
     }
   }
 
@@ -263,27 +264,27 @@ class PagingSelfAwareStructuredLoggerSpec extends Specification with BeforeAfter
   multiplePageSuite3 should {
     val case1 = "At trace level"
     case1 in {
-      runTest(1, 2, "trace", _.trace(ctx)(msg), multiplePageSuite3, case1) must beRight
+      runTest(1, 10, 2, "trace", _.trace(ctx)(msg), multiplePageSuite3, case1) must beRight
     }
 
     val case2 = "At debug level"
     case2 in {
-      runTest(1, 2, "debug", _.debug(ctx)(msg), multiplePageSuite3, case2) must beRight
+      runTest(1, 10, 2, "debug", _.debug(ctx)(msg), multiplePageSuite3, case2) must beRight
     }
 
     val case3 = "At info level"
     case3 in {
-      runTest(1, 2, "info", _.info(ctx)(msg), multiplePageSuite3, case3) must beRight
+      runTest(1, 10, 2, "info", _.info(ctx)(msg), multiplePageSuite3, case3) must beRight
     }
 
     val case4 = "At warn level"
     case4 in {
-      runTest(1, 2, "warn", _.warn(ctx)(msg), multiplePageSuite3, case4) must beRight
+      runTest(1, 10, 2, "warn", _.warn(ctx)(msg), multiplePageSuite3, case4) must beRight
     }
 
     val case5 = "At error level"
     case5 in {
-      runTest(1, 2, "error", _.error(ctx)(msg), multiplePageSuite3, case5) must beRight
+      runTest(1, 10, 2, "error", _.error(ctx)(msg), multiplePageSuite3, case5) must beRight
     }
   }
 
@@ -293,27 +294,57 @@ class PagingSelfAwareStructuredLoggerSpec extends Specification with BeforeAfter
   multiplePageSuite4 should {
     val case1 = "At trace level"
     case1 in {
-      runTest(3, 3, "trace", _.trace(ctx, excptn)(msg), multiplePageSuite4, case1) must beRight
+      runTest(3, 10, 3, "trace", _.trace(ctx, excptn)(msg), multiplePageSuite4, case1) must beRight
     }
 
     val case2 = "At debug level"
     case2 in {
-      runTest(3, 3, "debug", _.debug(ctx, excptn)(msg), multiplePageSuite4, case2) must beRight
+      runTest(3, 10, 3, "debug", _.debug(ctx, excptn)(msg), multiplePageSuite4, case2) must beRight
     }
 
     val case3 = "At info level"
     case3 in {
-      runTest(3, 3, "info", _.info(ctx, excptn)(msg), multiplePageSuite4, case3) must beRight
+      runTest(3, 10, 3, "info", _.info(ctx, excptn)(msg), multiplePageSuite4, case3) must beRight
     }
 
     val case4 = "At warn level"
     case4 in {
-      runTest(3, 3, "warn", _.warn(ctx, excptn)(msg), multiplePageSuite4, case4) must beRight
+      runTest(3, 10, 3, "warn", _.warn(ctx, excptn)(msg), multiplePageSuite4, case4) must beRight
     }
 
     val case5 = "At error level"
     case5 in {
-      runTest(3, 3, "error", _.error(ctx, excptn)(msg), multiplePageSuite4, case5) must beRight
+      runTest(3, 10, 3, "error", _.error(ctx, excptn)(msg), multiplePageSuite4, case5) must beRight
+    }
+  }
+
+  val maxPageNumSuite =
+    "PagingSelfAwareStructuredLogger with maxPageNeeded = 2 logs a message of 2 KB size with context and an exception in 2 log entries when page size is 3 KB"
+
+  maxPageNumSuite should {
+    val case1 = "At trace level"
+    case1 in {
+      runTest(3, 2, 2, "trace", _.trace(ctx, excptn)(msg), maxPageNumSuite, case1) must beRight
+    }
+
+    val case2 = "At debug level"
+    case2 in {
+      runTest(3, 2, 2, "debug", _.debug(ctx, excptn)(msg), maxPageNumSuite, case2) must beRight
+    }
+
+    val case3 = "At info level"
+    case3 in {
+      runTest(3, 2, 2, "info", _.info(ctx, excptn)(msg), maxPageNumSuite, case3) must beRight
+    }
+
+    val case4 = "At warn level"
+    case4 in {
+      runTest(3, 2, 2, "warn", _.warn(ctx, excptn)(msg), maxPageNumSuite, case4) must beRight
+    }
+
+    val case5 = "At error level"
+    case5 in {
+      runTest(3, 2, 2, "error", _.error(ctx, excptn)(msg), maxPageNumSuite, case5) must beRight
     }
   }
 }
