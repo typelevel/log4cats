@@ -41,7 +41,7 @@ object PagingSelfAwareStructuredLogger {
    * Example: Assume the log size limit of the underline logging provider is 75 Kb, setting pageSizeK to 64 leaves
    * 11 Kb for (part 2) and (part 3).
    *
-   * @param pageSizeK The size (in unit kilobyte) of the chunk of message in each page.
+   * @param pageSizeK The size (in unit kibibyte) of the chunk of message in each page.
    * @param maxPageNeeded The maximum number of pages to be logged.
    * @param logger The SelfAwareStructuredLogger to be used to do the actual logging.
    * @tparam F Effect type class.
