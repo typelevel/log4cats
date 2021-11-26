@@ -82,11 +82,7 @@ object PagingSelfAwareStructuredLogger {
             val pageFooter =
               s"Page $pi/$numOfPages $logSplitIdN=$logSplitId page_size=$pageSizeK Kb"
             val beginIndex = (pi - 1) * pageSize
-            val pageContent =
-              if (pi < numOfPages)
-                msg.substring(beginIndex, beginIndex + pageSize)
-              else
-                msg.substring(beginIndex)
+            val pageContent = msg.slice(beginIndex, beginIndex + pageSize)
 
             loggingOp(show"""$pageHeader
                             |
