@@ -29,14 +29,17 @@ import org.typelevel.log4cats.testing.StructuredTestingLogger
  */
 class PagingSelfAwareStructuredLoggerSpec extends Specification with BeforeAfterAll {
 
-  private var origLogLevel: Level = Level.OFF
-  private val rootLogger: Logger =
+  private var origLogLevel = Level.OFF
+  private val rootLogger =
     LoggerFactory.getLogger(org.slf4j.Logger.ROOT_LOGGER_NAME).asInstanceOf[Logger]
+
+  private val ctx = Map("foo" -> "bar")
   private val msg = "0123456789abcdef" * 128 // Size of message is 2K byte
   private val excptn = new RuntimeException(
     "Nothing wrong here, this exception is used for testing"
   )
-  private val ctx = Map("foo" -> "bar")
+  private val uuidPatternRegex =
+    "[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}"
 
   def beforeAll(): Unit = {
     origLogLevel = rootLogger.getLevel
@@ -54,6 +57,7 @@ class PagingSelfAwareStructuredLoggerSpec extends Specification with BeforeAfter
       suiteName: String = "",
       caseName: String = ""
   ): Either[Throwable, Vector[StructuredTestingLogger.LogMessage]] = {
+    val pageSize = pageSizeK * 1024
     val stl = StructuredTestingLogger.impl[IO]()
     val pagingStl: SelfAwareStructuredLogger[IO] =
       PagingSelfAwareStructuredLogger.withPaging[IO](pageSizeK, maxPageNeeded)(stl)
@@ -65,13 +69,42 @@ class PagingSelfAwareStructuredLoggerSpec extends Specification with BeforeAfter
     logged.fold(
       _ => anError,
       (loggedVec: Vector[StructuredTestingLogger.LogMessage]) => {
+        // Below it will assert the expectedNumOfPage, logging context and logged contents
+        // If an assertion does not pass, print out relevant info.
+
         if (loggedVec.size != expectedNumOfPage) {
-          // Print out actual log entries when assertion fails along with suite and case names
           println(s"\nFailed: $suiteName - $caseName - $logLevel")
+          println("Number of log entry does not match expectation")
           println(s"loggedVec.size=${loggedVec.size}, expectedNumOfPage=$expectedNumOfPage")
           println(s"loggedVec=$loggedVec")
         }
         loggedVec.size must_== expectedNumOfPage
+
+        val loggedVecWithIndex = loggedVec.zip(1 to loggedVec.size)
+        val allMsgValid = loggedVecWithIndex.forall { mi =>
+          val (logMsg, pageNum) = mi
+          val ctxValid =
+            logMsg.ctx.getOrElse("log_split_id", "").matches(uuidPatternRegex) &&
+              (logMsg.ctx.getOrElse("log_size", "0").toInt > pageSize || expectedNumOfPage == 1)
+          if (!ctxValid) {
+            println(s"\nFailed: $suiteName - $caseName - $logLevel")
+            println("Logging context does not match expectation")
+            println(s"pageNum=$pageNum, logMsg.ctx=${logMsg.ctx}")
+          }
+
+          val msgValid = expectedNumOfPage == 1 ||
+            (pageNum == loggedVec.size || logMsg.message.length > pageSize) &&
+            logMsg.message.endsWith(s" page_size=$pageSizeK Kb") &&
+            logMsg.message.startsWith("Page ")
+          if (!msgValid) {
+            println(s"\nFailed: $suiteName - $caseName - $logLevel")
+            println("Logged message page does not match expectation")
+            println(s"pageNum=$pageNum, logMsg=$logMsg")
+          }
+
+          ctxValid && msgValid
+        }
+        allMsgValid must_== true
       }
     )
 
@@ -354,27 +387,37 @@ class PagingSelfAwareStructuredLoggerSpec extends Specification with BeforeAfter
   parameterChkSuite should {
     val case1 = "Throw AssertionError for negative pageSizeK"
     case1 in {
-      runTest(-3, 2, 2, "trace", _.trace(msg), parameterChkSuite, case1) must throwAn[AssertionError]
+      runTest(-3, 2, 2, "trace", _.trace(msg), parameterChkSuite, case1) must throwAn[
+        AssertionError
+      ]
     }
 
     val case2 = "Throw AssertionError for negative maxPageNeeded"
     case2 in {
-      runTest(3, -2, 2, "debug", _.debug(excptn)(msg), parameterChkSuite, case2) must throwAn[AssertionError]
+      runTest(3, -2, 2, "debug", _.debug(excptn)(msg), parameterChkSuite, case2) must throwAn[
+        AssertionError
+      ]
     }
 
     val case3 = "Throw AssertionError for pageSizeK=0"
     case3 in {
-      runTest(0, 2, 2, "trace", _.info(ctx)(msg), parameterChkSuite, case3) must throwAn[AssertionError]
+      runTest(0, 2, 2, "trace", _.info(ctx)(msg), parameterChkSuite, case3) must throwAn[
+        AssertionError
+      ]
     }
 
     val case4 = "Throw AssertionError for maxPageNeeded=0"
     case4 in {
-      runTest(3, 0, 2, "debug", _.warn(ctx, excptn)(msg), parameterChkSuite, case4) must throwAn[AssertionError]
+      runTest(3, 0, 2, "debug", _.warn(ctx, excptn)(msg), parameterChkSuite, case4) must throwAn[
+        AssertionError
+      ]
     }
 
     val case5 = "Throw AssertionError for pageSizeK=0, maxPageNeeded=0"
     case5 in {
-      runTest(0, 0, 2, "debug", _.warn(ctx, excptn)(msg), parameterChkSuite, case5) must throwAn[AssertionError]
+      runTest(0, 0, 2, "debug", _.warn(ctx, excptn)(msg), parameterChkSuite, case5) must throwAn[
+        AssertionError
+      ]
     }
   }
 }

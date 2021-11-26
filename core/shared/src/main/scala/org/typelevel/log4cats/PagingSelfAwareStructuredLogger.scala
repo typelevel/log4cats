@@ -68,27 +68,25 @@ object PagingSelfAwareStructuredLogger {
         logSplitId: String,
         msg: => String
     ): F[Unit] = {
-      val msgLength = msg.length
-      val numOfPagesRaw = (msgLength - 1) / pageSize + 1
+      val numOfPagesRaw = (msg.length - 1) / pageSize + 1
       val numOfPages = Math.min(numOfPagesRaw, maxPageNeeded)
       if (numOfPages <= 1)
         loggingOp(msg)
       else {
         val logSplitIdPart1 = logSplitId.split('-').head
+        val pageHeaderTail = s"$numOfPages $logSplitIdPart1"
+        val pageFooterTail = s"$numOfPages $logSplitIdN=$logSplitId page_size=$pageSizeK Kb"
         pageIndices
           .take(numOfPages)
           .traverse_ { pi =>
-            val pageHeader = s"Page $pi/$numOfPages $logSplitIdPart1"
-            val pageFooter =
-              s"Page $pi/$numOfPages $logSplitIdN=$logSplitId page_size=$pageSizeK Kb"
             val beginIndex = (pi - 1) * pageSize
             val pageContent = msg.slice(beginIndex, beginIndex + pageSize)
 
-            loggingOp(show"""$pageHeader
+            loggingOp(show"""Page $pi/$pageHeaderTail
                             |
                             |$pageContent
                             |
-                            |$pageFooter""".stripMargin)
+                            |Page $pi/$pageFooterTail""".stripMargin)
           }
       }
     }
@@ -102,7 +100,8 @@ object PagingSelfAwareStructuredLogger {
         logSplitId,
         ctx
           .updated(logSplitIdN, logSplitId)
-          .updated("log_size", msg.getBytes().length.show)
+          .updated("page_size", pageSizeK.show)
+          .updated("log_size", msg.length.show)
       )
     }
 
