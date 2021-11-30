@@ -1,9 +1,9 @@
 import sbtcrossproject.{crossProject, CrossType}
 import sbtghactions.UseRef
 
-val Scala213 = "2.13.6"
-val Scala212 = "2.12.13"
-val Scala3 = "3.0.0"
+val Scala213 = "2.13.7"
+val Scala212 = "2.12.15"
+val Scala3 = "3.0.2"
 
 enablePlugins(SonatypeCiReleasePlugin)
 
@@ -72,11 +72,11 @@ ThisBuild / githubWorkflowPublish := Seq(
   cond = Some(MicrositesCond)
 )
 
-val catsV = "2.6.1"
-val catsEffectV = "2.5.4"
+val catsV = "2.7.0"
+val catsEffectV = "2.5.1"
 val slf4jV = "1.7.32"
 val munitCatsEffectV = "1.0.3"
-val logbackClassicV = "1.2.3"
+val logbackClassicV = "1.2.7"
 
 Global / onChangedBuildSource := ReloadOnSourceChanges
 
