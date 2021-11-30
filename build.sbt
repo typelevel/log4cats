@@ -122,7 +122,7 @@ lazy val testing = crossProject(JSPlatform, JVMPlatform)
     libraryDependencies ++= Seq(
       "org.typelevel" %%% "cats-effect"     % catsEffectV,
       "ch.qos.logback"  % "logback-classic" % logbackClassicV % Test,
-      "org.specs2"     %% "specs2-core"     % specs2V         % Test
+      "org.specs2"      % "specs2-core"     % specs2V         % Test
     )
   )
 lazy val testingJVM = testing.jvm
