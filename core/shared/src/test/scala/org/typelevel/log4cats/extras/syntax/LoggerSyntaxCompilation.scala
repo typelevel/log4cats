@@ -17,6 +17,7 @@
 package org.typelevel.log4cats.extras.syntax
 
 import cats._
+import cats.data.{EitherT, Kleisli, OptionT}
 import org.typelevel.log4cats._
 
 object LoggerSyntaxCompilation {
@@ -51,5 +52,14 @@ object LoggerSyntaxCompilation {
       l: SelfAwareStructuredLogger[F]
   ): SelfAwareStructuredLogger[F] =
     l.withModifiedString(identity)
+
+  def eitherTLogger[F[_]: Functor: Logger, A]: EitherT[F, A, Unit] =
+    Logger[EitherT[F, A, *]].info("foo")
+
+  def kleisliLogger[F[_]: Logger, A]: Kleisli[F, A, Unit] =
+    Logger[Kleisli[F, A, *]].info("bar")
+
+  def optionTLogger[F[_]: Functor: Logger]: OptionT[F, Unit] =
+    Logger[OptionT[F, *]].info("baz")
 
 }
