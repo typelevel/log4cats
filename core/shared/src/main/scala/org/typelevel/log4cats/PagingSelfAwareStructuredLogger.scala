@@ -100,8 +100,8 @@ object PagingSelfAwareStructuredLogger {
         logSplitId,
         ctx
           .updated(logSplitIdN, logSplitId)
-          .updated("page_size", pageSizeK.show)
-          .updated("log_size", msg.length.show)
+          .updated("page_size", s"${pageSizeK.show} Kb")
+          .updated("log_size", s"${msg.length.show} Byte")
       )
     }
 

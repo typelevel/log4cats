@@ -85,7 +85,8 @@ class PagingSelfAwareStructuredLoggerSpec extends Specification with BeforeAfter
           val (logMsg, pageNum) = mi
           val ctxValid =
             logMsg.ctx.getOrElse("log_split_id", "").matches(uuidPatternRegex) &&
-              (logMsg.ctx.getOrElse("log_size", "0").toInt > pageSize || expectedNumOfPage == 1)
+              (logMsg.ctx.getOrElse("page_size", "0 Kb").dropRight(3).toInt == pageSizeK) &&
+              (logMsg.ctx.getOrElse("log_size", "0 Byte").dropRight(5).toInt > pageSize || expectedNumOfPage == 1)
           if (!ctxValid) {
             println(s"\nFailed: $suiteName - $caseName - $logLevel")
             println("Logging context does not match expectation")
