@@ -102,7 +102,6 @@ object PagingSelfAwareStructuredLogger {
       )
     }
 
-    @SuppressWarnings(Array("org.wartremover.warts.DefaultArguments"))
     private def doLogging(
         loggingLevelChk: => F[Boolean],
         logOpWithCtx: Map[String, String] => (=> String) => F[Unit],
@@ -118,7 +117,6 @@ object PagingSelfAwareStructuredLogger {
       )
     }
 
-    @SuppressWarnings(Array("org.wartremover.warts.DefaultArguments"))
     private def doLoggingThrowable(
         loggingLevelChk: => F[Boolean],
         logOpWithCtx: Map[String, String] => (=> String) => F[Unit],
