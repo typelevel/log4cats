@@ -66,7 +66,7 @@ ThisBuild / githubWorkflowPublish := Seq(
   WorkflowStep.Sbt(
     List("release")
   )
-) ++ micrositeWorkflowSteps(Some(MicrositesCond)).toSeq :+ WorkflowStep.Sbt(
+) ++ micrositeWorkflowSteps(Some(MicrositesCond)) :+ WorkflowStep.Sbt(
   List("docs/publishMicrosite"),
   cond = Some(MicrositesCond)
 )
@@ -76,7 +76,6 @@ val catsEffectV = "3.2.9"
 val slf4jV = "1.7.32"
 val munitCatsEffectV = "1.0.5"
 val logbackClassicV = "1.2.7"
-val specs2V = "4.13.1"
 
 Global / onChangedBuildSource := ReloadOnSourceChanges
 
@@ -121,8 +120,7 @@ lazy val testing = crossProject(JSPlatform, JVMPlatform)
     name := "log4cats-testing",
     libraryDependencies ++= Seq(
       "org.typelevel" %%% "cats-effect"     % catsEffectV,
-      "ch.qos.logback"  % "logback-classic" % logbackClassicV % Test,
-      "org.specs2"     %% "specs2-core"     % specs2V         % Test
+      "ch.qos.logback"  % "logback-classic" % logbackClassicV % Test
     )
   )
 lazy val testingJVM = testing.jvm
