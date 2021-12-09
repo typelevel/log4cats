@@ -52,8 +52,7 @@ class PagingSelfAwareStructuredLoggerTestRunner extends CatsEffectSuite {
                expectedNumOfPage: Int,
                logLevel: String,
                logTest: SelfAwareStructuredLogger[IO] => IO[Unit],
-               suiteName: String = "",
-               caseName: String = ""
+               suiteCaseName: String = ""
              ): Unit = {
     val pageSize = pageSizeK * 1024
     val stl = StructuredTestingLogger.impl[IO]()
@@ -71,7 +70,7 @@ class PagingSelfAwareStructuredLoggerTestRunner extends CatsEffectSuite {
         // If an assertion does not pass, print out relevant info.
 
         if (loggedVec.size != expectedNumOfPage) {
-          println(s"\nFailed: $suiteName - $caseName - $logLevel")
+          println(s"\nFailed: $suiteCaseName - $logLevel")
           println("Number of log entry does not match expectation")
           println(s"loggedVec.size=${loggedVec.size}, expectedNumOfPage=$expectedNumOfPage")
           println(s"loggedVec=$loggedVec")
@@ -86,7 +85,7 @@ class PagingSelfAwareStructuredLoggerTestRunner extends CatsEffectSuite {
               (logMsg.ctx.getOrElse("page_size", "0 Kib").dropRight(4).toInt == pageSizeK) &&
               (logMsg.ctx.getOrElse("log_size", "0 Byte").dropRight(5).toInt > pageSize || expectedNumOfPage == 1)
           if (!ctxValid) {
-            println(s"\nFailed: $suiteName - $caseName - $logLevel")
+            println(s"\nFailed: $suiteCaseName - $logLevel")
             println("Logging context does not match expectation")
             println(s"pageNum=$pageNum, logMsg.ctx=${logMsg.ctx}")
           }
@@ -96,7 +95,7 @@ class PagingSelfAwareStructuredLoggerTestRunner extends CatsEffectSuite {
               logMsg.message.endsWith(s" page_size=$pageSizeK Kib") &&
               logMsg.message.startsWith("Page ")
           if (!msgValid) {
-            println(s"\nFailed: $suiteName - $caseName - $logLevel")
+            println(s"\nFailed: $suiteCaseName - $logLevel")
             println("Logged message page does not match expectation")
             println(s"pageNum=$pageNum, logMsg=$logMsg")
           }
