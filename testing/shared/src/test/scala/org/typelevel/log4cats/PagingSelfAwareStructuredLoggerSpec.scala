@@ -85,7 +85,7 @@ class PagingSelfAwareStructuredLoggerSpec extends Specification with BeforeAfter
           val (logMsg, pageNum) = mi
           val ctxValid =
             logMsg.ctx.getOrElse("log_split_id", "").matches(uuidPatternRegex) &&
-              (logMsg.ctx.getOrElse("page_size", "0 Kb").dropRight(3).toInt == pageSizeK) &&
+              (logMsg.ctx.getOrElse("page_size", "0 Kib").dropRight(4).toInt == pageSizeK) &&
               (logMsg.ctx.getOrElse("log_size", "0 Byte").dropRight(5).toInt > pageSize || expectedNumOfPage == 1)
           if (!ctxValid) {
             println(s"\nFailed: $suiteName - $caseName - $logLevel")
@@ -95,7 +95,7 @@ class PagingSelfAwareStructuredLoggerSpec extends Specification with BeforeAfter
 
           val msgValid = expectedNumOfPage == 1 ||
             (pageNum == loggedVec.size || logMsg.message.length > pageSize) &&
-            logMsg.message.endsWith(s" page_size=$pageSizeK Kb") &&
+            logMsg.message.endsWith(s" page_size=$pageSizeK Kib") &&
             logMsg.message.startsWith("Page ")
           if (!msgValid) {
             println(s"\nFailed: $suiteName - $caseName - $logLevel")
@@ -389,35 +389,35 @@ class PagingSelfAwareStructuredLoggerSpec extends Specification with BeforeAfter
     val case1 = "Throw AssertionError for negative pageSizeK"
     case1 in {
       runTest(-3, 2, 2, "trace", _.trace(msg), parameterChkSuite, case1) must throwAn[
-        AssertionError
+        IllegalArgumentException
       ]
     }
 
     val case2 = "Throw AssertionError for negative maxPageNeeded"
     case2 in {
       runTest(3, -2, 2, "debug", _.debug(excptn)(msg), parameterChkSuite, case2) must throwAn[
-        AssertionError
+        IllegalArgumentException
       ]
     }
 
     val case3 = "Throw AssertionError for pageSizeK=0"
     case3 in {
       runTest(0, 2, 2, "trace", _.info(ctx)(msg), parameterChkSuite, case3) must throwAn[
-        AssertionError
+        IllegalArgumentException
       ]
     }
 
     val case4 = "Throw AssertionError for maxPageNeeded=0"
     case4 in {
       runTest(3, 0, 2, "debug", _.warn(ctx, excptn)(msg), parameterChkSuite, case4) must throwAn[
-        AssertionError
+        IllegalArgumentException
       ]
     }
 
     val case5 = "Throw AssertionError for pageSizeK=0, maxPageNeeded=0"
     case5 in {
       runTest(0, 0, 2, "debug", _.warn(ctx, excptn)(msg), parameterChkSuite, case5) must throwAn[
-        AssertionError
+        IllegalArgumentException
       ]
     }
   }

@@ -19,7 +19,7 @@ package org.typelevel.log4cats
 import cats._
 import cats.implicits._
 
-import java.io.{ByteArrayOutputStream, PrintStream}
+import java.io.{PrintWriter, StringWriter}
 import java.util.UUID
 
 object PagingSelfAwareStructuredLogger {
@@ -47,7 +47,6 @@ object PagingSelfAwareStructuredLogger {
    * @tparam F Effect type class.
    * @return SelfAwareStructuredLogger with pagination.
    */
-  @SuppressWarnings(Array("org.wartremover.warts.DefaultArguments"))
   def withPaging[F[_]: Monad](pageSizeK: Int = 64, maxPageNeeded: Int = 999)(
       logger: SelfAwareStructuredLogger[F]
   ): SelfAwareStructuredLogger[F] =
@@ -56,10 +55,9 @@ object PagingSelfAwareStructuredLogger {
   private class PagingSelfAwareStructuredLogger[F[_]: Monad](pageSizeK: Int, maxPageNeeded: Int)(
       sl: SelfAwareStructuredLogger[F]
   ) extends SelfAwareStructuredLogger[F] {
-    assert(pageSizeK > 0)
-    assert(maxPageNeeded > 0)
+    if (pageSizeK <= 0 || maxPageNeeded <= 0)
+      throw new IllegalArgumentException(s"pageSizeK(=$pageSizeK) and maxPageNeeded(=$maxPageNeeded) must be positive numbers.")
 
-    private val pageIndices = (1 to maxPageNeeded).toList
     private val logSplitIdN = "log_split_id"
     private val pageSize = pageSizeK * 1024
 
@@ -75,9 +73,8 @@ object PagingSelfAwareStructuredLogger {
       else {
         val logSplitIdPart1 = logSplitId.split('-').head
         val pageHeaderTail = s"$numOfPages $logSplitIdPart1"
-        val pageFooterTail = s"$numOfPages $logSplitIdN=$logSplitId page_size=$pageSizeK Kb"
-        pageIndices
-          .take(numOfPages)
+        val pageFooterTail = s"$numOfPages $logSplitIdN=$logSplitId page_size=$pageSizeK Kib"
+        (1 to numOfPages).toList
           .traverse_ { pi =>
             val beginIndex = (pi - 1) * pageSize
             val pageContent = msg.slice(beginIndex, beginIndex + pageSize)
@@ -100,7 +97,7 @@ object PagingSelfAwareStructuredLogger {
         logSplitId,
         ctx
           .updated(logSplitIdN, logSplitId)
-          .updated("page_size", s"${pageSizeK.show} Kb")
+          .updated("page_size", s"${pageSizeK.show} Kib")
           .updated("log_size", s"${msg.length.show} Byte")
       )
     }
@@ -136,10 +133,10 @@ object PagingSelfAwareStructuredLogger {
     }
 
     def getStackTrace(t: Throwable): String = {
-      val bos = new ByteArrayOutputStream()
-      val ps = new PrintStream(bos)
-      t.printStackTrace(ps)
-      bos.toString
+      val sw = new StringWriter()
+      val pw = new PrintWriter(sw, true)
+      t.printStackTrace(pw)
+      sw.getBuffer.toString
     }
 
     override def isTraceEnabled: F[Boolean] = sl.isTraceEnabled
