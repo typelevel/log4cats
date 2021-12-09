@@ -58,6 +58,7 @@ object PagingSelfAwareStructuredLogger {
     if (pageSizeK <= 0 || maxPageNeeded <= 0)
       throw new IllegalArgumentException(s"pageSizeK(=$pageSizeK) and maxPageNeeded(=$maxPageNeeded) must be positive numbers.")
 
+    private val pageIndices = (1 to maxPageNeeded).toList
     private val logSplitIdN = "log_split_id"
     private val pageSize = pageSizeK * 1024
 
@@ -74,7 +75,8 @@ object PagingSelfAwareStructuredLogger {
         val logSplitIdPart1 = logSplitId.split('-').head
         val pageHeaderTail = s"$numOfPages $logSplitIdPart1"
         val pageFooterTail = s"$numOfPages $logSplitIdN=$logSplitId page_size=$pageSizeK Kib"
-        (1 to numOfPages).toList
+        pageIndices
+          .take(numOfPages)
           .traverse_ { pi =>
             val beginIndex = (pi - 1) * pageSize
             val pageContent = msg.slice(beginIndex, beginIndex + pageSize)
