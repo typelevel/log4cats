@@ -27,7 +27,7 @@ libraryDependencies ++= Seq(
 ```scala mdoc
 import org.typelevel.log4cats.Logger
 import org.typelevel.log4cats.slf4j.Slf4jLogger
-import cats.effect.{Sync, IO}
+import cats.effect.Sync
 import cats.implicits._
 
 object MyThing {
