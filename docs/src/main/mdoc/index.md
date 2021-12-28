@@ -61,6 +61,7 @@ def passForEasierUse[F[_]: Sync: Logger] = for {
 ```
 
 ### Laconic syntax
+
 It's possible to use interpolated syntax for logging. 
 Currently, supported ops are: `trace`, `debug`, `info`, `warn`, `error`.
 You can use it for your custom `Logger` as well as for Slf4j `Logger`.
