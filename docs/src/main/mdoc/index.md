@@ -67,17 +67,20 @@ Currently, supported ops are: `trace`, `debug`, `info`, `warn`, `error`.
 You can use it for your custom `Logger` as well as for Slf4j `Logger`.
 
 ```scala mdoc
+import cats.Applicative
 import cats.effect.Sync
 import org.typelevel.log4cats.Logger
 import org.typelevel.log4cats.syntax._
 
-def successComputation[F[_]: Sync]: F[Int] = Sync[F].pure(1)
+def successComputation[F[_]: Applicative]: F[Int] = Applicative[F].pure(1)
 def errorComputation[F[_]: Sync]: F[Unit] = Sync[F].raiseError[Unit](new Throwable("Sorry!"))
 
 def log[F[_]: Sync: Logger] = 
   for {
     result1 <- successComputation[F]
     _ <- info"First result is $result1"
-    _ <- errorComputation[F].onError(_ => error"We got an error!")
+    _ <- errorComputation[F].onError {
+      case _ => error"We got an error!"
+    }
   } yield ()
 ```
