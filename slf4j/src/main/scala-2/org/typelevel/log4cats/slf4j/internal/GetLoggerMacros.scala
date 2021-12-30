@@ -38,10 +38,10 @@ import scala.reflect.macros.blackbox
 /**
  * Macros that support the logging system.
  *
- *  See for handling call-by-name-parameters in macros
- *  https://issues.scala-lang.org/browse/SI-5778
+ * See for handling call-by-name-parameters in macros https://issues.scala-lang.org/browse/SI-5778
  *
- * @author Sarah Gerweck <sarah@atscale.com>
+ * @author
+ *   Sarah Gerweck <sarah@atscale.com>
  */
 private[slf4j] class GetLoggerMacros(val c: blackbox.Context) {
 

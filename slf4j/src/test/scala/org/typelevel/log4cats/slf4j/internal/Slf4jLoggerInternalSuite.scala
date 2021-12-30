@@ -79,10 +79,10 @@ class Slf4jLoggerInternalSuite extends CatsEffectSuite {
 
     import dirtyStuff._
 
-    //logging happens here
+    // logging happens here
     val loggerThread = namedSingleThreadExecutionContext("my-thread-1")
 
-    //restoring context would run here if IO.bracket was used
+    // restoring context would run here if IO.bracket was used
     val finalizerThread = namedSingleThreadExecutionContext("my-thread-2")
 
     val mainThread = namedSingleThreadExecutionContext("main-thread")

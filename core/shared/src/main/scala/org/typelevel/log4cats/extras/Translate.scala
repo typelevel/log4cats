@@ -20,8 +20,7 @@ import org.typelevel.log4cats._
 import cats._
 
 /**
- * Allows for mapK or algebraic higher kinded
- * transformations
+ * Allows for mapK or algebraic higher kinded transformations
  */
 object Translate {
 
