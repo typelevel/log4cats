@@ -22,11 +22,10 @@ import cats.syntax.all._
 import org.typelevel.log4cats._
 
 /**
- * >>> WARNING READ BEFORE USAGE! <<<
- * This logger will NOT log anything if `F` fails!
+ * >>> WARNING READ BEFORE USAGE! <<< This logger will NOT log anything if `F` fails!
  *
- * Running the `WriterT` instance will yield a value of type `F[(G[LogMessage], A)]`.
- * As a result, the logged messages can be materialized if and only `F` succeeds.
+ * Running the `WriterT` instance will yield a value of type `F[(G[LogMessage], A)]`. As a result,
+ * the logged messages can be materialized if and only `F` succeeds.
  */
 object WriterTLogger {
   def apply[F[_]: Applicative, G[_]: Alternative](
