@@ -72,10 +72,10 @@ ThisBuild / githubWorkflowPublish := Seq(
 )
 
 val catsV = "2.7.0"
-val catsEffectV = "3.3.0"
+val catsEffectV = "3.3.1"
 val slf4jV = "1.7.32"
 val munitCatsEffectV = "1.0.7"
-val logbackClassicV = "1.2.7"
+val logbackClassicV = "1.2.8"
 
 Global / onChangedBuildSource := ReloadOnSourceChanges
 
