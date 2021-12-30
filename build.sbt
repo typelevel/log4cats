@@ -1,4 +1,3 @@
-import sbtcrossproject.{crossProject, CrossType}
 import sbtghactions.UseRef
 
 val Scala213 = "2.13.7"
@@ -67,7 +66,7 @@ ThisBuild / githubWorkflowPublish := Seq(
   WorkflowStep.Sbt(
     List("release")
   )
-) ++ micrositeWorkflowSteps(Some(MicrositesCond)).toSeq :+ WorkflowStep.Sbt(
+) ++ micrositeWorkflowSteps(Some(MicrositesCond)) :+ WorkflowStep.Sbt(
   List("docs/publishMicrosite"),
   cond = Some(MicrositesCond)
 )
