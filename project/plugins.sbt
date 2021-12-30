@@ -1,4 +1,4 @@
-addSbtPlugin("org.scalameta"      % "sbt-scalafmt"             % "2.4.6")
+addSbtPlugin("org.scalameta"      % "sbt-scalafmt"             % "2.4.5")
 addSbtPlugin("org.scala-js"       % "sbt-scalajs"              % "1.7.1")
 addSbtPlugin("com.47deg"          % "sbt-microsites"           % "1.3.4")
 addSbtPlugin("com.typesafe.sbt"   % "sbt-ghpages"              % "0.6.3")
