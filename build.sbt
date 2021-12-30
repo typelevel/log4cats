@@ -14,7 +14,7 @@ ThisBuild / scalaVersion := Scala213
 ThisBuild / publishFullName := "Christopher Davenport"
 ThisBuild / publishGithubUser := "christopherdavenport"
 
-ThisBuild / githubWorkflowJavaVersions := Seq("adopt@1.8", "adopt@1.11")
+ThisBuild / githubWorkflowJavaVersions := Seq(JavaSpec.temurin("8"), JavaSpec.temurin("11"))
 
 ThisBuild / versionIntroduced := Map(
   "2.12" -> "1.2.0",
@@ -76,7 +76,7 @@ val catsV = "2.7.0"
 val catsEffectV = "2.5.4"
 val slf4jV = "1.7.32"
 val munitCatsEffectV = "1.0.7"
-val logbackClassicV = "1.2.8"
+val logbackClassicV = "1.2.10"
 
 Global / onChangedBuildSource := ReloadOnSourceChanges
 
