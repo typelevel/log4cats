@@ -16,7 +16,7 @@
 
 package org.typelevel.log4cats.testing
 
-import org.typelevel.log4cats.{SelfAwareLogger}
+import org.typelevel.log4cats.SelfAwareLogger
 import cats.effect.Sync
 import cats.implicits._
 import java.util.concurrent.atomic.AtomicReference
