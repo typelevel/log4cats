@@ -1,4 +1,4 @@
-# log4cats [![Maven Central](https://maven-badges.herokuapp.com/maven-central/org.typelvel/log4cats-core_2.12/badge.svg)](https://maven-badges.herokuapp.com/maven-central/org.typelevel/log4cats-core_2.12)
+# log4cats [![Maven Central](https://maven-badges.herokuapp.com/maven-central/org.typelevel/log4cats-core_2.12/badge.svg)](https://maven-badges.herokuapp.com/maven-central/org.typelevel/log4cats-core_2.12)
 
 ## Project Goals
 
