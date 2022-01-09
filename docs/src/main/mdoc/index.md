@@ -12,7 +12,7 @@ or you can use any of the supported backends, or create your own.
 
 ## Quick Start
 
-To use log4cats in an existing SBT project with Scala 2.11 or a later version, add the following dependency to your
+To use log4cats in an existing SBT project with Scala 2.12 or a later version, add the following dependency to your
 `build.sbt`:
 
 ```scala

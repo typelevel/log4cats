@@ -1,4 +1,4 @@
-# log4cats [![Maven Central](https://maven-badges.herokuapp.com/maven-central/org.typelvel/log4cats-core_2.12/badge.svg)](https://maven-badges.herokuapp.com/maven-central/org.typelevel/log4cats-core_2.12)
+# log4cats [![Maven Central](https://maven-badges.herokuapp.com/maven-central/org.typelevel/log4cats-core_2.12/badge.svg)](https://maven-badges.herokuapp.com/maven-central/org.typelevel/log4cats-core_2.12)
 
 ## Project Goals
 
@@ -8,7 +8,7 @@ or you can use any of the supported backends, or create your own.
 
 ## Quick Start
 
-To use log4cats in an existing SBT project with Scala 2.11 or a later version, add the following dependency to your
+To use log4cats in an existing SBT project with Scala 2.12 or a later version, add the following dependency to your
 `build.sbt`:
 
 ```scala
