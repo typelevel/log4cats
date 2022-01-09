@@ -17,19 +17,13 @@
 package org.typelevel.log4cats
 
 import cats.effect.IO
-import ch.qos.logback.classic.{Level, Logger}
 import munit.CatsEffectSuite
-import org.slf4j.LoggerFactory
 import org.typelevel.log4cats.testing.StructuredTestingLogger
 
 /**
  * This test class runs the test cases with StructuredTestingLogger
  */
 class PagingSelfAwareStructuredLoggerTestRunner extends CatsEffectSuite {
-
-  private var origLogLevel = Level.OFF
-  private val rootLogger =
-    LoggerFactory.getLogger(org.slf4j.Logger.ROOT_LOGGER_NAME).asInstanceOf[Logger]
 
   val msg: String = "0123456789abcdef" * 128 // Size of message is 2K byte
   val ctx: Map[String, String] = Map("foo" -> "bar")
@@ -38,13 +32,6 @@ class PagingSelfAwareStructuredLoggerTestRunner extends CatsEffectSuite {
   )
   val uuidPatternRegex =
     "[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}"
-
-  override def beforeAll(): Unit = {
-    origLogLevel = rootLogger.getLevel
-    rootLogger.setLevel(Level.INFO)
-  }
-
-  override def afterAll(): Unit = rootLogger.setLevel(origLogLevel)
 
   def runTest(
                pageSizeK: Int,
