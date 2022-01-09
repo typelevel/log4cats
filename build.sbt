@@ -7,6 +7,7 @@ val Scala3 = "3.0.2"
 enablePlugins(SonatypeCiReleasePlugin)
 
 ThisBuild / organization := "org.typelevel"
+ThisBuild / organizationName := "Typelevel"
 ThisBuild / baseVersion := "1.3"
 ThisBuild / crossScalaVersions := Seq(Scala213, Scala212, Scala3)
 ThisBuild / scalaVersion := Scala213
