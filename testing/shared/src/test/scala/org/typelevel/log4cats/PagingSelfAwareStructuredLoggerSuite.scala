@@ -296,7 +296,8 @@ class PagingSelfAwareStructuredLoggerSuite extends PagingSelfAwareStructuredLogg
     runTestExpectingThrow(3, 0, parameterChkSuite, suiteCase_pc4)
   }
 
-  val suiteCase_pc5 = "parameterChkSuite: Throw IllegalArgumentException for pageSizeK=0, maxPageNeeded=0"
+  val suiteCase_pc5 =
+    "parameterChkSuite: Throw IllegalArgumentException for pageSizeK=0, maxPageNeeded=0"
   test(suiteCase_pc5) {
     runTestExpectingThrow(0, 0, parameterChkSuite, suiteCase_pc5)
   }

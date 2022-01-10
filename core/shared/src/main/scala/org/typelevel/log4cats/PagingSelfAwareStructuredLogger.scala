@@ -56,7 +56,9 @@ object PagingSelfAwareStructuredLogger {
       sl: SelfAwareStructuredLogger[F]
   ) extends SelfAwareStructuredLogger[F] {
     if (pageSizeK <= 0 || maxPageNeeded <= 0)
-      throw new IllegalArgumentException(s"pageSizeK(=$pageSizeK) and maxPageNeeded(=$maxPageNeeded) must be positive numbers.")
+      throw new IllegalArgumentException(
+        s"pageSizeK(=$pageSizeK) and maxPageNeeded(=$maxPageNeeded) must be positive numbers."
+      )
 
     private val pageIndices = (1 to maxPageNeeded).toList
     private val logSplitIdN = "log_split_id"

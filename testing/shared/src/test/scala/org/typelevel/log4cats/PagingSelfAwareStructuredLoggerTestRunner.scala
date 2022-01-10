@@ -34,13 +34,13 @@ class PagingSelfAwareStructuredLoggerTestRunner extends CatsEffectSuite {
     "[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}"
 
   def runTest(
-               pageSizeK: Int,
-               maxPageNeeded: Int,
-               expectedNumOfPage: Int,
-               logLevel: String,
-               logTest: SelfAwareStructuredLogger[IO] => IO[Unit],
-               suiteCaseName: String = ""
-             ): Unit = {
+      pageSizeK: Int,
+      maxPageNeeded: Int,
+      expectedNumOfPage: Int,
+      logLevel: String,
+      logTest: SelfAwareStructuredLogger[IO] => IO[Unit],
+      suiteCaseName: String = ""
+  ): Unit = {
     val pageSize = pageSizeK * 1024
     val stl = StructuredTestingLogger.impl[IO]()
     val pagingStl: SelfAwareStructuredLogger[IO] =
@@ -50,59 +50,67 @@ class PagingSelfAwareStructuredLoggerTestRunner extends CatsEffectSuite {
     val test = logResult >> stl.logged.attempt
     test.unsafeRunAsync(
       (cbParam: Either[Throwable, Either[Throwable, Vector[StructuredTestingLogger.LogMessage]]]) =>
-      cbParam.fold(_ => fail("Failed to log"),
-        cbVal => cbVal.fold(
+        cbParam.fold(
           _ => fail("Failed to log"),
-          (loggedVec: Vector[StructuredTestingLogger.LogMessage]) => {
-            // Below it will assert the expectedNumOfPage, logging context and logged contents
-            // If an assertion does not pass, print out relevant info.
+          cbVal =>
+            cbVal.fold(
+              _ => fail("Failed to log"),
+              (loggedVec: Vector[StructuredTestingLogger.LogMessage]) => {
+                // Below it will assert the expectedNumOfPage, logging context and logged contents
+                // If an assertion does not pass, print out relevant info.
 
-            if (loggedVec.size != expectedNumOfPage) {
-              println(s"\nFailed: $suiteCaseName - $logLevel")
-              println("Number of log entry does not match expectation")
-              println(s"loggedVec.size=${loggedVec.size}, expectedNumOfPage=$expectedNumOfPage")
-              println(s"loggedVec=$loggedVec")
-            }
-            assertEquals(loggedVec.size, expectedNumOfPage)
+                if (loggedVec.size != expectedNumOfPage) {
+                  println(s"\nFailed: $suiteCaseName - $logLevel")
+                  println("Number of log entry does not match expectation")
+                  println(s"loggedVec.size=${loggedVec.size}, expectedNumOfPage=$expectedNumOfPage")
+                  println(s"loggedVec=$loggedVec")
+                }
+                assertEquals(loggedVec.size, expectedNumOfPage)
 
-            val loggedVecWithIndex = loggedVec.zip(1 to loggedVec.size)
-            val allMsgValid = loggedVecWithIndex.forall { mi =>
-              val (logMsg, pageNum) = mi
-              val ctxValid =
-                logMsg.ctx.getOrElse("log_split_id", "").matches(uuidPatternRegex) &&
-                  (logMsg.ctx.getOrElse("page_size", "0 Kib").dropRight(4).toInt == pageSizeK) &&
-                  (logMsg.ctx.getOrElse("log_size", "0 Byte").dropRight(5).toInt > pageSize || expectedNumOfPage == 1)
-              if (!ctxValid) {
-                println(s"\nFailed: $suiteCaseName - $logLevel")
-                println("Logging context does not match expectation")
-                println(s"pageNum=$pageNum, logMsg.ctx=${logMsg.ctx}")
+                val loggedVecWithIndex = loggedVec.zip(1 to loggedVec.size)
+                val allMsgValid = loggedVecWithIndex.forall { mi =>
+                  val (logMsg, pageNum) = mi
+                  val ctxValid =
+                    logMsg.ctx.getOrElse("log_split_id", "").matches(uuidPatternRegex) &&
+                      (logMsg.ctx
+                        .getOrElse("page_size", "0 Kib")
+                        .dropRight(4)
+                        .toInt == pageSizeK) &&
+                      (logMsg.ctx
+                        .getOrElse("log_size", "0 Byte")
+                        .dropRight(5)
+                        .toInt > pageSize || expectedNumOfPage == 1)
+                  if (!ctxValid) {
+                    println(s"\nFailed: $suiteCaseName - $logLevel")
+                    println("Logging context does not match expectation")
+                    println(s"pageNum=$pageNum, logMsg.ctx=${logMsg.ctx}")
+                  }
+
+                  val msgValid = expectedNumOfPage == 1 ||
+                    (pageNum == loggedVec.size || logMsg.message.length > pageSize) &&
+                    logMsg.message.endsWith(s" page_size=$pageSizeK Kib") &&
+                    logMsg.message.startsWith("Page ")
+                  if (!msgValid) {
+                    println(s"\nFailed: $suiteCaseName - $logLevel")
+                    println("Logged message page does not match expectation")
+                    println(s"pageNum=$pageNum, logMsg=$logMsg")
+                  }
+
+                  ctxValid && msgValid
+                }
+                assertEquals(allMsgValid, true)
               }
-
-              val msgValid = expectedNumOfPage == 1 ||
-                (pageNum == loggedVec.size || logMsg.message.length > pageSize) &&
-                  logMsg.message.endsWith(s" page_size=$pageSizeK Kib") &&
-                  logMsg.message.startsWith("Page ")
-              if (!msgValid) {
-                println(s"\nFailed: $suiteCaseName - $logLevel")
-                println("Logged message page does not match expectation")
-                println(s"pageNum=$pageNum, logMsg=$logMsg")
-              }
-
-              ctxValid && msgValid
-            }
-            assertEquals(allMsgValid, true)
-          }
+            )
         )
-      )
     )
   }
 
   def runTestExpectingThrow(
-                             pageSizeK: Int,
-                             maxPageNeeded: Int,
-                             suiteName: String = "",
-                             caseName: String = ""
-                           ): Unit = {
+      pageSizeK: Int,
+      maxPageNeeded: Int,
+      suiteName: String = "",
+      caseName: String = ""
+  ): Unit = {
     val stl = StructuredTestingLogger.impl[IO]()
     try {
       PagingSelfAwareStructuredLogger.withPaging[IO](pageSizeK, maxPageNeeded)(stl)
