@@ -17,7 +17,7 @@
 package org.typelevel.log4cats
 
 import cats._
-import cats.data.{EitherT, OptionT}
+import cats.data.{EitherT, Kleisli, OptionT}
 
 trait Logger[F[_]] extends MessageLogger[F] with ErrorLogger[F] {
   def withModifiedString(f: String => String): Logger[F] = Logger.withModifiedString[F](this, f)
@@ -32,6 +32,9 @@ object Logger {
 
   implicit def eitherTLogger[F[_]: Logger: Functor, E]: Logger[EitherT[F, E, *]] =
     Logger[F].mapK(EitherT.liftK[F, E])
+
+  implicit def kleisliLogger[F[_]: Logger, A]: Logger[Kleisli[F, A, *]] =
+    Logger[F].mapK(Kleisli.liftK[F, A])
 
   private def withModifiedString[F[_]](l: Logger[F], f: String => String): Logger[F] =
     new Logger[F] {

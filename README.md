@@ -1,4 +1,4 @@
-# log4cats [![Maven Central](https://maven-badges.herokuapp.com/maven-central/org.typelvel/log4cats-core_2.12/badge.svg)](https://maven-badges.herokuapp.com/maven-central/org.typelevel/log4cats-core_2.12)
+# log4cats [![Maven Central](https://maven-badges.herokuapp.com/maven-central/org.typelevel/log4cats-core_2.12/badge.svg)](https://maven-badges.herokuapp.com/maven-central/org.typelevel/log4cats-core_2.12)
 
 ## Project Goals
 
@@ -8,7 +8,7 @@ or you can use any of the supported backends, or create your own.
 
 ## Quick Start
 
-To use log4cats in an existing SBT project with Scala 2.11 or a later version, add the following dependency to your
+To use log4cats in an existing SBT project with Scala 2.12 or a later version, add the following dependency to your
 `build.sbt`:
 
 ```scala
@@ -55,3 +55,14 @@ object MyThing {
   } yield something
 }
 ```
+
+## CVE-2021-44228 ("log4shell")
+
+log4cats is not directly susceptible to CVS-2021-44228.  The
+log4cats-slf4j implementation delegates all logging operations to
+[slf4j][slf4j].  if you use log4cats-slf4j, your configured slf4j
+provider may put you at risk.  See [slf4j's comments on
+CVE-2021-44228][slf4j-log4shell] for more.
+
+[slf4j]: https://www.slf4j.org/
+[slf4j-log4shell]: https://www.slf4j.org/log4shell.html

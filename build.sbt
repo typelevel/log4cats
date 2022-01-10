@@ -1,6 +1,6 @@
 import sbtghactions.UseRef
 
-val Scala213 = "2.13.6"
+val Scala213 = "2.13.7"
 val Scala212 = "2.12.15"
 val Scala3 = "3.0.2"
 
@@ -13,7 +13,7 @@ ThisBuild / scalaVersion := Scala213
 ThisBuild / publishFullName := "Christopher Davenport"
 ThisBuild / publishGithubUser := "christopherdavenport"
 
-ThisBuild / githubWorkflowJavaVersions := Seq("adopt@1.8", "adopt@1.11")
+ThisBuild / githubWorkflowJavaVersions := Seq(JavaSpec.temurin("8"), JavaSpec.temurin("11"))
 
 ThisBuild / versionIntroduced := Map(
   "2.12" -> "1.2.0",
@@ -71,11 +71,11 @@ ThisBuild / githubWorkflowPublish := Seq(
   cond = Some(MicrositesCond)
 )
 
-val catsV = "2.6.1"
-val catsEffectV = "3.2.9"
+val catsV = "2.7.0"
+val catsEffectV = "3.3.4"
 val slf4jV = "1.7.32"
-val munitCatsEffectV = "1.0.5"
-val logbackClassicV = "1.2.7"
+val munitCatsEffectV = "1.0.7"
+val logbackClassicV = "1.2.10"
 
 Global / onChangedBuildSource := ReloadOnSourceChanges
 

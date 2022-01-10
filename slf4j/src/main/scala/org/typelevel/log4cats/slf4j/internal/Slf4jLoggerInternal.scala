@@ -48,8 +48,9 @@ private[slf4j] object Slf4jLoggerInternal {
       } MDC.put(k, v)
 
       try logging()
-      finally if (backup eq null) MDC.clear()
-      else MDC.setContextMap(backup)
+      finally
+        if (backup eq null) MDC.clear()
+        else MDC.setContextMap(backup)
     }
 
     isEnabled.ifM(
