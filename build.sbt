@@ -118,7 +118,6 @@ lazy val testing = crossProject(JSPlatform, JVMPlatform)
   .dependsOn(core)
   .settings(
     name := "log4cats-testing",
-    scalaJSLinkerConfig ~= (_.withModuleKind(ModuleKind.CommonJSModule)),
     libraryDependencies ++= Seq(
       "org.typelevel" %%% "cats-effect"     % catsEffectV,
       "ch.qos.logback"  % "logback-classic" % logbackClassicV % Test
