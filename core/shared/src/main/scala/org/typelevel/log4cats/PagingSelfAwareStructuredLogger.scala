@@ -25,27 +25,32 @@ import java.util.UUID
 object PagingSelfAwareStructuredLogger {
 
   /**
-   * Wrap a SelfAwareStructuredLogger adding pagination functionality to avoid the truncation (hard splitting) by the
-   * underline logging provider. For the functions with a Throwable parameter, the stack trace is appended to the
-   * message before pagination.
+   * Wrap a SelfAwareStructuredLogger adding pagination functionality to avoid the truncation (hard
+   * splitting) by the underline logging provider. For the functions with a Throwable parameter, the
+   * stack trace is appended to the message before pagination.
    *
    * The actual text to be logged has 3 parts:
    *
-   * Part 1. The chunk of message in each page;
-   * Part 2. This function will add the page header and footer;
-   * Part 3. The base class SelfAwareStructuredLogger may add tracing data etc logging context.
+   * Part 1. The chunk of message in each page; Part 2. This function will add the page header and
+   * footer; Part 3. The base class SelfAwareStructuredLogger may add tracing data etc logging
+   * context.
    *
-   * The total of the above 3 parts should be smaller than the log size limit of the underline logging provider to
-   * avoid hard splitting.
+   * The total of the above 3 parts should be smaller than the log size limit of the underline
+   * logging provider to avoid hard splitting.
    *
-   * Example: Assume the log size limit of the underline logging provider is 75 Kb, setting pageSizeK to 64 leaves
-   * 11 Kb for (part 2) and (part 3).
+   * Example: Assume the log size limit of the underline logging provider is 75 Kb, setting
+   * pageSizeK to 64 leaves 11 Kb for (part 2) and (part 3).
    *
-   * @param pageSizeK The size (in unit kibibyte) of the chunk of message in each page.
-   * @param maxPageNeeded The maximum number of pages to be logged.
-   * @param logger The SelfAwareStructuredLogger to be used to do the actual logging.
-   * @tparam F Effect type class.
-   * @return SelfAwareStructuredLogger with pagination.
+   * @param pageSizeK
+   *   The size (in unit kibibyte) of the chunk of message in each page.
+   * @param maxPageNeeded
+   *   The maximum number of pages to be logged.
+   * @param logger
+   *   The SelfAwareStructuredLogger to be used to do the actual logging.
+   * @tparam F
+   *   Effect type class.
+   * @return
+   *   SelfAwareStructuredLogger with pagination.
    */
   def withPaging[F[_]: Monad](pageSizeK: Int = 64, maxPageNeeded: Int = 999)(
       logger: SelfAwareStructuredLogger[F]
