@@ -1,6 +1,6 @@
 import sbtghactions.UseRef
 
-val Scala213 = "2.13.7"
+val Scala213 = "2.13.8"
 val Scala212 = "2.12.15"
 val Scala3 = "3.0.2"
 
@@ -120,8 +120,8 @@ lazy val testing = crossProject(JSPlatform, JVMPlatform)
   .settings(
     name := "log4cats-testing",
     libraryDependencies ++= Seq(
-      "org.typelevel" %%% "cats-effect"     % catsEffectV,
-      "ch.qos.logback"  % "logback-classic" % logbackClassicV % Test
+      "org.typelevel" %%% "cats-effect" % catsEffectV,
+      "ch.qos.logback"                  % "logback-classic" % logbackClassicV % Test
     )
   )
 lazy val testingJVM = testing.jvm
