@@ -1,6 +1,6 @@
 import sbtghactions.UseRef
 
-val Scala213 = "2.13.7"
+val Scala213 = "2.13.8"
 val Scala212 = "2.12.15"
 val Scala3 = "3.0.2"
 
@@ -8,7 +8,7 @@ enablePlugins(SonatypeCiReleasePlugin)
 
 ThisBuild / organization := "org.typelevel"
 ThisBuild / organizationName := "Typelevel"
-ThisBuild / baseVersion := "2.1"
+ThisBuild / baseVersion := "2.2"
 ThisBuild / crossScalaVersions := Seq(Scala213, Scala212, Scala3)
 ThisBuild / scalaVersion := Scala213
 ThisBuild / publishFullName := "Christopher Davenport"
@@ -51,6 +51,14 @@ ThisBuild / githubWorkflowAddedJobs ++= Seq(
     scalas = crossScalaVersions.value.toList.filter(_.startsWith("2."))
   ),
   WorkflowJob(
+    "headers",
+    "Headers",
+    githubWorkflowJobSetup.value.toList ::: List(
+      WorkflowStep.Sbt(List("headerCheckAll"), name = Some("Headers"))
+    ),
+    scalas = crossScalaVersions.value.toList
+  ),
+  WorkflowJob(
     "microsite",
     "Microsite",
     githubWorkflowJobSetup.value.toList ::: (micrositeWorkflowSteps(None) :+ WorkflowStep
@@ -74,7 +82,7 @@ ThisBuild / githubWorkflowPublish := Seq(
 
 val catsV = "2.7.0"
 val catsEffectV = "3.3.4"
-val slf4jV = "1.7.32"
+val slf4jV = "1.7.33"
 val munitCatsEffectV = "1.0.7"
 val logbackClassicV = "1.2.10"
 
@@ -155,7 +163,8 @@ lazy val slf4j = project
 lazy val commonSettings = Seq(
   libraryDependencies ++= Seq(
     "org.typelevel" %%% "munit-cats-effect-3" % munitCatsEffectV % Test
-  )
+  ),
+  testFrameworks += new TestFramework("munit.Framework"),
 )
 
 lazy val releaseSettings = {
