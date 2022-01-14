@@ -26,6 +26,9 @@ val MicrositesCond = s"matrix.scala == '$Scala212'"
 
 ThisBuild / githubWorkflowBuild := Seq(
   WorkflowStep.Sbt(List("test"), name = Some("Test")),
+  WorkflowStep.Run(
+    List("git status")
+  ),
   WorkflowStep.Sbt(List("mimaReportBinaryIssues"), name = Some("Binary Compatibility Check"))
 )
 
