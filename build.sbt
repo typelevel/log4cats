@@ -51,6 +51,14 @@ ThisBuild / githubWorkflowAddedJobs ++= Seq(
     scalas = crossScalaVersions.value.toList.filter(_.startsWith("2."))
   ),
   WorkflowJob(
+    "headers",
+    "Headers",
+    githubWorkflowJobSetup.value.toList ::: List(
+      WorkflowStep.Sbt(List("headerCheckAll"), name = Some("Headers"))
+    ),
+    scalas = crossScalaVersions.value.toList
+  ),
+  WorkflowJob(
     "microsite",
     "Microsite",
     githubWorkflowJobSetup.value.toList ::: (micrositeWorkflowSteps(None) :+ WorkflowStep
