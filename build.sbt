@@ -40,6 +40,11 @@ def micrositeWorkflowSteps(cond: Option[String] = None): List[WorkflowStep] = Li
   WorkflowStep.Run(List("gem install jekyll -v 4"), cond = cond)
 )
 
+ThisBuild / githubWorkflowBuildPreamble := Seq(
+  WorkflowStep.Sbt(
+    List("git", "status")
+  )
+)
 ThisBuild / githubWorkflowAddedJobs ++= Seq(
   WorkflowJob(
     "scalafmt",
