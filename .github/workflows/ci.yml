@@ -69,7 +69,7 @@ jobs:
       - name: Test
         run: sbt ++${{ matrix.scala }} test
 
-      - run: git status
+      - run: git diff
 
       - name: Binary Compatibility Check
         run: sbt ++${{ matrix.scala }} mimaReportBinaryIssues
