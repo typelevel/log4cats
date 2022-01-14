@@ -163,7 +163,10 @@ lazy val commonSettings = Seq(
   libraryDependencies ++= Seq(
     "org.typelevel" %%% "munit-cats-effect-2" % munitCatsEffectV % Test
   ),
-  testFrameworks += new TestFramework("munit.Framework")
+  testFrameworks += new TestFramework("munit.Framework"),
+  mimaPreviousArtifacts ~= { xs =>
+    xs.filterNot(_.revision == "1.5.0") // cursed tag
+  }
 )
 
 lazy val releaseSettings = {
