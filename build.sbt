@@ -41,8 +41,8 @@ def micrositeWorkflowSteps(cond: Option[String] = None): List[WorkflowStep] = Li
 )
 
 ThisBuild / githubWorkflowBuildPreamble := Seq(
-  WorkflowStep.Sbt(
-    List("git", "status")
+  WorkflowStep.Run(
+    List("git status")
   )
 )
 ThisBuild / githubWorkflowAddedJobs ++= Seq(
