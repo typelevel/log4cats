@@ -1,8 +1,6 @@
----
-layout: home
+# log4cats
 
----
-# log4cats [![Maven Central](https://maven-badges.herokuapp.com/maven-central/org.typelevel/log4cats-core_2.12/badge.svg)](https://maven-badges.herokuapp.com/maven-central/org.typelevel/log4cats-core_2.12)
+[![Maven Central](https://maven-badges.herokuapp.com/maven-central/org.typelevel/log4cats-core_2.12/badge.svg)](https://maven-badges.herokuapp.com/maven-central/org.typelevel/log4cats-core_2.12)
 
 ## Project Goals
 
@@ -17,8 +15,8 @@ To use log4cats in an existing SBT project with Scala 2.12 or a later version, a
 
 ```scala
 libraryDependencies ++= Seq(
-  "org.typelevel" %% "log4cats-core"    % "<version>",  // Only if you want to Support Any Backend
-  "org.typelevel" %% "log4cats-slf4j"   % "<version>",  // Direct Slf4j Support - Recommended
+  "org.typelevel" %% "log4cats-core"    % "@VERSION@",  // Only if you want to Support Any Backend
+  "org.typelevel" %% "log4cats-slf4j"   % "@VERSION@",  // Direct Slf4j Support - Recommended
 )
 ```
 
