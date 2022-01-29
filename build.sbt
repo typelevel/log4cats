@@ -81,7 +81,7 @@ ThisBuild / githubWorkflowPublish := Seq(
 )
 
 val catsV = "2.7.0"
-val catsEffectV = "3.3.4"
+val catsEffectV = "3.3.5"
 val slf4jV = "1.7.33"
 val munitCatsEffectV = "1.0.7"
 val logbackClassicV = "1.2.10"
@@ -128,8 +128,8 @@ lazy val testing = crossProject(JSPlatform, JVMPlatform)
   .settings(
     name := "log4cats-testing",
     libraryDependencies ++= Seq(
-      "org.typelevel" %%% "cats-effect"     % catsEffectV,
-      "ch.qos.logback"  % "logback-classic" % logbackClassicV % Test
+      "org.typelevel" %%% "cats-effect" % catsEffectV,
+      "ch.qos.logback"                  % "logback-classic" % logbackClassicV % Test
     )
   )
 lazy val testingJVM = testing.jvm
@@ -164,7 +164,7 @@ lazy val commonSettings = Seq(
   libraryDependencies ++= Seq(
     "org.typelevel" %%% "munit-cats-effect-3" % munitCatsEffectV % Test
   ),
-  testFrameworks += new TestFramework("munit.Framework"),
+  testFrameworks += new TestFramework("munit.Framework")
 )
 
 lazy val releaseSettings = {
