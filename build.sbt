@@ -25,7 +25,7 @@ ThisBuild / githubWorkflowJavaVersions := Seq(JavaSpec.temurin("8"), JavaSpec.te
 ThisBuild / tlVersionIntroduced := Map(
   "2.12" -> "1.2.0",
   "2.13" -> "1.2.0",
-  "3.0.0" -> "1.3.1"
+  "3" -> "1.3.1"
 )
 
 val catsV = "2.7.0"
