@@ -6,6 +6,8 @@ ThisBuild / tlBaseVersion := "1.5"
 ThisBuild / crossScalaVersions := Seq(Scala213, Scala212, Scala3)
 ThisBuild / scalaVersion := Scala213
 ThisBuild / startYear := Some(2018)
+ThisBuild / tlSitePublishBranch := None
+ThisBuild / tlCiReleaseBranches := Seq()
 ThisBuild / developers := List(
   Developer(
     "christopherdavenport",
