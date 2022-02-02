@@ -25,7 +25,9 @@ import scala.quoted._
 
 private[slf4j] object GetLoggerMacros {
 
-  def getLoggerImpl[F[_]: Type](F: Expr[Sync[F]])(using qctx: Quotes): Expr[SelfAwareStructuredLogger[F]] = {
+  def getLoggerImpl[F[_]: Type](
+      F: Expr[Sync[F]]
+  )(using qctx: Quotes): Expr[SelfAwareStructuredLogger[F]] = {
     import qctx.reflect._
 
     @tailrec def findEnclosingClass(sym: Symbol): Symbol = {
@@ -45,22 +47,18 @@ private[slf4j] object GetLoggerMacros {
         val flags = s.flags
         if (flags.is(Flags.Package)) {
           s.fullName
-        }
-        else if (s.isClassDef) {
+        } else if (s.isClassDef) {
           if (flags.is(Flags.Module)) {
             if (s.name == "package$") {
               fullName(s.owner)
-            }
-            else {
+            } else {
               val chomped = s.name.stripSuffix("$")
               fullName(s.owner) + "." + chomped
             }
-          }
-          else {
+          } else {
             fullName(s.owner) + "." + s.name
           }
-        }
-        else {
+        } else {
           fullName(s.owner)
         }
       }
@@ -73,8 +71,10 @@ private[slf4j] object GetLoggerMacros {
     logger(cls)
   }
 
-  def createImpl[F[_]: Type](F: Expr[Sync[F]])(using qctx: Quotes): Expr[F[SelfAwareStructuredLogger[F]]] = {
+  def createImpl[F[_]: Type](
+      F: Expr[Sync[F]]
+  )(using qctx: Quotes): Expr[F[SelfAwareStructuredLogger[F]]] = {
     val logger = getLoggerImpl(F)
-    '{$F.delay($logger)}
+    '{ $F.delay($logger) }
   }
 }
