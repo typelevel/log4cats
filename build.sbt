@@ -1,3 +1,5 @@
+import com.typesafe.tools.mima.core._
+
 val Scala213 = "2.13.8"
 val Scala212 = "2.12.15"
 val Scala3 = "3.0.2"
@@ -84,7 +86,11 @@ lazy val slf4j = project
     libraryDependencies ++= {
       if (tlIsScala3.value) Seq.empty
       else Seq("org.scala-lang" % "scala-reflect" % scalaVersion.value % Provided)
-    }
+    },
+    mimaBinaryIssueFilters ++= Seq(
+      ProblemFilters.exclude[DirectMissingMethodProblem]("org.typelevel.log4cats.slf4j.internal.GetLoggerMacros.createImpl"),
+      ProblemFilters.exclude[DirectMissingMethodProblem]("org.typelevel.log4cats.slf4j.internal.GetLoggerMacros.getLoggerImpl")
+    )
   )
 
 lazy val commonSettings = Seq(

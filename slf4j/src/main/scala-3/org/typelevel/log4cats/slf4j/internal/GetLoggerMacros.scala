@@ -18,16 +18,20 @@ package org.typelevel.log4cats.slf4j.internal
 
 import cats.effect.Sync
 import org.slf4j.LoggerFactory
-import org.typelevel.log4cats.slf4j.Slf4jLogger
+import org.typelevel.log4cats.slf4j.{LoggerName, Slf4jLogger}
 import org.typelevel.log4cats.SelfAwareStructuredLogger
+
 import scala.annotation.tailrec
-import scala.quoted._
+import scala.quoted.*
 
 private[slf4j] object GetLoggerMacros {
 
-  def getLoggerImpl[F[_]: Type](
-      F: Expr[Sync[F]]
-  )(using qctx: Quotes): Expr[SelfAwareStructuredLogger[F]] = {
+  def getLoggerName(using qctx: Quotes): Expr[LoggerName] = {
+    val name = getLoggerNameImpl
+    '{new LoggerName($name)}
+  }
+
+  def getLoggerNameImpl(using qctx: Quotes): Expr[String] = {
     import qctx.reflect._
 
     @tailrec def findEnclosingClass(sym: Symbol): Symbol = {
@@ -42,7 +46,7 @@ private[slf4j] object GetLoggerMacros {
       }
     }
 
-    def logger(s: Symbol): Expr[SelfAwareStructuredLogger[F]] = {
+    def logger(s: Symbol): Expr[String] = {
       def fullName(s: Symbol): String = {
         val flags = s.flags
         if (flags.is(Flags.Package)) {
@@ -63,18 +67,10 @@ private[slf4j] object GetLoggerMacros {
         }
       }
 
-      val name = Expr(fullName(s))
-      '{ Slf4jLogger.getLoggerFromSlf4j(LoggerFactory.getLogger($name))($F) }
+      Expr(fullName(s))
     }
 
     val cls = findEnclosingClass(Symbol.spliceOwner)
     logger(cls)
-  }
-
-  def createImpl[F[_]: Type](
-      F: Expr[Sync[F]]
-  )(using qctx: Quotes): Expr[F[SelfAwareStructuredLogger[F]]] = {
-    val logger = getLoggerImpl(F)
-    '{ $F.delay($logger) }
   }
 }

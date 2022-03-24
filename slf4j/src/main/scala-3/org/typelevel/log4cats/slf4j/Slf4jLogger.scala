@@ -19,40 +19,32 @@ package org.typelevel.log4cats.slf4j
 import cats.effect.Sync
 import org.typelevel.log4cats.SelfAwareStructuredLogger
 import org.typelevel.log4cats.slf4j.internal._
-import org.slf4j.{Logger => JLogger}
+import org.slf4j.Logger as JLogger
+import scala.annotation.nowarn
 
 object Slf4jLogger {
 
-  inline def getLogger[F[_]](implicit F: Sync[F]): SelfAwareStructuredLogger[F] =
-    ${ GetLoggerMacros.getLoggerImpl('F) }
+  //for binary compability
+  @nowarn("cat=unused")
+  private def create[F[_]: Sync]: F[SelfAwareStructuredLogger[F]] = ???
 
-  @deprecated("0.3.0", "Use getLogger instead")
-  inline def unsafeCreate[F[_]](implicit F: Sync[F]): SelfAwareStructuredLogger[F] =
-    ${ GetLoggerMacros.getLoggerImpl('F) }
+  @nowarn("cat=unused")
+  private def getLogger[F[_]](using F: Sync[F]): SelfAwareStructuredLogger[F] = ???
+
+  def getLogger[F[_]: Sync](using n: LoggerName): SelfAwareStructuredLogger[F] =
+    getLoggerFromName(n.value.stripSuffix("$"))
 
   def getLoggerFromName[F[_]: Sync](name: String): SelfAwareStructuredLogger[F] =
     getLoggerFromSlf4j(org.slf4j.LoggerFactory.getLogger(name))
 
-  @deprecated("0.3.0", "Use getLoggerFromName")
-  def unsafeFromName[F[_]: Sync](name: String): SelfAwareStructuredLogger[F] =
-    getLoggerFromName[F](name)
-
   def getLoggerFromClass[F[_]: Sync](clazz: Class[_]): SelfAwareStructuredLogger[F] =
     getLoggerFromSlf4j[F](org.slf4j.LoggerFactory.getLogger(clazz))
-
-  @deprecated("0.3.0", "Use getLoggerFromClass")
-  def unsafeFromClass[F[_]: Sync](clazz: Class[_]): SelfAwareStructuredLogger[F] =
-    getLoggerFromClass[F](clazz)
 
   def getLoggerFromSlf4j[F[_]: Sync](logger: JLogger): SelfAwareStructuredLogger[F] =
     new Slf4jLoggerInternal.Slf4jLogger(logger)
 
-  @deprecated("0.3.0", "Use getLoggerFromSlf4J instead")
-  def unsafeFromSlf4j[F[_]: Sync](logger: JLogger): SelfAwareStructuredLogger[F] =
-    getLoggerFromSlf4j[F](logger)
-
-  inline def create[F[_]](implicit F: Sync[F]): F[SelfAwareStructuredLogger[F]] =
-    ${ GetLoggerMacros.createImpl('F) }
+  def create[F[_]: Sync](using n: LoggerName): F[SelfAwareStructuredLogger[F]] =
+    Sync[F].delay(getLoggerFromName(n.value.stripSuffix("$")))
 
   def fromName[F[_]: Sync](name: String): F[SelfAwareStructuredLogger[F]] =
     Sync[F].delay(getLoggerFromName(name))
