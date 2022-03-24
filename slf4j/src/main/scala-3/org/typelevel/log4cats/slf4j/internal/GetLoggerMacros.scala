@@ -60,7 +60,7 @@ private[slf4j] object GetLoggerMacros {
       }
     }
 
-    def logger(s: Symbol): Expr[String] = {
+    def symbolName(s: Symbol): Expr[String] = {
       def fullName(s: Symbol): String = {
         val flags = s.flags
         if (flags.is(Flags.Package)) {
@@ -85,6 +85,6 @@ private[slf4j] object GetLoggerMacros {
     }
 
     val cls = findEnclosingClass(Symbol.spliceOwner)
-    logger(cls)
+    symbolName(cls)
   }
 }
