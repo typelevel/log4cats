@@ -29,12 +29,10 @@ import scala.reflect.macros.blackbox
  */
 private[slf4j] class GetLoggerMacros(val c: blackbox.Context) {
 
-  final def safeCreateImpl[F](f: c.Expr[F]) = getLoggerImpl[F](f, true)
-
-  final def unsafeCreateImpl[F](f: c.Expr[F]) = getLoggerImpl[F](f, false)
+  final def getLoggerName = getLoggerNameImpl
 
   /** Get a logger by reflecting the enclosing class name. */
-  private def getLoggerImpl[F](f: c.Expr[F], delayed: Boolean) = {
+  private def getLoggerNameImpl = {
     import c.universe._
 
     @tailrec def findEnclosingClass(sym: c.universe.Symbol): c.universe.Symbol = {
@@ -52,15 +50,6 @@ private[slf4j] class GetLoggerMacros(val c: blackbox.Context) {
     val cls = findEnclosingClass(c.internal.enclosingOwner)
 
     assert(cls.isModule || cls.isClass, "Enclosing class is always either a module or a class")
-
-    def loggerByParam(param: c.Tree) = {
-      val unsafeCreate =
-        q"_root_.org.typelevel.log4cats.slf4j.Slf4jLogger.getLoggerFromSlf4j(_root_.org.slf4j.LoggerFactory.getLogger(...${List(param)}))($f)"
-      if (delayed)
-        q"_root_.cats.effect.Sync.apply($f).delay(...$unsafeCreate)"
-      else
-        unsafeCreate
-    }
 
     def loggerBySymbolName(s: Symbol) = {
       def fullName(s: Symbol): String = {
@@ -81,7 +70,7 @@ private[slf4j] class GetLoggerMacros(val c: blackbox.Context) {
           fullName(s.owner)
         }
       }
-      loggerByParam(q"${fullName(s)}")
+      q"new _root_.org.typelevel.log4cats.slf4j.LoggerName(${fullName(s)})"
     }
 
     def loggerByType(s: Symbol) = {
@@ -89,7 +78,7 @@ private[slf4j] class GetLoggerMacros(val c: blackbox.Context) {
       val typeParams = typeSymbol.typeParams
 
       if (typeParams.isEmpty) {
-        loggerByParam(q"_root_.scala.Predef.classOf[$typeSymbol]")
+        q"new _root_.org.typelevel.log4cats.slf4j.LoggerName(_root_.scala.Predef.classOf[$typeSymbol].getName)"
       } else {
         if (typeParams.exists(_.asType.typeParams.nonEmpty)) {
           /* We have at least one higher-kinded type: fall back to by-name logger construction, as
@@ -98,7 +87,7 @@ private[slf4j] class GetLoggerMacros(val c: blackbox.Context) {
         } else {
           val typeArgs = List.fill(typeParams.length)(WildcardType)
           val typeConstructor = tq"$typeSymbol[..${typeArgs}]"
-          loggerByParam(q"_root_.scala.Predef.classOf[$typeConstructor]")
+          q"new _root_.org.typelevel.log4cats.slf4j.LoggerName(_root_.scala.Predef.classOf[$typeConstructor].getName)"
         }
       }
     }
@@ -107,9 +96,7 @@ private[slf4j] class GetLoggerMacros(val c: blackbox.Context) {
       s.isClass && !(s.owner.isPackage)
 
     val instanceByName =
-      Slf4jLoggerInternal.singletonsByName && (cls.isModule || cls.isModuleClass) || cls.isClass && isInnerClass(
-        cls
-      )
+      (Slf4jLoggerInternal.singletonsByName && cls.isModule || cls.isModuleClass) || (cls.isClass && isInnerClass(cls))
 
     if (instanceByName) {
       loggerBySymbolName(cls)

@@ -18,13 +18,19 @@ package org.typelevel.log4cats.slf4j
 
 import cats.effect.Sync
 import org.typelevel.log4cats.SelfAwareStructuredLogger
-import org.typelevel.log4cats.slf4j.internal._
+import org.typelevel.log4cats.slf4j.internal.{_}
 import org.slf4j.{Logger => JLogger}
+import scala.annotation.nowarn
 
 object Slf4jLogger {
 
-  def getLogger[F[_]: Sync]: SelfAwareStructuredLogger[F] =
-    macro GetLoggerMacros.unsafeCreateImpl[F[_]]
+  @nowarn("cat=unused")
+  private def getLogger[F[_]: Sync]: SelfAwareStructuredLogger[F] = ???
+  @nowarn("cat=unused")
+  private def create[F[_]: Sync]: F[SelfAwareStructuredLogger[F]] = ???
+
+  def getLogger[F[_]: Sync](implicit name: LoggerName): SelfAwareStructuredLogger[F] =
+    getLoggerFromName(name.value.stripSuffix("$"))
 
   def getLoggerFromName[F[_]: Sync](name: String): SelfAwareStructuredLogger[F] =
     getLoggerFromSlf4j(org.slf4j.LoggerFactory.getLogger(name))
@@ -35,8 +41,8 @@ object Slf4jLogger {
   def getLoggerFromSlf4j[F[_]: Sync](logger: JLogger): SelfAwareStructuredLogger[F] =
     new Slf4jLoggerInternal.Slf4jLogger(logger)
 
-  def create[F[_]: Sync]: F[SelfAwareStructuredLogger[F]] =
-    macro GetLoggerMacros.safeCreateImpl[F[_]]
+  def create[F[_]: Sync](implicit name: LoggerName): F[SelfAwareStructuredLogger[F]] =
+    Sync[F].delay(getLoggerFromName(name.value.stripSuffix("$")))
 
   def fromName[F[_]: Sync](name: String): F[SelfAwareStructuredLogger[F]] =
     Sync[F].delay(getLoggerFromName(name))
