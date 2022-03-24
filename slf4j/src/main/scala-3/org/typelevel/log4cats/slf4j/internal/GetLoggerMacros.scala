@@ -26,9 +26,23 @@ import scala.quoted.*
 
 private[slf4j] object GetLoggerMacros {
 
+  def getLoggerImpl[F[_]: Type](
+      F: Expr[Sync[F]]
+  )(using qctx: Quotes): Expr[SelfAwareStructuredLogger[F]] = {
+    val name = getLoggerNameImpl
+    '{ Slf4jLogger.getLoggerFromSlf4j(LoggerFactory.getLogger($name))($F) }
+  }
+
+  def createImpl[F[_]: Type](
+      F: Expr[Sync[F]]
+  )(using qctx: Quotes): Expr[F[SelfAwareStructuredLogger[F]]] = {
+    val logger = getLoggerImpl(F)
+    '{ $F.delay($logger) }
+  }
+
   def getLoggerName(using qctx: Quotes): Expr[LoggerName] = {
     val name = getLoggerNameImpl
-    '{new LoggerName($name)}
+    '{ new LoggerName($name) }
   }
 
   def getLoggerNameImpl(using qctx: Quotes): Expr[String] = {
@@ -67,7 +81,7 @@ private[slf4j] object GetLoggerMacros {
         }
       }
 
-      Expr(fullName(s))
+      Expr(fullName(s).stripSuffix("$"))
     }
 
     val cls = findEnclosingClass(Symbol.spliceOwner)
