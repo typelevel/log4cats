@@ -1,9 +1,7 @@
 package org.typelevel.log4cats.slf4j
 
-import internal.GetLoggerMacros
+import org.typelevel.log4cats.slf4j.internal.GetLoggerMacros
 
-object LoggerName {
+trait LoggerNamePlatform {
   implicit def name: LoggerName = macro GetLoggerMacros.getLoggerName
 }
-
-final case class LoggerName(value: String)

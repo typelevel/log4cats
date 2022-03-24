@@ -4,9 +4,7 @@ import org.typelevel.log4cats.slf4j.internal.GetLoggerMacros
 
 import scala.quoted.*
 
-object LoggerName {
+trait LoggerNamePlatform {
   implicit inline def name: LoggerName =
-    ${GetLoggerMacros.getLoggerName }
+    ${ GetLoggerMacros.getLoggerName }
 }
-
-final case class LoggerName(value: String)

@@ -1,36 +1,14 @@
-/*
- * Copyright 2018 Typelevel
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package org.typelevel.log4cats.slf4j
 
 import cats.effect.Sync
 import org.typelevel.log4cats.SelfAwareStructuredLogger
-import org.typelevel.log4cats.slf4j.internal.{_}
+import org.typelevel.log4cats.slf4j.internal.Slf4jLoggerInternal
 import org.slf4j.{Logger => JLogger}
-import scala.annotation.nowarn
 
-object Slf4jLogger {
-
-  @nowarn("cat=unused")
-  private def getLogger[F[_]: Sync]: SelfAwareStructuredLogger[F] = ???
-  @nowarn("cat=unused")
-  private def create[F[_]: Sync]: F[SelfAwareStructuredLogger[F]] = ???
+object Slf4jLogger extends Slf4jLoggerPlatform {
 
   def getLogger[F[_]: Sync](implicit name: LoggerName): SelfAwareStructuredLogger[F] =
-    getLoggerFromName(name.value.stripSuffix("$"))
+    getLoggerFromName(name.value)
 
   def getLoggerFromName[F[_]: Sync](name: String): SelfAwareStructuredLogger[F] =
     getLoggerFromSlf4j(org.slf4j.LoggerFactory.getLogger(name))
@@ -42,7 +20,7 @@ object Slf4jLogger {
     new Slf4jLoggerInternal.Slf4jLogger(logger)
 
   def create[F[_]: Sync](implicit name: LoggerName): F[SelfAwareStructuredLogger[F]] =
-    Sync[F].delay(getLoggerFromName(name.value.stripSuffix("$")))
+    Sync[F].delay(getLoggerFromName(name.value))
 
   def fromName[F[_]: Sync](name: String): F[SelfAwareStructuredLogger[F]] =
     Sync[F].delay(getLoggerFromName(name))
