@@ -18,7 +18,6 @@ package org.typelevel.log4cats
 package slf4j
 
 import cats.effect.Sync
-import org.typelevel.log4cats.SelfAwareStructuredLogger
 import org.typelevel.log4cats.slf4j.internal.Slf4jLoggerInternal
 import org.slf4j.{Logger => JLogger}
 
@@ -47,36 +46,4 @@ object Slf4jLogger extends Slf4jLoggerCompat {
 
   def fromSlf4j[F[_]: Sync](logger: JLogger): F[SelfAwareStructuredLogger[F]] =
     Sync[F].delay(getLoggerFromSlf4j[F](logger))
-
-  trait Factory[F[_]] extends LoggerFactoryGen[F, SelfAwareStructuredLogger[F]] {
-    def getLoggerFromSlf4j(logger: JLogger): SelfAwareStructuredLogger[F]
-    def fromSlf4j(logger: JLogger): F[SelfAwareStructuredLogger[F]]
-  }
-
-  object Factory extends LoggerFactoryCompanion {
-    def apply[F[_]: Factory] = implicitly[Factory[F]]
-
-    implicit def forSync[F[_]: Sync]: Factory[F] = new Factory[F] {
-      override def getLoggerFromName(name: String): SelfAwareStructuredLogger[F] =
-        Slf4jLogger.getLoggerFromName(name)
-      override def getLoggerFromSlf4j(logger: JLogger): SelfAwareStructuredLogger[F] =
-        Slf4jLogger.getLoggerFromSlf4j(logger)
-
-      override def fromName(name: String): F[SelfAwareStructuredLogger[F]] =
-        Slf4jLogger.fromName(name)
-
-      override def fromSlf4j(logger: JLogger): F[SelfAwareStructuredLogger[F]] =
-        Slf4jLogger.fromSlf4j(logger)
-    }
-
-    def getLoggerFromSlf4j[F[_]](logger: JLogger)(implicit
-        lf: Factory[F]
-    ): SelfAwareStructuredLogger[F] =
-      lf.getLoggerFromSlf4j(logger)
-
-    def fromSlf4j[F[_]](logger: JLogger)(implicit
-        lf: Factory[F]
-    ): F[SelfAwareStructuredLogger[F]] =
-      lf.fromSlf4j(logger)
-  }
 }
