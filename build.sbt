@@ -47,7 +47,11 @@ lazy val core = crossProject(JSPlatform, JVMPlatform)
     name := "log4cats-core",
     libraryDependencies ++= Seq(
       "org.typelevel" %%% "cats-core" % catsV
-    )
+    ),
+    libraryDependencies ++= {
+      if (tlIsScala3.value) Seq.empty
+      else Seq("org.scala-lang" % "scala-reflect" % scalaVersion.value % Provided)
+    }
   )
 
 lazy val testing = crossProject(JSPlatform, JVMPlatform)

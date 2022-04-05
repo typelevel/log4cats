@@ -18,8 +18,9 @@ package org.typelevel.log4cats.slf4j.internal
 
 import cats.effect.Sync
 import org.slf4j.LoggerFactory
-import org.typelevel.log4cats.slf4j.{LoggerName, Slf4jLogger}
+import org.typelevel.log4cats.slf4j.Slf4jLogger
 import org.typelevel.log4cats.SelfAwareStructuredLogger
+import org.typelevel.log4cats.internal.LoggerNameMacro
 
 import scala.annotation.tailrec
 import scala.quoted.*
@@ -29,7 +30,7 @@ private[slf4j] object GetLoggerMacros {
   def getLoggerImpl[F[_]: Type](
       F: Expr[Sync[F]]
   )(using qctx: Quotes): Expr[SelfAwareStructuredLogger[F]] = {
-    val name = getLoggerNameImpl
+    val name = LoggerNameMacro.getLoggerNameImpl
     '{ Slf4jLogger.getLoggerFromSlf4j(LoggerFactory.getLogger($name))($F) }
   }
 
@@ -38,53 +39,5 @@ private[slf4j] object GetLoggerMacros {
   )(using qctx: Quotes): Expr[F[SelfAwareStructuredLogger[F]]] = {
     val logger = getLoggerImpl(F)
     '{ $F.delay($logger) }
-  }
-
-  def getLoggerName(using qctx: Quotes): Expr[LoggerName] = {
-    val name = getLoggerNameImpl
-    '{ new LoggerName($name) }
-  }
-
-  def getLoggerNameImpl(using qctx: Quotes): Expr[String] = {
-    import qctx.reflect._
-
-    @tailrec def findEnclosingClass(sym: Symbol): Symbol = {
-      sym match {
-        case s if s.isNoSymbol =>
-          report.throwError("Couldn't find an enclosing class or module for the logger")
-        case s if s.isClassDef =>
-          s
-        case other =>
-          /* We're not in a module or a class, so we're probably inside a member definition. Recurse upward. */
-          findEnclosingClass(other.owner)
-      }
-    }
-
-    def symbolName(s: Symbol): Expr[String] = {
-      def fullName(s: Symbol): String = {
-        val flags = s.flags
-        if (flags.is(Flags.Package)) {
-          s.fullName
-        } else if (s.isClassDef) {
-          if (flags.is(Flags.Module)) {
-            if (s.name == "package$") {
-              fullName(s.owner)
-            } else {
-              val chomped = s.name.stripSuffix("$")
-              fullName(s.owner) + "." + chomped
-            }
-          } else {
-            fullName(s.owner) + "." + s.name
-          }
-        } else {
-          fullName(s.owner)
-        }
-      }
-
-      Expr(fullName(s).stripSuffix("$"))
-    }
-
-    val cls = findEnclosingClass(Symbol.spliceOwner)
-    symbolName(cls)
   }
 }
