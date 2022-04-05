@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
-package org.typelevel.log4cats.slf4j
+package org.typelevel.log4cats
+package slf4j
 
 import cats.effect.Sync
-import org.typelevel.log4cats.{LoggerFactory, LoggerFactoryCompanion, SelfAwareStructuredLogger}
 import org.slf4j.{Logger => JLogger}
 
 trait Slf4jFactory[F[_]] extends LoggerFactory[F] {
@@ -26,7 +26,7 @@ trait Slf4jFactory[F[_]] extends LoggerFactory[F] {
   def fromSlf4j(logger: JLogger): F[SelfAwareStructuredLogger[F]]
 }
 
-object Slf4jFactory extends LoggerFactoryCompanion {
+object Slf4jFactory {
   def apply[F[_]: Slf4jFactory]: Slf4jFactory[F] = implicitly
 
   implicit def forSync[F[_]: Sync]: Slf4jFactory[F] = new Slf4jFactory[F] {
@@ -51,4 +51,31 @@ object Slf4jFactory extends LoggerFactoryCompanion {
       lf: Slf4jFactory[F]
   ): F[SelfAwareStructuredLogger[F]] =
     lf.fromSlf4j(logger)
+
+  def getLogger[F[_]](implicit
+      lf: Slf4jFactory[F],
+      name: LoggerName
+  ): SelfAwareStructuredLogger[F] =
+    lf.getLogger
+  def getLoggerFromName[F[_]](name: String)(implicit
+      lf: Slf4jFactory[F]
+  ): SelfAwareStructuredLogger[F] =
+    lf.getLoggerFromName(name)
+
+  def getLoggerFromClass[F[_]](clazz: Class[_])(implicit
+      lf: Slf4jFactory[F]
+  ): SelfAwareStructuredLogger[F] =
+    lf.getLoggerFromClass(clazz)
+
+  def create[F[_]](implicit
+      lf: Slf4jFactory[F],
+      name: LoggerName
+  ): F[SelfAwareStructuredLogger[F]] =
+    lf.create
+  def fromName[F[_]](name: String)(implicit lf: Slf4jFactory[F]): F[SelfAwareStructuredLogger[F]] =
+    lf.fromName(name)
+  def fromClass[F[_]](clazz: Class[_])(implicit
+      lf: Slf4jFactory[F]
+  ): F[SelfAwareStructuredLogger[F]] =
+    lf.fromClass(clazz)
 }
