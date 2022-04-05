@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.typelevel.log4cats.slf4j
+package org.typelevel.log4cats
 
 import munit.FunSuite
 
@@ -31,7 +31,7 @@ class LoggerNameTest extends FunSuite {
     val name1 = new FooA().name
     val name2 = FooB.name
 
-    assertEquals(name1.value, "org.typelevel.log4cats.slf4j.LoggerNameTests.FooA")
-    assertEquals(name2.value, "org.typelevel.log4cats.slf4j.LoggerNameTests.FooB")
+    assertEquals(name1.value, "org.typelevel.log4cats.LoggerNameTest.FooA")
+    assertEquals(name2.value, "org.typelevel.log4cats.LoggerNameTest.FooB")
   }
 }

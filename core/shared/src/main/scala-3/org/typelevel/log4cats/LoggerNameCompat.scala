@@ -14,17 +14,13 @@
  * limitations under the License.
  */
 
-package org.typelevel.log4cats.slf4j
+package org.typelevel.log4cats
 
-import cats.effect.Sync
-import org.typelevel.log4cats.SelfAwareStructuredLogger
-import org.typelevel.log4cats.slf4j.internal._
+import org.typelevel.log4cats.internal.LoggerNameMacro
 
-trait Slf4jLoggerPlatform {
+import scala.quoted.*
 
-  private[slf4j] def getLogger[F[_]](implicit f: Sync[F]): SelfAwareStructuredLogger[F] =
-    macro GetLoggerMacros.unsafeCreateImpl[F[_]]
-
-  private[slf4j] def create[F[_]](implicit f: Sync[F]): F[SelfAwareStructuredLogger[F]] =
-    macro GetLoggerMacros.safeCreateImpl[F[_]]
+trait LoggerNameCompat {
+  implicit inline def name: LoggerName =
+    ${ LoggerNameMacro.getLoggerName }
 }

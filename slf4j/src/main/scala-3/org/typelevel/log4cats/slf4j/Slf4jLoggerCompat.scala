@@ -16,6 +16,18 @@
 
 package org.typelevel.log4cats.slf4j
 
-object LoggerName extends LoggerNamePlatform
+import cats.effect.Sync
+import org.typelevel.log4cats.SelfAwareStructuredLogger
+import org.typelevel.log4cats.slf4j.internal._
+import org.slf4j.Logger as JLogger
+import scala.annotation.nowarn
 
-final case class LoggerName(value: String)
+trait Slf4jLoggerCompat {
+
+  // for binary compability
+  private[slf4j] inline def create[F[_]](F: Sync[F]): F[SelfAwareStructuredLogger[F]] =
+    ${ GetLoggerMacros.createImpl('F) }
+  private[slf4j] inline def getLogger[F[_]](using F: Sync[F]): SelfAwareStructuredLogger[F] =
+    ${ GetLoggerMacros.getLoggerImpl('F) }
+
+}

@@ -19,15 +19,12 @@ package org.typelevel.log4cats.slf4j
 import cats.effect.Sync
 import org.typelevel.log4cats.SelfAwareStructuredLogger
 import org.typelevel.log4cats.slf4j.internal._
-import org.slf4j.Logger as JLogger
-import scala.annotation.nowarn
 
-trait Slf4jLoggerPlatform {
+trait Slf4jLoggerCompat {
 
-  // for binary compability
-  private[slf4j] inline def create[F[_]](F: Sync[F]): F[SelfAwareStructuredLogger[F]] =
-    ${ GetLoggerMacros.createImpl('F) }
-  private[slf4j] inline def getLogger[F[_]](using F: Sync[F]): SelfAwareStructuredLogger[F] =
-    ${ GetLoggerMacros.getLoggerImpl('F) }
+  private[slf4j] def getLogger[F[_]](implicit f: Sync[F]): SelfAwareStructuredLogger[F] =
+    macro GetLoggerMacros.unsafeCreateImpl[F[_]]
 
+  private[slf4j] def create[F[_]](implicit f: Sync[F]): F[SelfAwareStructuredLogger[F]] =
+    macro GetLoggerMacros.safeCreateImpl[F[_]]
 }
