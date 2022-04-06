@@ -18,13 +18,14 @@ package org.typelevel.log4cats
 
 import scala.annotation.implicitNotFound
 
-@implicitNotFound("""|
-                     |Implicit not found for LoggerFactory[${F}].
-                     |
-                     |Information can be found here: https://log4cats.github.io/logging-capability.html
-                     |""")
+@implicitNotFound("""
+Implicit not found for LoggerFactory[${F}].
+Information can be found here: https://log4cats.github.io/logging-capability.html
+""")
 trait LoggerFactory[F[_]] extends LoggerFactoryGen[F, SelfAwareStructuredLogger[F]]
-object LoggerFactory extends LoggerFactoryCompanion
+object LoggerFactory extends LoggerFactoryCompanion {
+  def apply[F[_]: LoggerFactory]: LoggerFactory[F] = implicitly
+}
 
 private[log4cats] trait LoggerFactoryCompanion {
   def getLogger[F[_]](implicit
