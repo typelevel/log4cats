@@ -25,7 +25,7 @@ trait Slf4jFactory[F[_]] extends LoggerFactory[F] {
   def fromSlf4j(logger: JLogger): F[SelfAwareStructuredLogger[F]]
 }
 
-object Slf4jFactory extends LoggerFactoryCompanion {
+object Slf4jFactory extends LoggerFactoryGenCompanion {
   def apply[F[_]: Slf4jFactory]: Slf4jFactory[F] = implicitly
 
   def getLoggerFromSlf4j[F[_]](logger: JLogger)(implicit
