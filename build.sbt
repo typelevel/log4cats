@@ -1,3 +1,5 @@
+import com.typesafe.tools.mima.core._
+
 val Scala213 = "2.13.8"
 val Scala212 = "2.12.15"
 val Scala3 = "3.0.2"
@@ -45,7 +47,11 @@ lazy val core = crossProject(JSPlatform, JVMPlatform)
     name := "log4cats-core",
     libraryDependencies ++= Seq(
       "org.typelevel" %%% "cats-core" % catsV
-    )
+    ),
+    libraryDependencies ++= {
+      if (tlIsScala3.value) Seq.empty
+      else Seq("org.scala-lang" % "scala-reflect" % scalaVersion.value % Provided)
+    }
   )
 
 lazy val testing = crossProject(JSPlatform, JVMPlatform)
