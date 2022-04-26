@@ -79,6 +79,54 @@ def log[F[_]: Sync: Logger] =
   } yield ()
 ```
 
+## Logging using capabilities
+
+You can work with logging using capabilities. It's implemented via the `LoggerFactory` trait.
+You instantiate it once in your application (dependent on the specific logging backend you use)
+and pass this around in your application.
+
+This brings several advantages:
+
+* it's no more need to pass everywhere the very powerful `F[_]: Sync` constraint
+  that can do almost anything when you only need logging.
+* you have control of loggers creation, and you can even add in whatever custom
+  functionality you need for your applications here. E.g. create loggers that also push logs
+  to some external providers by giving a custom implementation of this trait.
+
+If you are unsure how to create a `LoggerFactory[F]`, then you can to look at the `log4cats-slf4j`,
+or `log4cats-noop` modules for concrete implementations.
+
+The quickest fix might be to import needed implicits:
+```scala
+// assumes dependency on log4cats-slf4j module
+import org.typelevel.log4cats._
+import org.typelevel.log4cats.slf4j._
+
+val logger: SelfAwareStructuredLogger[IO] = LoggerFactory[IO].getLogger
+
+// or
+def anyFSyncLogger[F[_]: Sync]: SelfAwareStructuredLogger[F] = Slf4jFactory[F].getLogger
+```
+
+Alternatively, a mutually exclusive solution is to explicitly create your
+`LoggerFactory[F]` instance and pass them around implicitly:
+```scala
+import cats.effect.IO
+import org.typelevel.log4cats._
+import org.typelevel.log4cats.slf4j.Slf4jFactory
+
+// create our LoggerFactory
+implicit val logging: LoggerFactory[IO] = Slf4jFactory[IO]
+
+// we summon LoggerFactory instance, and create logger
+val logger: SelfAwareStructuredLogger[IO] = LoggerFactory[IO].getLogger
+logger.info("logging in IO!"): IO[Unit]
+
+def useLogging[F[_]: LoggerFactory] = 
+  LoggerFactory[F].getLogger.info("yay! effect polymorphic code")
+useLogging[IO]
+```
+
 ## CVE-2021-44228 ("log4shell")
 
 log4cats is not directly susceptible to CVS-2021-44228.  The
