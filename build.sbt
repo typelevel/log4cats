@@ -73,7 +73,7 @@ lazy val noop = crossProject(JSPlatform, JVMPlatform)
 
 lazy val slf4j = project
   .settings(commonSettings)
-  .dependsOn(core.js)
+  .dependsOn(core.jvm)
   .settings(
     name := "log4cats-slf4j",
     libraryDependencies ++= Seq(
