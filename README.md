@@ -82,18 +82,18 @@ def log[F[_]: Sync: Logger] =
 ## Logging using capabilities
 
 You can work with logging using capabilities. It's implemented via the `LoggerFactory` trait.
-You instantiate it once in your application (dependent on the specific logging backend you use)
+You instantiate it once (dependent on the specific logging backend you use)
 and pass this around in your application.
 
 This brings several advantages:
 
-* it's no more need to pass everywhere the very powerful `F[_]: Sync` constraint
+* it's no more needed to pass the very powerful `F[_]: Sync` constraint everywhere 
   that can do almost anything when you only need logging.
 * you have control of loggers creation, and you can even add in whatever custom
   functionality you need for your applications here. E.g. create loggers that also push logs
   to some external providers by giving a custom implementation of this trait.
 
-If you are unsure how to create a `LoggerFactory[F]`, then you can to look at the `log4cats-slf4j`,
+If you are unsure how to create a new `LoggerFactory[F]` instance, then you can look at the `log4cats-slf4j`,
 or `log4cats-noop` modules for concrete implementations.
 
 The quickest fix might be to import needed implicits:
