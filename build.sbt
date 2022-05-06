@@ -4,7 +4,7 @@ val Scala213 = "2.13.8"
 val Scala212 = "2.12.15"
 val Scala3 = "3.0.2"
 
-ThisBuild / tlBaseVersion := "2.2"
+ThisBuild / tlBaseVersion := "2.3"
 ThisBuild / crossScalaVersions := Seq(Scala213, Scala212, Scala3)
 ThisBuild / scalaVersion := Scala213
 ThisBuild / startYear := Some(2018)
@@ -74,7 +74,7 @@ lazy val noop = crossProject(JSPlatform, JVMPlatform)
 
 lazy val slf4j = project
   .settings(commonSettings)
-  .dependsOn(core.js)
+  .dependsOn(core.jvm)
   .settings(
     name := "log4cats-slf4j",
     libraryDependencies ++= Seq(
