@@ -112,6 +112,8 @@ Alternatively, a mutually exclusive solution is to explicitly create your
 `LoggerFactory[F]` instance and pass them around implicitly:
 ```scala
 import cats.effect.IO
+import cats.Monad
+import cats.syntax.all._
 import org.typelevel.log4cats._
 import org.typelevel.log4cats.slf4j.Slf4jFactory
 
@@ -122,9 +124,16 @@ implicit val logging: LoggerFactory[IO] = Slf4jFactory[IO]
 val logger: SelfAwareStructuredLogger[IO] = LoggerFactory[IO].getLogger
 logger.info("logging in IO!"): IO[Unit]
 
-def useLogging[F[_]: LoggerFactory] = 
-  LoggerFactory[F].getLogger.info("yay! effect polymorphic code")
-useLogging[IO]
+// basic example of a service using LoggerFactory
+class LoggerUsingService[F[_]: LoggerFactory: Monad] {
+  val logger = LoggerFactory[F].getLogger
+  def use(args: String): F[Unit] =
+    for {
+      _ <- logger.info("yay! effect polymorphic code")
+      _ <- logger.debug(s"and $args")
+    } yield ()
+}
+new LoggerUsingService[IO].use("foo")
 ```
 
 ## CVE-2021-44228 ("log4shell")
