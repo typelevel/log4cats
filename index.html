@@ -71,6 +71,7 @@
           <li class="level1"><a href="#quick-start">Quick Start</a></li>
           <li class="level1"><a href="#examples">Examples</a></li>
           <li class="level2"><a href="#laconic-syntax">Laconic syntax</a></li>
+          <li class="level1"><a href="#logging-using-capabilities">Logging using capabilities</a></li>
           <li class="level1"><a href="#cve-2021-44228-log4shell">CVE-2021-44228 (&quot;log4shell&quot;)</a></li>
         </ul>
         
@@ -91,8 +92,8 @@
         <p>To use log4cats in an existing SBT project with Scala 2.12 or a later version, add the following dependency to your
         <code>build.sbt</code>:</p>
         <pre class="keep-together pdf epub"><code class="nohighlight"><span class="identifier">libraryDependencies</span><span> ++= </span><span class="type-name">Seq</span><span>(
-  </span><span class="string-literal">&quot;org.typelevel&quot;</span><span> %% </span><span class="string-literal">&quot;log4cats-core&quot;</span><span>    % </span><span class="string-literal">&quot;2.3.0&quot;</span><span>,  </span><span class="comment">// Only if you want to Support Any Backend
-</span><span>  </span><span class="string-literal">&quot;org.typelevel&quot;</span><span> %% </span><span class="string-literal">&quot;log4cats-slf4j&quot;</span><span>   % </span><span class="string-literal">&quot;2.3.0&quot;</span><span>,  </span><span class="comment">// Direct Slf4j Support - Recommended
+  </span><span class="string-literal">&quot;org.typelevel&quot;</span><span> %% </span><span class="string-literal">&quot;log4cats-core&quot;</span><span>    % </span><span class="string-literal">&quot;2.3.1&quot;</span><span>,  </span><span class="comment">// Only if you want to Support Any Backend
+</span><span>  </span><span class="string-literal">&quot;org.typelevel&quot;</span><span> %% </span><span class="string-literal">&quot;log4cats-slf4j&quot;</span><span>   % </span><span class="string-literal">&quot;2.3.1&quot;</span><span>,  </span><span class="comment">// Direct Slf4j Support - Recommended
 </span><span>)</span></code></pre>
         
         <h2 id="examples" class="section">Examples<a class="anchor-link right" href="#examples"><i class="icofont-laika">&#xef71;</i></a></h2>
@@ -150,6 +151,55 @@
       </span><span class="keyword">case</span><span> </span><span class="identifier">_</span><span> =&gt; </span><span class="string-literal">error&quot;We got an error!&quot;</span><span>
     }
   } </span><span class="keyword">yield</span><span> ()</span></code></pre>
+        
+        <h2 id="logging-using-capabilities" class="section">Logging using capabilities<a class="anchor-link right" href="#logging-using-capabilities"><i class="icofont-laika">&#xef71;</i></a></h2>
+        <p>You can work with logging using capabilities. It&#39;s implemented via the <code>LoggerFactory</code> trait. 
+        You instantiate it once (dependent on the specific logging backend you use) 
+        and pass this around in your application.</p>
+        <p>This brings several advantages:</p>
+        <ul>
+          <li>it&#39;s no more needed to pass the very powerful <code>F[_]: Sync</code> constraint everywhere 
+          that can do almost anything when you only need logging.</li>
+          <li>you have control of loggers creation, and you can even add in whatever custom 
+          functionality you need for your applications here. E.g. create loggers that also push logs 
+          to some external providers by giving a custom implementation of this trait.</li>
+        </ul>
+        <p>If you are unsure how to create a new <code>LoggerFactory[F]</code> instance, then you can look at the <code>log4cats-slf4j</code>,
+        or <code>log4cats-noop</code> modules for concrete implementations.</p>
+        <p>The quickest fix might be to import needed implicits:</p>
+        <pre class="keep-together pdf epub"><code class="nohighlight"><span class="comment">// assumes dependency on log4cats-slf4j module
+</span><span class="keyword">import</span><span> </span><span class="identifier">org</span><span>.</span><span class="identifier">typelevel</span><span>.</span><span class="identifier">log4cats</span><span>.</span><span class="identifier">_</span><span>
+</span><span class="keyword">import</span><span> </span><span class="identifier">org</span><span>.</span><span class="identifier">typelevel</span><span>.</span><span class="identifier">log4cats</span><span>.</span><span class="identifier">slf4j</span><span>.</span><span class="identifier">_</span><span>
+
+</span><span class="keyword">val</span><span> </span><span class="identifier">logger</span><span>: </span><span class="type-name">SelfAwareStructuredLogger</span><span>[</span><span class="type-name">IO</span><span>] = </span><span class="type-name">LoggerFactory</span><span>[</span><span class="type-name">IO</span><span>].</span><span class="identifier">getLogger</span><span>
+
+</span><span class="comment">// or
+</span><span class="keyword">def</span><span> </span><span class="declaration-name">anyFSyncLogger</span><span>[</span><span class="type-name">F</span><span>[</span><span class="identifier">_</span><span>]: </span><span class="type-name">Sync</span><span>]: </span><span class="type-name">SelfAwareStructuredLogger</span><span>[</span><span class="type-name">F</span><span>] = </span><span class="type-name">Slf4jFactory</span><span>[</span><span class="type-name">F</span><span>].</span><span class="identifier">getLogger</span></code></pre>
+        <p>Alternatively, a mutually exclusive solution is to explicitly create your 
+        <code>LoggerFactory[F]</code> instance and pass them around implicitly:</p>
+        <pre><code class="nohighlight"><span class="keyword">import</span><span> </span><span class="identifier">cats</span><span>.</span><span class="identifier">effect</span><span>.</span><span class="type-name">IO</span><span>
+</span><span class="keyword">import</span><span> </span><span class="identifier">cats</span><span>.</span><span class="type-name">Monad</span><span>
+</span><span class="keyword">import</span><span> </span><span class="identifier">cats</span><span>.</span><span class="identifier">syntax</span><span>.</span><span class="identifier">all</span><span>.</span><span class="identifier">_</span><span>
+</span><span class="keyword">import</span><span> </span><span class="identifier">org</span><span>.</span><span class="identifier">typelevel</span><span>.</span><span class="identifier">log4cats</span><span>.</span><span class="identifier">_</span><span>
+</span><span class="keyword">import</span><span> </span><span class="identifier">org</span><span>.</span><span class="identifier">typelevel</span><span>.</span><span class="identifier">log4cats</span><span>.</span><span class="identifier">slf4j</span><span>.</span><span class="type-name">Slf4jFactory</span><span>
+
+</span><span class="comment">// create our LoggerFactory
+</span><span class="keyword">implicit</span><span> </span><span class="keyword">val</span><span> </span><span class="identifier">logging</span><span>: </span><span class="type-name">LoggerFactory</span><span>[</span><span class="type-name">IO</span><span>] = </span><span class="type-name">Slf4jFactory</span><span>[</span><span class="type-name">IO</span><span>]
+
+</span><span class="comment">// we summon LoggerFactory instance, and create logger
+</span><span class="keyword">val</span><span> </span><span class="identifier">logger</span><span>: </span><span class="type-name">SelfAwareStructuredLogger</span><span>[</span><span class="type-name">IO</span><span>] = </span><span class="type-name">LoggerFactory</span><span>[</span><span class="type-name">IO</span><span>].</span><span class="identifier">getLogger</span><span>
+</span><span class="identifier">logger</span><span>.</span><span class="identifier">info</span><span>(</span><span class="string-literal">&quot;logging in IO!&quot;</span><span>): </span><span class="type-name">IO</span><span>[</span><span class="type-name">Unit</span><span>]
+
+</span><span class="comment">// basic example of a service using LoggerFactory
+</span><span class="keyword">class</span><span> </span><span class="type-name">LoggerUsingService</span><span>[</span><span class="type-name">F</span><span>[</span><span class="identifier">_</span><span>]: </span><span class="type-name">LoggerFactory</span><span>: </span><span class="type-name">Monad</span><span>] {
+  </span><span class="keyword">val</span><span> </span><span class="identifier">logger</span><span> = </span><span class="type-name">LoggerFactory</span><span>[</span><span class="type-name">F</span><span>].</span><span class="identifier">getLogger</span><span>
+  </span><span class="keyword">def</span><span> </span><span class="declaration-name">use</span><span>(</span><span class="identifier">args</span><span>: </span><span class="type-name">String</span><span>): </span><span class="type-name">F</span><span>[</span><span class="type-name">Unit</span><span>] = 
+    </span><span class="keyword">for</span><span> {
+      </span><span class="identifier">_</span><span> &lt;- </span><span class="identifier">logger</span><span>.</span><span class="identifier">info</span><span>(</span><span class="string-literal">&quot;yay! effect polymorphic code&quot;</span><span>)
+      </span><span class="identifier">_</span><span> &lt;- </span><span class="identifier">logger</span><span>.</span><span class="identifier">debug</span><span>(</span><span class="string-literal">s&quot;and </span><span class="substitution">$args</span><span class="string-literal">&quot;</span><span>)
+    } </span><span class="keyword">yield</span><span> ()
+}
+</span><span class="keyword">new</span><span> </span><span class="type-name">LoggerUsingService</span><span>[</span><span class="type-name">IO</span><span>].</span><span class="identifier">use</span><span>(</span><span class="string-literal">&quot;foo&quot;</span><span>)</span></code></pre>
         
         <h2 id="cve-2021-44228-log4shell" class="section">CVE-2021-44228 (&quot;log4shell&quot;)<a class="anchor-link right" href="#cve-2021-44228-log4shell"><i class="icofont-laika">&#xef71;</i></a></h2>
         <p>log4cats is not directly susceptible to CVS-2021-44228.  The
