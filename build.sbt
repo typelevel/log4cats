@@ -55,7 +55,7 @@ lazy val core = crossProject(JSPlatform, JVMPlatform)
   )
   .jsSettings(
     // https://www.scala-js.org/news/2022/04/04/announcing-scalajs-1.10.0#fixes-with-compatibility-concerns
-    libraryDependencies += "org.scala-js" %%% "scalajs-java-securerandom" % "1.0.0"
+    libraryDependencies += ("org.scala-js" %%% "scalajs-java-securerandom" % "1.0.0").cross(CrossVersion.for3Use2_13)
   )
 
 lazy val testing = crossProject(JSPlatform, JVMPlatform)
