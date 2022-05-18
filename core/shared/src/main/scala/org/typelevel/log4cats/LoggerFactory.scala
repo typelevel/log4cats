@@ -16,6 +16,10 @@
 
 package org.typelevel.log4cats
 
+import cats.Functor
+import cats.syntax.functor._
+import cats.~>
+
 import scala.annotation.implicitNotFound
 
 @implicitNotFound("""
@@ -28,4 +32,18 @@ trait LoggerFactory[F[_]] extends LoggerFactoryGen[F] {
 
 object LoggerFactory extends LoggerFactoryGenCompanion {
   def apply[F[_]: LoggerFactory]: LoggerFactory[F] = implicitly
+
+  def mapK[F[_]: Functor, G[_]](fk: F ~> G)(lfg: LoggerFactory[F]): LoggerFactory[G] =
+    new LoggerFactory[G] {
+
+      def getLoggerFromName(name: String): LoggerType = lfg
+        .getLoggerFromName(name)
+        .mapK(fk)
+
+      def fromName(name: String): G[LoggerType] = {
+        val loggerG = lfg.fromName(name).map(_.mapK(fk))
+        fk(loggerG)
+      }
+
+    }
 }
