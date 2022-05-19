@@ -28,12 +28,15 @@ Learn about LoggerFactory at https://typelevel.org/log4cats/#logging-using-capab
 """)
 trait LoggerFactory[F[_]] extends LoggerFactoryGen[F] {
   type LoggerType = SelfAwareStructuredLogger[F]
+
+  def mapK[G[_]](fk: F ~> G)(implicit F: Functor[F]): LoggerFactory[G] =
+    LoggerFactory.mapK[F, G](fk)(this)
 }
 
 object LoggerFactory extends LoggerFactoryGenCompanion {
   def apply[F[_]: LoggerFactory]: LoggerFactory[F] = implicitly
 
-  def mapK[F[_]: Functor, G[_]](fk: F ~> G)(lf: LoggerFactory[F]): LoggerFactory[G] =
+  private def mapK[F[_]: Functor, G[_]](fk: F ~> G)(lf: LoggerFactory[F]): LoggerFactory[G] =
     new LoggerFactory[G] {
 
       def getLoggerFromName(name: String): LoggerType = lf
