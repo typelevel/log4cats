@@ -33,17 +33,16 @@ trait LoggerFactory[F[_]] extends LoggerFactoryGen[F] {
 object LoggerFactory extends LoggerFactoryGenCompanion {
   def apply[F[_]: LoggerFactory]: LoggerFactory[F] = implicitly
 
-  def mapK[F[_]: Functor, G[_]](fk: F ~> G)(lfg: LoggerFactory[F]): LoggerFactory[G] =
+  def mapK[F[_]: Functor, G[_]](fk: F ~> G)(lf: LoggerFactory[F]): LoggerFactory[G] =
     new LoggerFactory[G] {
 
-      def getLoggerFromName(name: String): LoggerType = lfg
+      def getLoggerFromName(name: String): LoggerType = lf
         .getLoggerFromName(name)
         .mapK(fk)
 
       def fromName(name: String): G[LoggerType] = {
-        val loggerG = lfg.fromName(name).map(_.mapK(fk))
-        fk(loggerG)
+        val logger = lf.fromName(name).map(_.mapK(fk))
+        fk(logger)
       }
-
     }
 }
