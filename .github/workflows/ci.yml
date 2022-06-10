@@ -28,11 +28,11 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest]
-        scala: [2.13.8, 2.12.15, 3.0.2]
+        scala: [2.13.8, 2.12.16, 3.0.2]
         java: [temurin@8, temurin@11]
         project: [rootJS, rootJVM]
         exclude:
-          - scala: 2.12.15
+          - scala: 2.12.16
             java: temurin@11
           - scala: 3.0.2
             java: temurin@11
