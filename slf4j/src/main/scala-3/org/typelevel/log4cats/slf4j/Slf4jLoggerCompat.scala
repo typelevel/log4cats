@@ -25,9 +25,10 @@ import scala.annotation.nowarn
 trait Slf4jLoggerCompat {
 
   // for binary compability
-  private[slf4j] inline def create[F[_]](F: Sync[F]): F[SelfAwareStructuredLogger[F]] =
+  private[slf4j] inline def createMacro[F[_]](F: Sync[F]): F[SelfAwareStructuredLogger[F]] =
     ${ GetLoggerMacros.createImpl('F) }
-  private[slf4j] inline def getLogger[F[_]](using F: Sync[F]): SelfAwareStructuredLogger[F] =
+
+  private[slf4j] inline def getLoggerMacro[F[_]](using F: Sync[F]): SelfAwareStructuredLogger[F] =
     ${ GetLoggerMacros.getLoggerImpl('F) }
 
 }
