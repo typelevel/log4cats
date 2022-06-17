@@ -14,21 +14,21 @@
  * limitations under the License.
  */
 
-package org.typelevel.log4cats.slf4j
+package org.typelevel.log4cats
+package slf4j
 
 import cats.effect.Sync
-import org.typelevel.log4cats.SelfAwareStructuredLogger
-import org.typelevel.log4cats.slf4j.internal._
+import org.typelevel.log4cats.slf4j.internal.Slf4jLoggerInternal
 import org.slf4j.{Logger => JLogger}
 
-object Slf4jLogger {
+object Slf4jLogger extends Slf4jLoggerCompat {
 
-  inline def getLogger[F[_]](implicit F: Sync[F]): SelfAwareStructuredLogger[F] =
-    ${ GetLoggerMacros.getLoggerImpl('F) }
+  def getLogger[F[_]](implicit f: Sync[F], name: LoggerName): SelfAwareStructuredLogger[F] =
+    getLoggerFromName(name.value)
 
   @deprecated("0.3.0", "Use getLogger instead")
-  inline def unsafeCreate[F[_]](implicit F: Sync[F]): SelfAwareStructuredLogger[F] =
-    ${ GetLoggerMacros.getLoggerImpl('F) }
+  def unsafeCreate[F[_]: Sync](implicit name: LoggerName): SelfAwareStructuredLogger[F] =
+    getLogger[F]
 
   def getLoggerFromName[F[_]: Sync](name: String): SelfAwareStructuredLogger[F] =
     getLoggerFromSlf4j(org.slf4j.LoggerFactory.getLogger(name))
@@ -51,8 +51,8 @@ object Slf4jLogger {
   def unsafeFromSlf4j[F[_]: Sync](logger: JLogger): SelfAwareStructuredLogger[F] =
     getLoggerFromSlf4j[F](logger)
 
-  inline def create[F[_]](implicit F: Sync[F]): F[SelfAwareStructuredLogger[F]] =
-    ${ GetLoggerMacros.createImpl('F) }
+  def create[F[_]: Sync](implicit name: LoggerName): F[SelfAwareStructuredLogger[F]] =
+    Sync[F].delay(getLoggerFromName(name.value))
 
   def fromName[F[_]: Sync](name: String): F[SelfAwareStructuredLogger[F]] =
     Sync[F].delay(getLoggerFromName(name))
@@ -62,5 +62,4 @@ object Slf4jLogger {
 
   def fromSlf4j[F[_]: Sync](logger: JLogger): F[SelfAwareStructuredLogger[F]] =
     Sync[F].delay(getLoggerFromSlf4j[F](logger))
-
 }
