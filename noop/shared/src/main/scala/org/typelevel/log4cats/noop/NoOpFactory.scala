@@ -19,28 +19,16 @@ package noop
 
 import cats.Applicative
 
-final class NoOpFactory[F[_]](implicit F: Applicative[F]) extends LoggerFactory[F] {
-  def getLoggerFromF: SelfAwareStructuredLogger[F] = NoOpLogger.impl[F]
-
-  def fromF: F[SelfAwareStructuredLogger[F]] = F.pure(getLoggerFromF)
-
-  override def getLoggerFromName(name: String): SelfAwareStructuredLogger[F] = {
-    val _ = name
-    getLoggerFromF
-  }
-
-  override def fromName(name: String): F[SelfAwareStructuredLogger[F]] = {
-    val _ = name
-    fromF
-  }
-}
-
 object NoOpFactory extends LoggerFactoryGenCompanion {
-  def apply[F[_]: NoOpFactory]: NoOpFactory[F] = implicitly
+  def apply[F[_]: Applicative]: LoggerFactory[F] = instanceFor[F]
 
-  def getLoggerFromF[F[_]](implicit lf: NoOpFactory[F]): SelfAwareStructuredLogger[F] =
-    lf.getLoggerFromF
+  def instanceFor[F[_]](implicit F: Applicative[F]): LoggerFactory[F] = new LoggerFactory[F] {
+    override def getLoggerFromName(name: String): SelfAwareStructuredLogger[F] = {
+      val _ = name
+      NoOpLogger.impl[F]
+    }
 
-  def fromF[F[_]](implicit lf: NoOpFactory[F]): F[SelfAwareStructuredLogger[F]] =
-    lf.fromF
+    override def fromName(name: String): F[SelfAwareStructuredLogger[F]] =
+      F.pure(getLoggerFromName(name))
+  }
 }
