@@ -19,18 +19,20 @@ package noop
 
 import cats.Applicative
 
-import scala.annotation.unused
-
 final class NoOpFactory[F[_]](implicit F: Applicative[F]) extends LoggerFactory[F] {
   def getLoggerFromF: SelfAwareStructuredLogger[F] = NoOpLogger.impl[F]
 
   def fromF: F[SelfAwareStructuredLogger[F]] = F.pure(getLoggerFromF)
 
-  override def getLoggerFromName(@unused name: String): SelfAwareStructuredLogger[F] =
+  override def getLoggerFromName(name: String): SelfAwareStructuredLogger[F] = {
+    val _ = name
     getLoggerFromF
+  }
 
-  override def fromName(@unused name: String): F[SelfAwareStructuredLogger[F]] =
+  override def fromName(name: String): F[SelfAwareStructuredLogger[F]] = {
+    val _ = name
     fromF
+  }
 }
 
 object NoOpFactory extends LoggerFactoryGenCompanion {
