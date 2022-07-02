@@ -1,5 +1,7 @@
+import com.typesafe.tools.mima.core._
+
 val Scala213 = "2.13.8"
-val Scala212 = "2.12.15"
+val Scala212 = "2.12.16"
 val Scala3 = "3.1.2"
 
 ThisBuild / tlBaseVersion := "2.3"
@@ -25,10 +27,10 @@ ThisBuild / githubWorkflowJavaVersions := Seq(JavaSpec.temurin("8"), JavaSpec.te
 ThisBuild / tlVersionIntroduced := Map("3" -> "2.1.1")
 
 val catsV = "2.7.0"
-val catsEffectV = "3.3.11"
+val catsEffectV = "3.3.13"
 val slf4jV = "1.7.36"
 val munitCatsEffectV = "1.0.7"
-val logbackClassicV = "1.2.10"
+val logbackClassicV = "1.2.11"
 
 Global / onChangedBuildSource := ReloadOnSourceChanges
 
@@ -45,7 +47,16 @@ lazy val core = crossProject(JSPlatform, JVMPlatform)
     name := "log4cats-core",
     libraryDependencies ++= Seq(
       "org.typelevel" %%% "cats-core" % catsV
-    )
+    ),
+    libraryDependencies ++= {
+      if (tlIsScala3.value) Seq.empty
+      else Seq("org.scala-lang" % "scala-reflect" % scalaVersion.value % Provided)
+    }
+  )
+  .jsSettings(
+    // https://www.scala-js.org/news/2022/04/04/announcing-scalajs-1.10.0#fixes-with-compatibility-concerns
+    libraryDependencies += ("org.scala-js" %%% "scalajs-java-securerandom" % "1.0.0")
+      .cross(CrossVersion.for3Use2_13)
   )
 
 lazy val testing = crossProject(JSPlatform, JVMPlatform)
@@ -68,7 +79,7 @@ lazy val noop = crossProject(JSPlatform, JVMPlatform)
 
 lazy val slf4j = project
   .settings(commonSettings)
-  .dependsOn(core.js)
+  .dependsOn(core.jvm)
   .settings(
     name := "log4cats-slf4j",
     libraryDependencies ++= Seq(

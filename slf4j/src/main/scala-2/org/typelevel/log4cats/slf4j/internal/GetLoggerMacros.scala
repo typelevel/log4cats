@@ -16,7 +16,8 @@
 
 package org.typelevel.log4cats.slf4j.internal
 
-import scala.annotation.tailrec
+import org.typelevel.log4cats.internal.SharedLoggerNameMacro
+
 import scala.reflect.macros.blackbox
 
 /**
@@ -28,30 +29,13 @@ import scala.reflect.macros.blackbox
  *   Sarah Gerweck <sarah@atscale.com>
  */
 private[slf4j] class GetLoggerMacros(val c: blackbox.Context) {
-
   final def safeCreateImpl[F](f: c.Expr[F]) = getLoggerImpl[F](f, true)
 
   final def unsafeCreateImpl[F](f: c.Expr[F]) = getLoggerImpl[F](f, false)
 
-  /** Get a logger by reflecting the enclosing class name. */
   private def getLoggerImpl[F](f: c.Expr[F], delayed: Boolean) = {
+    val loggerName = SharedLoggerNameMacro.getLoggerNameImpl(c)
     import c.universe._
-
-    @tailrec def findEnclosingClass(sym: c.universe.Symbol): c.universe.Symbol = {
-      sym match {
-        case NoSymbol =>
-          c.abort(c.enclosingPosition, s"Couldn't find an enclosing class or module for the logger")
-        case s if s.isModule || s.isClass =>
-          s
-        case other =>
-          /* We're not in a module or a class, so we're probably inside a member definition. Recurse upward. */
-          findEnclosingClass(other.owner)
-      }
-    }
-
-    val cls = findEnclosingClass(c.internal.enclosingOwner)
-
-    assert(cls.isModule || cls.isClass, "Enclosing class is always either a module or a class")
 
     def loggerByParam(param: c.Tree) = {
       val unsafeCreate =
@@ -61,60 +45,6 @@ private[slf4j] class GetLoggerMacros(val c: blackbox.Context) {
       else
         unsafeCreate
     }
-
-    def loggerBySymbolName(s: Symbol) = {
-      def fullName(s: Symbol): String = {
-        @inline def isPackageObject = (
-          (s.isModule || s.isModuleClass)
-            && s.owner.isPackage
-            && s.name.decodedName.toString == termNames.PACKAGE.decodedName.toString
-        )
-        if (s.isModule || s.isClass) {
-          if (isPackageObject) {
-            s.owner.fullName
-          } else if (s.owner.isStatic) {
-            s.fullName
-          } else {
-            fullName(s.owner) + "." + s.name.encodedName.toString
-          }
-        } else {
-          fullName(s.owner)
-        }
-      }
-      loggerByParam(q"${fullName(s)}")
-    }
-
-    def loggerByType(s: Symbol) = {
-      val typeSymbol: ClassSymbol = (if (s.isModule) s.asModule.moduleClass else s).asClass
-      val typeParams = typeSymbol.typeParams
-
-      if (typeParams.isEmpty) {
-        loggerByParam(q"_root_.scala.Predef.classOf[$typeSymbol]")
-      } else {
-        if (typeParams.exists(_.asType.typeParams.nonEmpty)) {
-          /* We have at least one higher-kinded type: fall back to by-name logger construction, as
-           * there's no simple way to declare a higher-kinded type with an "any" parameter. */
-          loggerBySymbolName(s)
-        } else {
-          val typeArgs = List.fill(typeParams.length)(WildcardType)
-          val typeConstructor = tq"$typeSymbol[..${typeArgs}]"
-          loggerByParam(q"_root_.scala.Predef.classOf[$typeConstructor]")
-        }
-      }
-    }
-
-    @inline def isInnerClass(s: Symbol) =
-      s.isClass && !(s.owner.isPackage)
-
-    val instanceByName =
-      Slf4jLoggerInternal.singletonsByName && (cls.isModule || cls.isModuleClass) || cls.isClass && isInnerClass(
-        cls
-      )
-
-    if (instanceByName) {
-      loggerBySymbolName(cls)
-    } else {
-      loggerByType(cls)
-    }
+    loggerByParam(q"$loggerName.value")
   }
 }
