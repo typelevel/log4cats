@@ -20,9 +20,9 @@ package noop
 import cats.Applicative
 
 object NoOpFactory extends LoggerFactoryGenCompanion {
-  def apply[F[_]: Applicative]: LoggerFactory[F] = instanceFor[F]
+  def apply[F[_]: Applicative]: LoggerFactory[F] = impl[F]
 
-  def instanceFor[F[_]](implicit F: Applicative[F]): LoggerFactory[F] = new LoggerFactory[F] {
+  def impl[F[_]](implicit F: Applicative[F]): LoggerFactory[F] = new LoggerFactory[F] {
     override def getLoggerFromName(name: String): SelfAwareStructuredLogger[F] = {
       val _ = name
       NoOpLogger.impl[F]
