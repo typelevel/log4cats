@@ -2,9 +2,9 @@ import com.typesafe.tools.mima.core._
 
 val Scala213 = "2.13.8"
 val Scala212 = "2.12.16"
-val Scala3 = "3.0.2"
+val Scala3 = "3.1.3"
 
-ThisBuild / tlBaseVersion := "2.3"
+ThisBuild / tlBaseVersion := "2.4"
 ThisBuild / crossScalaVersions := Seq(Scala213, Scala212, Scala3)
 ThisBuild / scalaVersion := Scala213
 ThisBuild / startYear := Some(2018)
@@ -26,8 +26,8 @@ ThisBuild / githubWorkflowJavaVersions := Seq(JavaSpec.temurin("8"), JavaSpec.te
 
 ThisBuild / tlVersionIntroduced := Map("3" -> "2.1.1")
 
-val catsV = "2.8.0"
-val catsEffectV = "3.3.13"
+val catsV = "2.7.0"
+val catsEffectV = "3.3.14"
 val slf4jV = "1.7.36"
 val munitCatsEffectV = "1.0.7"
 val logbackClassicV = "1.2.11"

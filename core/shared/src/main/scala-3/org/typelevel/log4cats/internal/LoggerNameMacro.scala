@@ -32,7 +32,7 @@ private[log4cats] object LoggerNameMacro {
     @tailrec def findEnclosingClass(sym: Symbol): Symbol = {
       sym match {
         case s if s.isNoSymbol =>
-          report.throwError("Couldn't find an enclosing class or module for the logger")
+          report.errorAndAbort("Couldn't find an enclosing class or module for the logger")
         case s if s.isClassDef =>
           s
         case other =>
