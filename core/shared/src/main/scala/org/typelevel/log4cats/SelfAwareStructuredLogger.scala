@@ -18,6 +18,8 @@ package org.typelevel.log4cats
 
 import cats._
 import cats.Show.Shown
+import cats.data.Kleisli
+import cats.implicits.{toFlatMapOps, toFunctorOps}
 
 trait SelfAwareStructuredLogger[F[_]] extends SelfAwareLogger[F] with StructuredLogger[F] {
   override def mapK[G[_]](fk: F ~> G): SelfAwareStructuredLogger[G] =
@@ -92,6 +94,90 @@ object SelfAwareStructuredLogger {
       sl.debug(modify(ctx), t)(message)
     def trace(ctx: Map[String, String], t: Throwable)(message: => String): F[Unit] =
       sl.trace(modify(ctx), t)(message)
+  }
+
+  def withContextFromKleisli[F[_]: Monad](
+      sl: SelfAwareStructuredLogger[Kleisli[F, Map[String, String], *]]
+  ): SelfAwareStructuredLogger[Kleisli[F, Map[String, String], *]] =
+    withContextF(sl)(
+      Kleisli.ask[F, Map[String, String]]
+    )
+  def withContextF[F[_]: FlatMap](
+      sl: SelfAwareStructuredLogger[F]
+  )(ctx: F[Map[String, String]]): SelfAwareStructuredLogger[F] =
+    new ModifiedContextFSelfAwareStructuredLogger[F](sl)(existingCtx => ctx.map(_ ++ existingCtx))
+
+  private class ModifiedContextFSelfAwareStructuredLogger[F[_]: FlatMap](
+      sl: SelfAwareStructuredLogger[F]
+  )(
+      modify: Map[String, String] => F[Map[String, String]]
+  ) extends SelfAwareStructuredLogger[F] {
+    private lazy val defaultCtx: F[Map[String, String]] = modify(Map.empty)
+
+    def error(message: => String): F[Unit] = defaultCtx.flatMap(sl.error(_)(message))
+
+    def warn(message: => String): F[Unit] = defaultCtx.flatMap(sl.warn(_)(message))
+
+    def info(message: => String): F[Unit] = defaultCtx.flatMap(sl.info(_)(message))
+
+    def debug(message: => String): F[Unit] = defaultCtx.flatMap(sl.debug(_)(message))
+
+    def trace(message: => String): F[Unit] = defaultCtx.flatMap(sl.trace(_)(message))
+
+    def trace(ctx: Map[String, String])(msg: => String): F[Unit] =
+      modify(ctx).flatMap(sl.trace(_)(msg))
+
+    def debug(ctx: Map[String, String])(msg: => String): F[Unit] =
+      modify(ctx).flatMap(sl.debug(_)(msg))
+
+    def info(ctx: Map[String, String])(msg: => String): F[Unit] =
+      modify(ctx).flatMap(sl.info(_)(msg))
+
+    def warn(ctx: Map[String, String])(msg: => String): F[Unit] =
+      modify(ctx).flatMap(sl.warn(_)(msg))
+
+    def error(ctx: Map[String, String])(msg: => String): F[Unit] =
+      modify(ctx).flatMap(sl.error(_)(msg))
+
+    def isTraceEnabled: F[Boolean] = sl.isTraceEnabled
+
+    def isDebugEnabled: F[Boolean] = sl.isDebugEnabled
+
+    def isInfoEnabled: F[Boolean] = sl.isInfoEnabled
+
+    def isWarnEnabled: F[Boolean] = sl.isWarnEnabled
+
+    def isErrorEnabled: F[Boolean] = sl.isErrorEnabled
+
+    def error(t: Throwable)(message: => String): F[Unit] =
+      defaultCtx.flatMap(sl.error(_, t)(message))
+
+    def warn(t: Throwable)(message: => String): F[Unit] =
+      defaultCtx.flatMap(sl.warn(_, t)(message))
+
+    def info(t: Throwable)(message: => String): F[Unit] =
+      defaultCtx.flatMap(sl.info(_, t)(message))
+
+    def debug(t: Throwable)(message: => String): F[Unit] =
+      defaultCtx.flatMap(sl.debug(_, t)(message))
+
+    def trace(t: Throwable)(message: => String): F[Unit] =
+      defaultCtx.flatMap(sl.trace(_, t)(message))
+
+    def error(ctx: Map[String, String], t: Throwable)(message: => String): F[Unit] =
+      modify(ctx).flatMap(sl.error(_, t)(message))
+
+    def warn(ctx: Map[String, String], t: Throwable)(message: => String): F[Unit] =
+      modify(ctx).flatMap(sl.warn(_, t)(message))
+
+    def info(ctx: Map[String, String], t: Throwable)(message: => String): F[Unit] =
+      modify(ctx).flatMap(sl.info(_, t)(message))
+
+    def debug(ctx: Map[String, String], t: Throwable)(message: => String): F[Unit] =
+      modify(ctx).flatMap(sl.debug(_, t)(message))
+
+    def trace(ctx: Map[String, String], t: Throwable)(message: => String): F[Unit] =
+      modify(ctx).flatMap(sl.trace(_, t)(message))
   }
 
   private def withModifiedString[F[_]](

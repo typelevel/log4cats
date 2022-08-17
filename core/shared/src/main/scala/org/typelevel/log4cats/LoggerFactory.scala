@@ -16,9 +16,9 @@
 
 package org.typelevel.log4cats
 
-import cats.Functor
+import cats.{~>, FlatMap, Functor, Monad}
+import cats.data.Kleisli
 import cats.syntax.functor._
-import cats.~>
 
 import scala.annotation.implicitNotFound
 
@@ -48,4 +48,20 @@ object LoggerFactory extends LoggerFactoryGenCompanion {
         fk(logger)
       }
     }
+
+  def withContextF[F[_]: FlatMap](
+      lf: LoggerFactory[F]
+  )(ctx: F[Map[String, String]]): LoggerFactory[F] =
+    new LoggerFactory[F] {
+      override def getLoggerFromName(name: String): SelfAwareStructuredLogger[F] =
+        SelfAwareStructuredLogger.withContextF(lf.getLoggerFromName(name))(ctx)
+
+      override def fromName(name: String): F[SelfAwareStructuredLogger[F]] = lf
+        .fromName(name)
+        .map(SelfAwareStructuredLogger.withContextF(_)(ctx))
+    }
+
+  def withContextFromKleisli[F[_]: Monad](
+      lf: LoggerFactory[Kleisli[F, Map[String, String], *]]
+  ): LoggerFactory[Kleisli[F, Map[String, String], *]] = withContextF(lf)(Kleisli.ask)
 }
