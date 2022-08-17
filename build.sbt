@@ -76,6 +76,16 @@ lazy val noop = crossProject(JSPlatform, JVMPlatform, NativePlatform)
   )
   .nativeSettings(commonNativeSettings)
 
+lazy val ce3 = crossProject(JSPlatform, JVMPlatform)
+  .settings(commonSettings)
+  .dependsOn(core)
+  .settings(
+    name := "log4cats-ce3",
+    libraryDependencies ++= Seq(
+      "org.typelevel" %%% "cats-effect" % catsEffectV
+    )
+  )
+
 lazy val slf4j = project
   .settings(commonSettings)
   .dependsOn(core.jvm)
