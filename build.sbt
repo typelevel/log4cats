@@ -46,7 +46,7 @@ lazy val core = crossProject(JSPlatform, JVMPlatform)
   .settings(
     name := "log4cats-core",
     libraryDependencies ++= Seq(
-      "org.typelevel" %%% "cats-core" % catsV,
+      "org.typelevel" %%% "cats-core"       % catsV,
       "org.typelevel" %%% "cats-effect-std" % catsEffectV
     ),
     libraryDependencies ++= {
