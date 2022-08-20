@@ -44,7 +44,7 @@ class PagingSelfAwareStructuredLoggerTestRunner extends CatsEffectSuite {
     val pageSize = pageSizeK * 1024
     val stl = StructuredTestingLogger.impl[IO]()
     val pagingStl: SelfAwareStructuredLogger[IO] =
-      PagingSelfAwareStructuredLogger.withPaging2[IO](pageSizeK, maxPageNeeded)(stl)
+      PagingSelfAwareStructuredLogger.paged[IO](pageSizeK, maxPageNeeded)(stl)
     val logResult: IO[Unit] = logTest(pagingStl)
 
     val test = logResult >> stl.logged
@@ -103,7 +103,7 @@ class PagingSelfAwareStructuredLoggerTestRunner extends CatsEffectSuite {
   ): Unit = {
     val stl = StructuredTestingLogger.impl[IO]()
     try {
-      PagingSelfAwareStructuredLogger.withPaging2[IO](pageSizeK, maxPageNeeded)(stl)
+      PagingSelfAwareStructuredLogger.paged[IO](pageSizeK, maxPageNeeded)(stl)
       fail(s"$suiteName $caseName: Expected exception not thrown")
     } catch {
       case thr: Throwable => assert(thr.isInstanceOf[IllegalArgumentException])

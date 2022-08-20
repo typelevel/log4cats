@@ -53,12 +53,12 @@ object PagingSelfAwareStructuredLogger {
    * @return
    *   SelfAwareStructuredLogger with pagination.
    */
-  def withPaging2[F[_]: Monad: UUIDGen](pageSizeK: Int = 64, maxPageNeeded: Int = 999)(
+  def paged[F[_]: Monad: UUIDGen](pageSizeK: Int = 64, maxPageNeeded: Int = 999)(
       logger: SelfAwareStructuredLogger[F]
   ): SelfAwareStructuredLogger[F] =
     new PagingSelfAwareStructuredLogger[F](pageSizeK, maxPageNeeded, UUIDGen.randomUUID)(logger)
 
-  @deprecated("Use withPaging2", "2.5.0")
+  @deprecated("Use paged", "2.5.0")
   def withPaging[F[_]: Monad](pageSizeK: Int = 64, maxPageNeeded: Int = 999)(
       logger: SelfAwareStructuredLogger[F]
   ): SelfAwareStructuredLogger[F] =
