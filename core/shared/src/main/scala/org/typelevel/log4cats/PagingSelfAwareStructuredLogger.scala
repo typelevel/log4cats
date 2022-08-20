@@ -62,11 +62,7 @@ object PagingSelfAwareStructuredLogger {
   def withPaging[F[_]: Monad](pageSizeK: Int = 64, maxPageNeeded: Int = 999)(
       logger: SelfAwareStructuredLogger[F]
   ): SelfAwareStructuredLogger[F] =
-    new PagingSelfAwareStructuredLogger[F](
-      pageSizeK,
-      maxPageNeeded,
-      Monad[F].unit.map(_ => UUID.randomUUID())
-    )(logger)
+    new PagingSelfAwareStructuredLogger[F](pageSizeK, maxPageNeeded)(logger)
 
   private class PagingSelfAwareStructuredLogger[F[_]: Monad](
       pageSizeK: Int,
@@ -79,6 +75,12 @@ object PagingSelfAwareStructuredLogger {
       throw new IllegalArgumentException(
         s"pageSizeK(=$pageSizeK) and maxPageNeeded(=$maxPageNeeded) must be positive numbers."
       )
+
+    @deprecated("Use constructor with randomUUID", "2.5.0")
+    def this(pageSizeK: Int, maxPageNeeded: Int)(
+        sl: SelfAwareStructuredLogger[F]
+    ) =
+      this(pageSizeK, maxPageNeeded, Monad[F].unit.map(_ => UUID.randomUUID()))(sl)
 
     private val pageIndices = (1 to maxPageNeeded).toList
     private val logSplitIdN = "log_split_id"
