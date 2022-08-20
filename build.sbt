@@ -4,7 +4,7 @@ val Scala213 = "2.13.8"
 val Scala212 = "2.12.16"
 val Scala3 = "3.1.3"
 
-ThisBuild / tlBaseVersion := "2.4"
+ThisBuild / tlBaseVersion := "2.5"
 ThisBuild / crossScalaVersions := Seq(Scala213, Scala212, Scala3)
 ThisBuild / scalaVersion := Scala213
 ThisBuild / startYear := Some(2018)
