@@ -46,17 +46,13 @@ lazy val core = crossProject(JSPlatform, JVMPlatform)
   .settings(
     name := "log4cats-core",
     libraryDependencies ++= Seq(
-      "org.typelevel" %%% "cats-core" % catsV
+      "org.typelevel" %%% "cats-core" % catsV,
+      "org.typelevel" %%% "cats-effect-std" % catsEffectV
     ),
     libraryDependencies ++= {
       if (tlIsScala3.value) Seq.empty
       else Seq("org.scala-lang" % "scala-reflect" % scalaVersion.value % Provided)
     }
-  )
-  .jsSettings(
-    // https://www.scala-js.org/news/2022/04/04/announcing-scalajs-1.10.0#fixes-with-compatibility-concerns
-    libraryDependencies += ("org.scala-js" %%% "scalajs-java-securerandom" % "1.0.0")
-      .cross(CrossVersion.for3Use2_13)
   )
 
 lazy val testing = crossProject(JSPlatform, JVMPlatform)
