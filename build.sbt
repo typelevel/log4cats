@@ -71,6 +71,7 @@ lazy val testing = crossProject(JSPlatform, JVMPlatform)
   )
 
 lazy val noop = crossProject(JSPlatform, JVMPlatform)
+  .crossType(CrossType.Pure)
   .settings(commonSettings)
   .dependsOn(core)
   .settings(
