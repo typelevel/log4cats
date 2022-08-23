@@ -48,6 +48,19 @@ trait StructuredLogger[F[_]] extends Logger[F] {
 }
 
 object StructuredLogger {
+  trait Fallback[F[_]] extends StructuredLogger[F] {
+    def trace(ctx: Map[String, String])(msg: => String): F[Unit] = trace(msg)
+    def trace(ctx: Map[String, String], t: Throwable)(msg: => String): F[Unit] = trace(t)(msg)
+    def debug(ctx: Map[String, String])(msg: => String): F[Unit] = debug(msg)
+    def debug(ctx: Map[String, String], t: Throwable)(msg: => String): F[Unit] = debug(t)(msg)
+    def info(ctx: Map[String, String])(msg: => String): F[Unit] = info(msg)
+    def info(ctx: Map[String, String], t: Throwable)(msg: => String): F[Unit] = info(t)(msg)
+    def warn(ctx: Map[String, String])(msg: => String): F[Unit] = warn(msg)
+    def warn(ctx: Map[String, String], t: Throwable)(msg: => String): F[Unit] = warn(t)(msg)
+    def error(ctx: Map[String, String])(msg: => String): F[Unit] = error(msg)
+    def error(ctx: Map[String, String], t: Throwable)(msg: => String): F[Unit] = error(t)(msg)
+  }
+
   def apply[F[_]](implicit ev: StructuredLogger[F]): StructuredLogger[F] = ev
 
   def withContext[F[_]](sl: StructuredLogger[F])(ctx: Map[String, String]): StructuredLogger[F] =

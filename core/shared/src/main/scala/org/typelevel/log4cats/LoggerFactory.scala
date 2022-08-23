@@ -16,9 +16,8 @@
 
 package org.typelevel.log4cats
 
-import cats.Functor
+import cats.{~>, Applicative, Functor}
 import cats.syntax.functor._
-import cats.~>
 
 import scala.annotation.implicitNotFound
 
@@ -35,6 +34,18 @@ trait LoggerFactory[F[_]] extends LoggerFactoryGen[F] {
 
 object LoggerFactory extends LoggerFactoryGenCompanion {
   def apply[F[_]: LoggerFactory]: LoggerFactory[F] = implicitly
+
+  def const[F[_]](
+      logger: SelfAwareStructuredLogger[F]
+  )(implicit F: Applicative[F]): LoggerFactory[F] = new LoggerFactory[F] {
+    override def getLoggerFromName(name: String): SelfAwareStructuredLogger[F] = logger
+
+    override def fromName(name: String): F[SelfAwareStructuredLogger[F]] = F.pure(logger)
+  }
+
+  def liftF[F[_]: Applicative](f: String => F[Unit]): LoggerFactory[F] = const(
+    SelfAwareStructuredLogger.liftF(f)
+  )
 
   private def mapK[F[_]: Functor, G[_]](fk: F ~> G)(lf: LoggerFactory[F]): LoggerFactory[G] =
     new LoggerFactory[G] {

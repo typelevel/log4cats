@@ -28,6 +28,14 @@ trait ErrorLogger[F[_]] {
 }
 
 object ErrorLogger {
+  trait Fallback[F[_]] extends ErrorLogger[F] { _: MessageLogger[F] =>
+    final def error(t: Throwable)(message: => String): F[Unit] = error(message)
+    final def warn(t: Throwable)(message: => String): F[Unit] = warn(message)
+    final def info(t: Throwable)(message: => String): F[Unit] = info(message)
+    final def debug(t: Throwable)(message: => String): F[Unit] = debug(message)
+    final def trace(t: Throwable)(message: => String): F[Unit] = trace(message)
+  }
+
   def apply[F[_]](implicit ev: ErrorLogger[F]): ErrorLogger[F] = ev
 
   private def mapK[G[_], F[_]](f: G ~> F)(logger: ErrorLogger[G]): ErrorLogger[F] =
