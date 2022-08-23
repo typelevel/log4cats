@@ -27,22 +27,16 @@ trait LoggerFactoryGen[F[_]] {
 }
 
 private[log4cats] trait LoggerFactoryGenCompanion {
-  @deprecated("LoggerFactories should be passed explicitly, not implicitly", "2.5.0")
   def getLogger[F[_]](implicit lf: LoggerFactoryGen[F], name: LoggerName): lf.LoggerType =
     lf.getLogger
-  @deprecated("LoggerFactories should be passed explicitly, not implicitly", "2.5.0")
   def getLoggerFromName[F[_]](name: String)(implicit lf: LoggerFactoryGen[F]): lf.LoggerType =
     lf.getLoggerFromName(name)
-  @deprecated("LoggerFactories should be passed explicitly, not implicitly", "2.5.0")
   def getLoggerFromClass[F[_]](clazz: Class[_])(implicit lf: LoggerFactoryGen[F]): lf.LoggerType =
     lf.getLoggerFromClass(clazz)
-  @deprecated("LoggerFactories should be passed explicitly, not implicitly", "2.5.0")
   def create[F[_]](implicit lf: LoggerFactoryGen[F], name: LoggerName): F[lf.LoggerType] =
     lf.create
-  @deprecated("LoggerFactories should be passed explicitly, not implicitly", "2.5.0")
   def fromName[F[_]](name: String)(implicit lf: LoggerFactoryGen[F]): F[lf.LoggerType] =
     lf.fromName(name)
-  @deprecated("LoggerFactories should be passed explicitly, not implicitly", "2.5.0")
   def fromClass[F[_]](clazz: Class[_])(implicit lf: LoggerFactoryGen[F]): F[lf.LoggerType] =
     lf.fromClass(clazz)
 }
