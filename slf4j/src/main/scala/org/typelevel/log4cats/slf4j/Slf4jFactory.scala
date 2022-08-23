@@ -17,6 +17,7 @@
 package org.typelevel.log4cats
 package slf4j
 
+import cats.effect.kernel.Sync
 import org.slf4j.{Logger => JLogger}
 
 trait Slf4jFactory[F[_]] extends LoggerFactory[F] {
@@ -27,6 +28,20 @@ trait Slf4jFactory[F[_]] extends LoggerFactory[F] {
 
 object Slf4jFactory extends LoggerFactoryGenCompanion {
   def apply[F[_]: Slf4jFactory]: Slf4jFactory[F] = implicitly
+
+  def create[F[_]: Sync]: Slf4jFactory[F] = new Slf4jFactory[F] {
+    override def getLoggerFromName(name: String): SelfAwareStructuredLogger[F] =
+      Slf4jLogger.getLoggerFromName(name)
+
+    override def getLoggerFromSlf4j(logger: JLogger): SelfAwareStructuredLogger[F] =
+      Slf4jLogger.getLoggerFromSlf4j(logger)
+
+    override def fromName(name: String): F[SelfAwareStructuredLogger[F]] =
+      Slf4jLogger.fromName(name)
+
+    override def fromSlf4j(logger: JLogger): F[SelfAwareStructuredLogger[F]] =
+      Slf4jLogger.fromSlf4j(logger)
+  }
 
   def getLoggerFromSlf4j[F[_]](logger: JLogger)(implicit
       lf: Slf4jFactory[F]
