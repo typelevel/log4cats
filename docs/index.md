@@ -100,7 +100,7 @@ This brings several advantages:
 If you are unsure how to create a new `LoggerFactory[F]` instance, then you can look at the `log4cats-slf4j`,
 or `log4cats-noop` modules for concrete implementations.
 
-The quickest fix might to create an instance of a `Slf4jFactory` and pass it around implicitly:
+The quickest fix might be to create an instance of a `Slf4jFactory` and pass it around implicitly:
 ```scala mdoc:reset:silent
 import cats.effect.IO
 import cats.Monad
