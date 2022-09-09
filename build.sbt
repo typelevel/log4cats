@@ -27,9 +27,9 @@ ThisBuild / githubWorkflowJavaVersions := Seq(JavaSpec.temurin("8"), JavaSpec.te
 ThisBuild / tlVersionIntroduced := Map("3" -> "2.1.1")
 
 val catsV = "2.8.0"
-val catsEffectV = "3.3.14"
+val catsEffectV = "3.3.14-1-5d11fe9"
 val slf4jV = "1.7.36"
-val munitCatsEffectV = "1.0.7"
+val munitCatsEffectV = "2.0-5e03bfc"
 val logbackClassicV = "1.2.11"
 
 Global / onChangedBuildSource := ReloadOnSourceChanges
@@ -41,7 +41,7 @@ lazy val docs = project
   .enablePlugins(TypelevelSitePlugin)
   .dependsOn(slf4j)
 
-lazy val core = crossProject(JSPlatform, JVMPlatform)
+lazy val core = crossProject(JSPlatform, JVMPlatform, NativePlatform)
   .settings(commonSettings)
   .settings(
     name := "log4cats-core",
@@ -54,8 +54,9 @@ lazy val core = crossProject(JSPlatform, JVMPlatform)
       else Seq("org.scala-lang" % "scala-reflect" % scalaVersion.value % Provided)
     }
   )
+  .nativeSettings(commonNativeSettings)
 
-lazy val testing = crossProject(JSPlatform, JVMPlatform)
+lazy val testing = crossProject(JSPlatform, JVMPlatform, NativePlatform)
   .settings(commonSettings)
   .dependsOn(core)
   .settings(
@@ -65,13 +66,15 @@ lazy val testing = crossProject(JSPlatform, JVMPlatform)
       "ch.qos.logback"                  % "logback-classic" % logbackClassicV % Test
     )
   )
+  .nativeSettings(commonNativeSettings)
 
-lazy val noop = crossProject(JSPlatform, JVMPlatform)
+lazy val noop = crossProject(JSPlatform, JVMPlatform, NativePlatform)
   .settings(commonSettings)
   .dependsOn(core)
   .settings(
     name := "log4cats-noop"
   )
+  .nativeSettings(commonNativeSettings)
 
 lazy val slf4j = project
   .settings(commonSettings)
@@ -91,6 +94,10 @@ lazy val slf4j = project
 
 lazy val commonSettings = Seq(
   libraryDependencies ++= Seq(
-    "org.typelevel" %%% "munit-cats-effect-3" % munitCatsEffectV % Test
+    "org.typelevel" %%% "munit-cats-effect" % munitCatsEffectV % Test
   )
+)
+
+lazy val commonNativeSettings = Seq(
+  tlVersionIntroduced := List("2.12", "2.13", "3").map(_ -> "2.4.1").toMap
 )
