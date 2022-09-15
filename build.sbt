@@ -4,7 +4,7 @@ val Scala213 = "2.13.8"
 val Scala212 = "2.12.16"
 val Scala3 = "3.1.3"
 
-ThisBuild / tlBaseVersion := "2.4"
+ThisBuild / tlBaseVersion := "2.5"
 ThisBuild / crossScalaVersions := Seq(Scala213, Scala212, Scala3)
 ThisBuild / scalaVersion := Scala213
 ThisBuild / startYear := Some(2018)
@@ -29,7 +29,7 @@ ThisBuild / tlVersionIntroduced := Map("3" -> "2.1.1")
 val catsV = "2.8.0"
 val catsEffectV = "3.3.14"
 val slf4jV = "1.7.36"
-val munitCatsEffectV = "1.0.7"
+val munitCatsEffectV = "2.0.0-M3"
 val logbackClassicV = "1.2.11"
 
 Global / onChangedBuildSource := ReloadOnSourceChanges
@@ -41,25 +41,22 @@ lazy val docs = project
   .enablePlugins(TypelevelSitePlugin)
   .dependsOn(slf4j)
 
-lazy val core = crossProject(JSPlatform, JVMPlatform)
+lazy val core = crossProject(JSPlatform, JVMPlatform, NativePlatform)
   .settings(commonSettings)
   .settings(
     name := "log4cats-core",
     libraryDependencies ++= Seq(
-      "org.typelevel" %%% "cats-core" % catsV
+      "org.typelevel" %%% "cats-core"       % catsV,
+      "org.typelevel" %%% "cats-effect-std" % catsEffectV
     ),
     libraryDependencies ++= {
       if (tlIsScala3.value) Seq.empty
       else Seq("org.scala-lang" % "scala-reflect" % scalaVersion.value % Provided)
     }
   )
-  .jsSettings(
-    // https://www.scala-js.org/news/2022/04/04/announcing-scalajs-1.10.0#fixes-with-compatibility-concerns
-    libraryDependencies += ("org.scala-js" %%% "scalajs-java-securerandom" % "1.0.0")
-      .cross(CrossVersion.for3Use2_13)
-  )
+  .nativeSettings(commonNativeSettings)
 
-lazy val testing = crossProject(JSPlatform, JVMPlatform)
+lazy val testing = crossProject(JSPlatform, JVMPlatform, NativePlatform)
   .settings(commonSettings)
   .dependsOn(core)
   .settings(
@@ -69,13 +66,15 @@ lazy val testing = crossProject(JSPlatform, JVMPlatform)
       "ch.qos.logback"                  % "logback-classic" % logbackClassicV % Test
     )
   )
+  .nativeSettings(commonNativeSettings)
 
-lazy val noop = crossProject(JSPlatform, JVMPlatform)
+lazy val noop = crossProject(JSPlatform, JVMPlatform, NativePlatform)
   .settings(commonSettings)
   .dependsOn(core)
   .settings(
     name := "log4cats-noop"
   )
+  .nativeSettings(commonNativeSettings)
 
 lazy val slf4j = project
   .settings(commonSettings)
@@ -95,6 +94,10 @@ lazy val slf4j = project
 
 lazy val commonSettings = Seq(
   libraryDependencies ++= Seq(
-    "org.typelevel" %%% "munit-cats-effect-3" % munitCatsEffectV % Test
+    "org.typelevel" %%% "munit-cats-effect" % munitCatsEffectV % Test
   )
+)
+
+lazy val commonNativeSettings = Seq(
+  tlVersionIntroduced := List("2.12", "2.13", "3").map(_ -> "2.4.1").toMap
 )
