@@ -20,7 +20,7 @@ import cats.effect.Sync
 
 package object slf4j {
 
-  @deprecated("Use Slf4jFactory.create[F] explicitly", "2.5.0")
+  @deprecated("Use Slf4jFactory.create[F] explicitly", "2.6.0")
   implicit def loggerFactoryforSync[F[_]: Sync]: Slf4jFactory[F] =
     Slf4jFactory.create[F]
 }
