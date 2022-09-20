@@ -180,25 +180,16 @@
         </ul>
         <p>If you are unsure how to create a new <code>LoggerFactory[F]</code> instance, then you can look at the <code>log4cats-slf4j</code>,
         or <code>log4cats-noop</code> modules for concrete implementations.</p>
-        <p>The quickest fix might be to import needed implicits:</p>
-        <pre class="keep-together pdf epub"><code class="nohighlight"><span class="comment">// assumes dependency on log4cats-slf4j module
-</span><span class="keyword">import</span><span> </span><span class="identifier">org</span><span>.</span><span class="identifier">typelevel</span><span>.</span><span class="identifier">log4cats</span><span>.</span><span class="identifier">_</span><span>
-</span><span class="keyword">import</span><span> </span><span class="identifier">org</span><span>.</span><span class="identifier">typelevel</span><span>.</span><span class="identifier">log4cats</span><span>.</span><span class="identifier">slf4j</span><span>.</span><span class="identifier">_</span><span>
-
-</span><span class="keyword">val</span><span> </span><span class="identifier">logger</span><span>: </span><span class="type-name">SelfAwareStructuredLogger</span><span>[</span><span class="type-name">IO</span><span>] = </span><span class="type-name">LoggerFactory</span><span>[</span><span class="type-name">IO</span><span>].</span><span class="identifier">getLogger</span><span>
-
-</span><span class="comment">// or
-</span><span class="keyword">def</span><span> </span><span class="declaration-name">anyFSyncLogger</span><span>[</span><span class="type-name">F</span><span>[</span><span class="identifier">_</span><span>]: </span><span class="type-name">Sync</span><span>]: </span><span class="type-name">SelfAwareStructuredLogger</span><span>[</span><span class="type-name">F</span><span>] = </span><span class="type-name">Slf4jFactory</span><span>[</span><span class="type-name">F</span><span>].</span><span class="identifier">getLogger</span></code></pre>
-        <p>Alternatively, a mutually exclusive solution is to explicitly create your 
-        <code>LoggerFactory[F]</code> instance and pass them around implicitly:</p>
+        <p>The quickest fix might be to create an instance of a <code>Slf4jFactory</code> and pass it around implicitly:</p>
         <pre><code class="nohighlight"><span class="keyword">import</span><span> </span><span class="identifier">cats</span><span>.</span><span class="identifier">effect</span><span>.</span><span class="type-name">IO</span><span>
 </span><span class="keyword">import</span><span> </span><span class="identifier">cats</span><span>.</span><span class="type-name">Monad</span><span>
 </span><span class="keyword">import</span><span> </span><span class="identifier">cats</span><span>.</span><span class="identifier">syntax</span><span>.</span><span class="identifier">all</span><span>.</span><span class="identifier">_</span><span>
 </span><span class="keyword">import</span><span> </span><span class="identifier">org</span><span>.</span><span class="identifier">typelevel</span><span>.</span><span class="identifier">log4cats</span><span>.</span><span class="identifier">_</span><span>
+</span><span class="comment">// assumes dependency on log4cats-slf4j module
 </span><span class="keyword">import</span><span> </span><span class="identifier">org</span><span>.</span><span class="identifier">typelevel</span><span>.</span><span class="identifier">log4cats</span><span>.</span><span class="identifier">slf4j</span><span>.</span><span class="type-name">Slf4jFactory</span><span>
 
 </span><span class="comment">// create our LoggerFactory
-</span><span class="keyword">implicit</span><span> </span><span class="keyword">val</span><span> </span><span class="identifier">logging</span><span>: </span><span class="type-name">LoggerFactory</span><span>[</span><span class="type-name">IO</span><span>] = </span><span class="type-name">Slf4jFactory</span><span>[</span><span class="type-name">IO</span><span>]
+</span><span class="keyword">implicit</span><span> </span><span class="keyword">val</span><span> </span><span class="identifier">logging</span><span>: </span><span class="type-name">LoggerFactory</span><span>[</span><span class="type-name">IO</span><span>] = </span><span class="type-name">Slf4jFactory</span><span>.</span><span class="identifier">create</span><span>[</span><span class="type-name">IO</span><span>]
 
 </span><span class="comment">// we summon LoggerFactory instance, and create logger
 </span><span class="keyword">val</span><span> </span><span class="identifier">logger</span><span>: </span><span class="type-name">SelfAwareStructuredLogger</span><span>[</span><span class="type-name">IO</span><span>] = </span><span class="type-name">LoggerFactory</span><span>[</span><span class="type-name">IO</span><span>].</span><span class="identifier">getLogger</span><span>
