@@ -48,7 +48,7 @@ class Slf4jLoggerOuterClassMacroTest {
 
 object LoggingBaseline {
   val t = new Throwable
-  def logger[F[_]: Sync]: SelfAwareStructuredLogger[F] = Slf4jFactory.getLogger[F]
+  def logger[F[_]: Sync]: SelfAwareStructuredLogger[F] = Slf4jFactory.create[F].getLogger
 
   val traceM = logger[IO].trace("")
   val traceTM = logger[IO].trace(t)("")
