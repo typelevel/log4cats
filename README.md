@@ -18,6 +18,23 @@ libraryDependencies ++= Seq(
 )
 ```
 
+## Why log4cats?
+
+Well, to answer that, let's take a look at how you might combine cats-effect with vanilla logging...
+
+```scala
+object MyVanillaLoggingThing {
+  val logger: Logger = Logger(LoggerFactory.getLogger(getClass.getName))
+  
+  def doSomething(): IO[Unit] =
+    IO(logger.info("Doing something!") *> IO.println("Hello, World!")
+
+}
+```
+
+But what if you don't want to wrap your logger in an `IO` like this?  
+Good news, you don't have to!  Enter log4cats!  Read on!
+
 ## Examples
 
 ```scala
