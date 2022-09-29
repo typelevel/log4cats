@@ -34,7 +34,7 @@ val logbackClassicV = "1.2.11"
 
 Global / onChangedBuildSource := ReloadOnSourceChanges
 
-lazy val root = tlCrossRootProject.aggregate(core, testing, noop, slf4j, docs)
+lazy val root = tlCrossRootProject.aggregate(core, testing, noop, slf4j, docs, `js-console`)
 
 lazy val docs = project
   .in(file("site"))
@@ -91,6 +91,18 @@ lazy val slf4j = project
       else Seq("org.scala-lang" % "scala-reflect" % scalaVersion.value % Provided)
     }
   )
+
+lazy val `js-console` = project
+  .settings(commonSettings)
+  .dependsOn(core.js)
+  .settings(
+    name := "log4cats-js-console",
+    tlVersionIntroduced := List("2.12", "2.13", "3").map(_ -> "2.6.0").toMap,
+    libraryDependencies ++= Seq(
+      "org.typelevel" %%% "cats-effect" % catsEffectV,
+    )
+  )
+  .enablePlugins(ScalaJSPlugin)
 
 lazy val commonSettings = Seq(
   libraryDependencies ++= Seq(
