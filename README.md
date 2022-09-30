@@ -27,7 +27,7 @@ object MyVanillaLoggingThing {
   val logger: Logger = Logger(LoggerFactory.getLogger(getClass.getName))
   
   def doSomething(): IO[Unit] =
-    IO(logger.info("Doing something!") *> IO.println("Hello, World!")
+    IO(logger.info("Doing something!")) *> IO.println("Hello, World!")
 
 }
 ```
