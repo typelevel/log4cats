@@ -27,32 +27,40 @@ import scala.annotation.nowarn
 import scala.scalajs.js
 import scala.scalajs.js.annotation.JSGlobal
 
-/** The console object provides access to the browser's debugging console. The specifics of how it works vary from
- * browser to browser, but there is a de facto set of features that are typically provided.
+/**
+ * The console object provides access to the browser's debugging console. The specifics of how it
+ * works vary from browser to browser, but there is a de facto set of features that are typically
+ * provided.
  *
- * There are more methods available; this is the minimal façade needed for console logging from log4cats.
+ * There are more methods available; this is the minimal façade needed for console logging from
+ * log4cats.
  */
 @js.native
 @JSGlobal("console")
 @nowarn("msg=parameter value .+ in method .+ is never used")
 object Console extends js.Object {
-  /** Outputs an informational message to the Web Console. In Firefox, a small "i" icon is displayed next to these items
-   * in the Web Console's log.
+
+  /**
+   * Outputs an informational message to the Web Console. In Firefox, a small "i" icon is displayed
+   * next to these items in the Web Console's log.
    */
   def info(message: Any, optionalParams: Any*): Unit = js.native
 
-  /** Outputs a warning message. You may use string substitution and additional arguments with this method. See Using
-   * string substitutions.
+  /**
+   * Outputs a warning message. You may use string substitution and additional arguments with this
+   * method. See Using string substitutions.
    */
   def warn(message: Any, optionalParams: Any*): Unit = js.native
 
-  /** Outputs an error message. You may use string substitution and additional arguments with this method. See Using
-   * string substitutions.
+  /**
+   * Outputs an error message. You may use string substitution and additional arguments with this
+   * method. See Using string substitutions.
    */
   def error(message: Any, optionalParams: Any*): Unit = js.native
 
-  /** Outputs a debug message. You may use string substitution and additional arguments with this method. See Using
-   * string substitutions.
+  /**
+   * Outputs a debug message. You may use string substitution and additional arguments with this
+   * method. See Using string substitutions.
    */
   def debug(message: Any, optionalParams: Any*): Unit = js.native
 }
