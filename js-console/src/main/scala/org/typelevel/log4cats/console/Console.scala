@@ -23,7 +23,6 @@
 
 package org.typelevel.log4cats.console
 
-import scala.annotation.nowarn
 import scala.scalajs.js
 import scala.scalajs.js.annotation.JSGlobal
 
@@ -37,8 +36,7 @@ import scala.scalajs.js.annotation.JSGlobal
  */
 @js.native
 @JSGlobal("console")
-@nowarn("msg=parameter value .+ in method .+ is never used")
-object Console extends js.Object {
+private[console] object Console extends js.Object {
 
   /**
    * Outputs an informational message to the Web Console. In Firefox, a small "i" icon is displayed

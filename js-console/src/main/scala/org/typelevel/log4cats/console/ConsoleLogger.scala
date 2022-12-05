@@ -22,26 +22,27 @@ import cats.syntax.all._
 import org.typelevel.log4cats.extras.LogLevel
 import org.typelevel.log4cats.extras.LogLevel._
 
-class ConsoleLogger[F[_]: Applicative: ConsoleF](logLevel: Option[LogLevel] = Option(Trace))
-    extends SelfAwareStructuredLogger[F] {
-  override def trace(t: Throwable)(message: => String): F[Unit] = ConsoleF[F].debug(message, t)
-  override def trace(message: => String): F[Unit] = ConsoleF[F].debug(message)
+class ConsoleLogger[F[_]: Applicative](logLevel: Option[LogLevel] = Option(Trace))(implicit
+    ConsoleF: ConsoleF[F]
+) extends SelfAwareStructuredLogger[F] {
+  override def trace(t: Throwable)(message: => String): F[Unit] = ConsoleF.debug(message, t)
+  override def trace(message: => String): F[Unit] = ConsoleF.debug(message)
   override def isTraceEnabled: F[Boolean] = logLevel.exists(_ <= Trace).pure[F]
 
-  override def debug(t: Throwable)(message: => String): F[Unit] = ConsoleF[F].debug(message, t)
-  override def debug(message: => String): F[Unit] = ConsoleF[F].debug(message)
+  override def debug(t: Throwable)(message: => String): F[Unit] = ConsoleF.debug(message, t)
+  override def debug(message: => String): F[Unit] = ConsoleF.debug(message)
   override def isDebugEnabled: F[Boolean] = logLevel.exists(_ <= Debug).pure[F]
 
-  override def info(t: Throwable)(message: => String): F[Unit] = ConsoleF[F].info(message, t)
-  override def info(message: => String): F[Unit] = ConsoleF[F].info(message)
+  override def info(t: Throwable)(message: => String): F[Unit] = ConsoleF.info(message, t)
+  override def info(message: => String): F[Unit] = ConsoleF.info(message)
   override def isInfoEnabled: F[Boolean] = logLevel.exists(_ <= Info).pure[F]
 
-  override def warn(t: Throwable)(message: => String): F[Unit] = ConsoleF[F].warn(message, t)
-  override def warn(message: => String): F[Unit] = ConsoleF[F].warn(message)
+  override def warn(t: Throwable)(message: => String): F[Unit] = ConsoleF.warn(message, t)
+  override def warn(message: => String): F[Unit] = ConsoleF.warn(message)
   override def isWarnEnabled: F[Boolean] = logLevel.exists(_ <= Warn).pure[F]
 
-  override def error(t: Throwable)(message: => String): F[Unit] = ConsoleF[F].error(message, t)
-  override def error(message: => String): F[Unit] = ConsoleF[F].error(message)
+  override def error(t: Throwable)(message: => String): F[Unit] = ConsoleF.error(message, t)
+  override def error(message: => String): F[Unit] = ConsoleF.error(message)
   override def isErrorEnabled: F[Boolean] = logLevel.exists(_ <= Error).pure[F]
 
   /*
