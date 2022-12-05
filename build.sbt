@@ -99,7 +99,7 @@ lazy val `js-console` = project
     name := "log4cats-js-console",
     tlVersionIntroduced := List("2.12", "2.13", "3").map(_ -> "2.6.0").toMap,
     libraryDependencies ++= Seq(
-      "org.typelevel" %%% "cats-effect" % catsEffectV
+      "org.typelevel" %%% "cats-effect-kernel" % catsEffectV
     )
   )
   .enablePlugins(ScalaJSPlugin)

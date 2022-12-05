@@ -17,7 +17,7 @@
 package org.typelevel.log4cats
 package console
 
-import cats.effect.Sync
+import cats.effect.kernel.Sync
 
 class ConsoleF[F[_]: Sync] {
   def info(message: Any, optionalParams: Any*): F[Unit] =
