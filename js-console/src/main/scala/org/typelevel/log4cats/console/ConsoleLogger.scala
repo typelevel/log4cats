@@ -17,14 +17,14 @@
 package org.typelevel.log4cats
 package console
 
-import cats._
+import cats.effect.kernel.Sync
 import cats.syntax.all._
 import org.typelevel.log4cats.extras.LogLevel
 import org.typelevel.log4cats.extras.LogLevel._
 
-class ConsoleLogger[F[_]: Applicative](logLevel: Option[LogLevel] = Option(Trace))(implicit
-    ConsoleF: ConsoleF[F]
-) extends SelfAwareStructuredLogger[F] {
+class ConsoleLogger[F[_]: Sync](logLevel: Option[LogLevel] = Option(Trace))
+    extends SelfAwareStructuredLogger[F] {
+  private val ConsoleF: ConsoleF[F] = implicitly
   override def trace(t: Throwable)(message: => String): F[Unit] = ConsoleF.debug(message, t)
   override def trace(message: => String): F[Unit] = ConsoleF.debug(message)
   override def isTraceEnabled: F[Boolean] = logLevel.exists(_ <= Trace).pure[F]
