@@ -76,6 +76,31 @@ lazy val noop = crossProject(JSPlatform, JVMPlatform, NativePlatform)
   )
   .nativeSettings(commonNativeSettings)
 
+lazy val natchez = crossProject(JSPlatform, JVMPlatform, NativePlatform)
+  .settings(commonSettings)
+  .dependsOn(core)
+  .settings(
+    name := "log4cats-natchez",
+    libraryDependencies ++= Seq(
+      "org.tpolecat" %%% "natchez-core" % "0.2.2"
+    ),
+    tlVersionIntroduced := List("2.12", "2.13", "3").map(_ -> "2.6.0").toMap
+  )
+  .jvmSettings(
+    libraryDependencies ++= Seq(
+      "org.tpolecat" %%% "natchez-opentelemetry" % "0.2.2"                       % Test,
+      "io.opentelemetry"                         % "opentelemetry-api"           % "1.21.0" % Test,
+      "io.opentelemetry"                         % "opentelemetry-context"       % "1.21.0" % Test,
+      "io.opentelemetry"                         % "opentelemetry-exporter-otlp" % "1.21.0" % Test,
+      "io.opentelemetry" % "opentelemetry-exporter-logging"            % "1.21.0"       % Test,
+      "io.opentelemetry" % "opentelemetry-extension-trace-propagators" % "1.21.0"       % Test,
+      "io.opentelemetry" % "opentelemetry-sdk"                         % "1.20.1"       % Test,
+      "io.opentelemetry" % "opentelemetry-sdk-common"                  % "1.21.0"       % Test,
+      "io.opentelemetry" % "opentelemetry-sdk-trace"                   % "1.21.0"       % Test,
+      "io.opentelemetry" % "opentelemetry-semconv"                     % "1.21.0-alpha" % Test
+    )
+  )
+
 lazy val slf4j = project
   .settings(commonSettings)
   .dependsOn(core.jvm)
