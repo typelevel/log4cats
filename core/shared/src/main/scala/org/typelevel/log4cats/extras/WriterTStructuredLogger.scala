@@ -27,6 +27,12 @@ import org.typelevel.log4cats.{SelfAwareStructuredLogger, StructuredLogger}
  *
  * Running the `WriterT` instance will yield a value of type `F[(G[LogMessage], A)]`. As a result,
  * the logged messages can be materialized if and only `F` succeeds.
+ *
+ * This is particularly important because of the way that `cats.effect.IO` handles cancellation and
+ * timeouts.
+ *
+ * If a `SelfAwareStructuredLogger` is needed for testing, the `testing` module provides a better
+ * option: `org.typelevel.log4cats.testing.StructuredTestingLogger`
  */
 object WriterTStructuredLogger {
   def apply[F[_]: Applicative, G[_]: Alternative](

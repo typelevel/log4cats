@@ -21,6 +21,12 @@ import cats.syntax.all._
 import cats.{~>, Alternative, Applicative, Foldable, Id}
 import org.typelevel.log4cats.{SelfAwareStructuredLogger, StructuredLogger}
 
+/**
+ * A `SelfAwareStructuredLogger` implemented using `cats.data.Writer`.
+ *
+ * If a `SelfAwareStructuredLogger` is needed for test code, the `testing` module provides a better
+ * option: `org.typelevel.log4cats.testing.StructuredTestingLogger`
+ */
 object WriterStructuredLogger {
   def apply[G[_]: Alternative](
       traceEnabled: Boolean = true,

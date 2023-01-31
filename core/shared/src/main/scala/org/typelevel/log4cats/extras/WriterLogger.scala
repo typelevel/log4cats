@@ -21,6 +21,12 @@ import cats.data._
 import cats.syntax.all._
 import org.typelevel.log4cats._
 
+/**
+ * A `SelfAwareLogger` implemented using `cats.data.Writer`.
+ *
+ * If a `SelfAwareLogger` is needed for test code, the `testing` module provides a better option:
+ * `org.typelevel.log4cats.testing.TestingLogger`
+ */
 object WriterLogger {
 
   def apply[G[_]: Alternative](
