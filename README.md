@@ -167,6 +167,10 @@ class LoggerUsingService[F[_]: LoggerFactory: Monad] {
 new LoggerUsingService[IO].use("foo")
 ```
 
+## Using log4cats in tests
+
+See [here](testing/README.md) for details
+
 ## CVE-2021-44228 ("log4shell")
 
 log4cats is not directly susceptible to CVS-2021-44228.  The
