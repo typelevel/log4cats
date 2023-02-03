@@ -35,18 +35,12 @@ object WriterStructuredLogger {
       warnEnabled: Boolean = true,
       errorEnabled: Boolean = true
   ): SelfAwareStructuredLogger[Writer[G[StructuredLogMessage], *]] =
-    WriterTStructuredLogger[Id, G](
-      traceEnabled,
-      debugEnabled,
-      infoEnabled,
-      warnEnabled,
-      errorEnabled
-    )
+    WriterTStructuredLogger[Id, G](traceEnabled, debugEnabled, infoEnabled, warnEnabled, errorEnabled)
 
   def run[F[_]: Applicative, G[_]: Foldable](
       l: StructuredLogger[F]
   ): Writer[G[StructuredLogMessage], *] ~> F =
-    new ~>[Writer[G[StructuredLogMessage], *], F] {
+    new (Writer[G[StructuredLogMessage], *] ~> F) {
       def apply[A](fa: Writer[G[StructuredLogMessage], A]): F[A] = {
         val (toLog, out) = fa.run
         toLog.traverse_(StructuredLogMessage.log(_, l)).as(out)
