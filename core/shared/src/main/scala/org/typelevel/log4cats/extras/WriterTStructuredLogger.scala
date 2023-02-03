@@ -23,15 +23,13 @@ import cats.{~>, Alternative, Applicative, Foldable, Monad}
 import org.typelevel.log4cats.{SelfAwareStructuredLogger, StructuredLogger}
 
 /**
- * >>> WARNING READ BEFORE USAGE! <<< This logger will NOT log anything if `F` fails!
+ * A `SelfAwareStructuredLogger` implemented using `cats.data.WriterT`.
  *
- * Running the `WriterT` instance will yield a value of type `F[(G[LogMessage], A)]`. As a result,
- * the logged messages can be materialized if and only `F` succeeds.
+ * >>> WARNING: READ BEFORE USAGE! <<<
+ * https://github.com/typelevel/log4cats/blob/main/core/shared/src/main/scala/org/typelevel/log4cats/extras/README.md
+ * >>> WARNING: READ BEFORE USAGE! <<<
  *
- * This is particularly important because of the way that `cats.effect.IO` handles cancellation and
- * timeouts.
- *
- * If a `SelfAwareStructuredLogger` is needed for testing, the `testing` module provides a better
+ * If a `SelfAwareStructuredLogger` is needed for test code, the `testing` module provides a better
  * option: `org.typelevel.log4cats.testing.StructuredTestingLogger`
  */
 object WriterTStructuredLogger {

@@ -24,6 +24,10 @@ import org.typelevel.log4cats._
 /**
  * A `SelfAwareLogger` implemented using `cats.data.Writer`.
  *
+ * >>> WARNING: READ BEFORE USAGE! <<<
+ * https://github.com/typelevel/log4cats/blob/main/core/shared/src/main/scala/org/typelevel/log4cats/extras/README.md
+ * >>> WARNING: READ BEFORE USAGE! <<<
+ *
  * If a `SelfAwareLogger` is needed for test code, the `testing` module provides a better option:
  * `org.typelevel.log4cats.testing.TestingLogger`
  */
