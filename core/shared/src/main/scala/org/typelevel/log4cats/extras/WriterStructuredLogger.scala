@@ -39,7 +39,13 @@ object WriterStructuredLogger {
       warnEnabled: Boolean = true,
       errorEnabled: Boolean = true
   ): SelfAwareStructuredLogger[Writer[G[StructuredLogMessage], *]] =
-    WriterTStructuredLogger[Id, G](traceEnabled, debugEnabled, infoEnabled, warnEnabled, errorEnabled)
+    WriterTStructuredLogger[Id, G](
+      traceEnabled,
+      debugEnabled,
+      infoEnabled,
+      warnEnabled,
+      errorEnabled
+    )
 
   def run[F[_]: Applicative, G[_]: Foldable](
       l: StructuredLogger[F]

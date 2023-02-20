@@ -43,7 +43,7 @@ object WriterLogger {
     WriterTLogger[cats.Id, G](traceEnabled, debugEnabled, infoEnabled, warnEnabled, errorEnabled)
 
   def run[F[_]: Applicative, G[_]: Foldable](l: Logger[F]): Writer[G[LogMessage], *] ~> F =
-    new(Writer[G[LogMessage], *] ~> F) {
+    new (Writer[G[LogMessage], *] ~> F) {
       def apply[A](fa: Writer[G[LogMessage], A]): F[A] = {
         val (toLog, out) = fa.run
         toLog.traverse_(LogMessage.log(_, l)).as(out)
