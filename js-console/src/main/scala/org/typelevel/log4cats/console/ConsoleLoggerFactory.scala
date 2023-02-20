@@ -15,12 +15,21 @@
  */
 
 package org.typelevel.log4cats
+package console
 
-import cats.effect.Sync
+import cats.effect.kernel._
+import cats.syntax.all._
 
-package object slf4j {
+trait ConsoleLoggerFactory[F[_]] extends LoggerFactory[F]
 
-  @deprecated("Use Slf4jFactory.create[F] explicitly", "2.6.0")
-  implicit def loggerFactoryforSync[F[_]: Sync]: Slf4jFactory[F] =
-    Slf4jFactory.create[F]
+object ConsoleLoggerFactory {
+  def apply[F[_]: ConsoleLoggerFactory]: ConsoleLoggerFactory[F] = implicitly
+
+  def create[F[_]: Sync]: ConsoleLoggerFactory[F] = new ConsoleLoggerFactory[F] {
+    override def getLoggerFromName(name: String): SelfAwareStructuredLogger[F] =
+      new ConsoleLogger[F]()
+
+    override def fromName(name: String): F[SelfAwareStructuredLogger[F]] =
+      getLoggerFromName(name).pure[F].widen
+  }
 }

@@ -100,29 +100,17 @@ This brings several advantages:
 If you are unsure how to create a new `LoggerFactory[F]` instance, then you can look at the `log4cats-slf4j`,
 or `log4cats-noop` modules for concrete implementations.
 
-The quickest fix might be to import needed implicits:
-```scala mdoc:silent
-// assumes dependency on log4cats-slf4j module
-import org.typelevel.log4cats._
-import org.typelevel.log4cats.slf4j._
-
-val logger: SelfAwareStructuredLogger[IO] = LoggerFactory[IO].getLogger
-
-// or
-def anyFSyncLogger[F[_]: Sync]: SelfAwareStructuredLogger[F] = Slf4jFactory[F].getLogger
-```
-
-Alternatively, a mutually exclusive solution is to explicitly create your 
-`LoggerFactory[F]` instance and pass them around implicitly:
+The quickest fix might be to create an instance of a `Slf4jFactory` and pass it around implicitly:
 ```scala mdoc:reset:silent
 import cats.effect.IO
 import cats.Monad
 import cats.syntax.all._
 import org.typelevel.log4cats._
+// assumes dependency on log4cats-slf4j module
 import org.typelevel.log4cats.slf4j.Slf4jFactory
 
 // create our LoggerFactory
-implicit val logging: LoggerFactory[IO] = Slf4jFactory[IO]
+implicit val logging: LoggerFactory[IO] = Slf4jFactory.create[IO]
 
 // we summon LoggerFactory instance, and create logger
 val logger: SelfAwareStructuredLogger[IO] = LoggerFactory[IO].getLogger

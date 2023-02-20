@@ -18,6 +18,23 @@ libraryDependencies ++= Seq(
 )
 ```
 
+## Why log4cats?
+
+Well, to answer that, let's take a look at how you might combine cats-effect with vanilla logging...
+
+```scala
+object MyVanillaLoggingThing {
+  val logger: Logger = Logger(LoggerFactory.getLogger(getClass.getName))
+  
+  def doSomething(): IO[Unit] =
+    IO(logger.info("Doing something!")) *> IO.println("Hello, World!")
+
+}
+```
+
+But what if you don't want to wrap your logger in an `IO` like this?  
+Good news, you don't have to!  Enter log4cats!  Read on!
+
 ## Examples
 
 ```scala
@@ -55,6 +72,20 @@ object MyThing {
   } yield something
 }
 ```
+
+## Wait...why log4cats again?
+If you compare the vanilla logger + cats-effect example with the log4cats examples above,
+you might be asking yourself "why do I have to do any of this?" 
+or "why can't I just add a log statement like normal?"  
+
+Well there are several reasons.  Logging is often times an overlooked side-effect, 
+which under the hood can range from writing to a mutable queue, writing to disk, 
+outputting to the console, or sometimes even doing network I/O! 
+To correctly deal with these kinds of side-effects we have to ensure they are properly wrapped in `IO`,
+see the [cats-effect docs](https://typelevel.org/cats-effect/docs/concepts#side-effects) for more details.
+
+Basically, we are using cats-effect.  We like things like "referential transparency" 
+and "programs-as-values".  Wrapping our log statement in an `IO` helps with that.
 
 ### Laconic syntax
 

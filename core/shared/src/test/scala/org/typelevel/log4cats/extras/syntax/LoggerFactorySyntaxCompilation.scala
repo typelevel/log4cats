@@ -17,7 +17,9 @@
 package org.typelevel.log4cats.extras.syntax
 
 import cats._
+import cats.data.EitherT
 import cats.data.Kleisli
+import cats.data.OptionT
 import org.typelevel.log4cats.LoggerFactory
 
 object LoggerFactorySyntaxCompilation {
@@ -30,4 +32,14 @@ object LoggerFactorySyntaxCompilation {
       lf: LoggerFactory[F]
   ): LoggerFactory[Kleisli[F, A, *]] =
     lf.mapK(Kleisli.liftK[F, A])
+
+  def eitherTLoggerFactory[F[_]: Functor: LoggerFactory, E]: LoggerFactory[EitherT[F, E, *]] =
+    LoggerFactory[EitherT[F, E, *]]
+
+  def optionTLoggerFactory[F[_]: Functor: LoggerFactory]: LoggerFactory[OptionT[F, *]] =
+    LoggerFactory[OptionT[F, *]]
+
+  def kleisliLoggerFactory[F[_]: Functor: LoggerFactory, A]: LoggerFactory[Kleisli[F, A, *]] =
+    LoggerFactory[Kleisli[F, A, *]]
+
 }
