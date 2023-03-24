@@ -22,13 +22,19 @@ import cats.Applicative
 object NoOpFactory extends LoggerFactoryGenCompanion {
   def apply[F[_]: Applicative]: LoggerFactory[F] = impl[F]
 
-  def impl[F[_]](implicit F: Applicative[F]): LoggerFactory[F] = new LoggerFactory[F] {
-    override def getLoggerFromName(name: String): SelfAwareStructuredLogger[F] = {
-      val _ = name
-      NoOpLogger.impl[F]
+  def strictEvalArgs[F[_]: Applicative]: LoggerFactory[F] = impl_[F](evaluateArgs = true)
+
+  def impl[F[_]](implicit F: Applicative[F]): LoggerFactory[F] = impl_[F](evaluateArgs = false)
+
+  private def impl_[F[_]](evaluateArgs: Boolean)(implicit F: Applicative[F]): LoggerFactory[F] =
+    new LoggerFactory[F] {
+      override def getLoggerFromName(name: String): SelfAwareStructuredLogger[F] = {
+        val _ = name
+        NoOpLogger.impl_[F](evaluateArgs)
+      }
+
+      override def fromName(name: String): F[SelfAwareStructuredLogger[F]] =
+        F.pure(getLoggerFromName(name))
     }
 
-    override def fromName(name: String): F[SelfAwareStructuredLogger[F]] =
-      F.pure(getLoggerFromName(name))
-  }
 }
