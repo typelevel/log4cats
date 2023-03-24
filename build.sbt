@@ -30,7 +30,7 @@ val catsV = "2.9.0"
 val catsEffectV = "3.4.8"
 val slf4jV = "1.7.36"
 val munitCatsEffectV = "2.0.0-M3"
-val logbackClassicV = "1.2.11"
+val logbackClassicV = "1.2.12"
 
 Global / onChangedBuildSource := ReloadOnSourceChanges
 
