@@ -28,7 +28,7 @@ object NoOpLogger {
   def impl[F[_]: Applicative] = impl_[F](evaluateArgs = false)
 
   private[noop] def impl_[F[_]: Applicative](evaluateArgs: Boolean): SelfAwareStructuredLogger[F] =
-    if (evaluateArgs) stricImpl else lazyImpl
+    if (evaluateArgs) strictImpl else lazyImpl
 
   private def lazyImpl[F[_]: Applicative] = new SelfAwareStructuredLogger[F] {
 
@@ -67,19 +67,19 @@ object NoOpLogger {
       unit
   }
 
-  private def stricImpl[F[_]: Applicative] = new SelfAwareStructuredLogger[F] {
+  private def strictImpl[F[_]: Applicative] = new SelfAwareStructuredLogger[F] {
 
-    val no: F[Boolean] = Applicative[F].pure(false)
+    val yes: F[Boolean] = Applicative[F].pure(true)
     def void(arg: => Any): F[Unit] = Applicative[F].pure {
       val _ = arg
       ()
     }
 
-    @inline override def isTraceEnabled: F[Boolean] = no
-    @inline override def isDebugEnabled: F[Boolean] = no
-    @inline override def isInfoEnabled: F[Boolean] = no
-    @inline override def isWarnEnabled: F[Boolean] = no
-    @inline override def isErrorEnabled: F[Boolean] = no
+    @inline override def isTraceEnabled: F[Boolean] = yes
+    @inline override def isDebugEnabled: F[Boolean] = yes
+    @inline override def isInfoEnabled: F[Boolean] = yes
+    @inline override def isWarnEnabled: F[Boolean] = yes
+    @inline override def isErrorEnabled: F[Boolean] = yes
     @inline override def trace(t: Throwable)(msg: => String): F[Unit] = void(t)
     @inline override def trace(msg: => String): F[Unit] = void(msg)
     @inline override def trace(ctx: Map[String, String])(msg: => String): F[Unit] = void(msg)
