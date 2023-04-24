@@ -1,6 +1,6 @@
 # log4cats
 
-[![Maven Central](https://maven-badges.herokuapp.com/maven-central/org.typelevel/log4cats-core_2.12/badge.svg)](https://maven-badges.herokuapp.com/maven-central/org.typelevel/log4cats-core_2.12)
+[![Build Status](https://github.com/typelevel/log4cats/workflows/Continuous%20Integration/badge.svg?branch=main)](https://github.com/typelevel/log4cats/actions?query=branch%3Amain+workflow%3A%22Continuous+Integration%22) [![Maven Central](https://maven-badges.herokuapp.com/maven-central/org.typelevel/log4cats-core_2.12/badge.svg)](https://maven-badges.herokuapp.com/maven-central/org.typelevel/log4cats-core_2.12)
 
 ## Project Goals
 
