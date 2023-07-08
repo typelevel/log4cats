@@ -63,6 +63,13 @@ private[slf4j] object Slf4jLoggerInternal {
   final class Slf4jLogger[F[_]](val logger: JLogger, sync: Sync.Type = Sync.Type.Delay)(implicit
       F: Sync[F]
   ) extends SelfAwareStructuredLogger[F] {
+
+    @deprecated("Use constructor with sync", "2.6.0")
+    def this(logger: JLogger)(
+        F: Sync[F]
+    ) =
+      this(logger, Sync.Type.Delay)(F)
+
     override def isTraceEnabled: F[Boolean] = F.suspend(sync)(logger.isTraceEnabled)
     override def isDebugEnabled: F[Boolean] = F.suspend(sync)(logger.isDebugEnabled)
     override def isInfoEnabled: F[Boolean] = F.suspend(sync)(logger.isInfoEnabled)
