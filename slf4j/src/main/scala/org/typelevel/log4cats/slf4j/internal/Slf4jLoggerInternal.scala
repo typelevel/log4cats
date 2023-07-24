@@ -70,11 +70,11 @@ private[slf4j] object Slf4jLoggerInternal {
     ) =
       this(logger, Sync.Type.Delay)(F)
 
-    override def isTraceEnabled: F[Boolean] = F.suspend(sync)(logger.isTraceEnabled)
-    override def isDebugEnabled: F[Boolean] = F.suspend(sync)(logger.isDebugEnabled)
-    override def isInfoEnabled: F[Boolean] = F.suspend(sync)(logger.isInfoEnabled)
-    override def isWarnEnabled: F[Boolean] = F.suspend(sync)(logger.isWarnEnabled)
-    override def isErrorEnabled: F[Boolean] = F.suspend(sync)(logger.isErrorEnabled)
+    override def isTraceEnabled: F[Boolean] = F.delay(logger.isTraceEnabled)
+    override def isDebugEnabled: F[Boolean] = F.delay(logger.isDebugEnabled)
+    override def isInfoEnabled: F[Boolean] = F.delay(logger.isInfoEnabled)
+    override def isWarnEnabled: F[Boolean] = F.delay(logger.isWarnEnabled)
+    override def isErrorEnabled: F[Boolean] = F.delay(logger.isErrorEnabled)
 
     override def trace(t: Throwable)(msg: => String): F[Unit] =
       isTraceEnabled
