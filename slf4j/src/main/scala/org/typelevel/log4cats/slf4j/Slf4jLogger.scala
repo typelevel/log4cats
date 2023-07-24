@@ -51,5 +51,5 @@ object Slf4jLogger extends Slf4jLoggerCompat {
     Sync[F].delay(getLoggerFromSlf4j[F](logger))
 
   def fromBlockingSlf4j[F[_]: Sync](logger: JLogger): F[SelfAwareStructuredLogger[F]] =
-    Sync[F].blocking(getLoggerFromBlockingSlf4j[F](logger))
+    Sync[F].delay(getLoggerFromBlockingSlf4j[F](logger))
 }
