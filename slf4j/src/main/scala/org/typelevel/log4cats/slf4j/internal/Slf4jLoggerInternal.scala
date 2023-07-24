@@ -37,11 +37,10 @@ private[slf4j] object Slf4jLoggerInternal {
   private[this] def contextLog[F[_]](
       isEnabled: F[Boolean],
       ctx: Map[String, String],
-      logging: () => Unit,
-      sync: Sync.Type
+      logging: () => Unit
   )(implicit F: Sync[F]): F[Unit] = {
 
-    val ifEnabled = F.suspend(sync) {
+    val ifEnabled = F.delay {
       val backup = MDC.getCopyOfContextMap()
 
       for {
@@ -83,7 +82,7 @@ private[slf4j] object Slf4jLoggerInternal {
       isTraceEnabled
         .ifM(F.suspend(sync)(logger.trace(msg)), F.unit)
     override def trace(ctx: Map[String, String])(msg: => String): F[Unit] =
-      contextLog(isTraceEnabled, ctx, () => logger.trace(msg), sync)
+      contextLog(isTraceEnabled, ctx, () => logger.trace(msg))
     override def debug(t: Throwable)(msg: => String): F[Unit] =
       isDebugEnabled
         .ifM(F.suspend(sync)(logger.debug(msg, t)), F.unit)
@@ -91,7 +90,7 @@ private[slf4j] object Slf4jLoggerInternal {
       isDebugEnabled
         .ifM(F.suspend(sync)(logger.debug(msg)), F.unit)
     override def debug(ctx: Map[String, String])(msg: => String): F[Unit] =
-      contextLog(isDebugEnabled, ctx, () => logger.debug(msg), sync)
+      contextLog(isDebugEnabled, ctx, () => logger.debug(msg))
     override def info(t: Throwable)(msg: => String): F[Unit] =
       isInfoEnabled
         .ifM(F.suspend(sync)(logger.info(msg, t)), F.unit)
@@ -99,7 +98,7 @@ private[slf4j] object Slf4jLoggerInternal {
       isInfoEnabled
         .ifM(F.suspend(sync)(logger.info(msg)), F.unit)
     override def info(ctx: Map[String, String])(msg: => String): F[Unit] =
-      contextLog(isInfoEnabled, ctx, () => logger.info(msg), sync)
+      contextLog(isInfoEnabled, ctx, () => logger.info(msg))
     override def warn(t: Throwable)(msg: => String): F[Unit] =
       isWarnEnabled
         .ifM(F.suspend(sync)(logger.warn(msg, t)), F.unit)
@@ -107,7 +106,7 @@ private[slf4j] object Slf4jLoggerInternal {
       isWarnEnabled
         .ifM(F.suspend(sync)(logger.warn(msg)), F.unit)
     override def warn(ctx: Map[String, String])(msg: => String): F[Unit] =
-      contextLog(isWarnEnabled, ctx, () => logger.warn(msg), sync)
+      contextLog(isWarnEnabled, ctx, () => logger.warn(msg))
     override def error(t: Throwable)(msg: => String): F[Unit] =
       isErrorEnabled
         .ifM(F.suspend(sync)(logger.error(msg, t)), F.unit)
@@ -115,16 +114,16 @@ private[slf4j] object Slf4jLoggerInternal {
       isErrorEnabled
         .ifM(F.suspend(sync)(logger.error(msg)), F.unit)
     override def error(ctx: Map[String, String])(msg: => String): F[Unit] =
-      contextLog(isErrorEnabled, ctx, () => logger.error(msg), sync)
+      contextLog(isErrorEnabled, ctx, () => logger.error(msg))
     override def trace(ctx: Map[String, String], t: Throwable)(msg: => String): F[Unit] =
-      contextLog(isTraceEnabled, ctx, () => logger.trace(msg, t), sync)
+      contextLog(isTraceEnabled, ctx, () => logger.trace(msg, t))
     override def debug(ctx: Map[String, String], t: Throwable)(msg: => String): F[Unit] =
-      contextLog(isDebugEnabled, ctx, () => logger.debug(msg, t), sync)
+      contextLog(isDebugEnabled, ctx, () => logger.debug(msg, t))
     override def info(ctx: Map[String, String], t: Throwable)(msg: => String): F[Unit] =
-      contextLog(isInfoEnabled, ctx, () => logger.info(msg, t), sync)
+      contextLog(isInfoEnabled, ctx, () => logger.info(msg, t))
     override def warn(ctx: Map[String, String], t: Throwable)(msg: => String): F[Unit] =
-      contextLog(isWarnEnabled, ctx, () => logger.warn(msg, t), sync)
+      contextLog(isWarnEnabled, ctx, () => logger.warn(msg, t))
     override def error(ctx: Map[String, String], t: Throwable)(msg: => String): F[Unit] =
-      contextLog(isErrorEnabled, ctx, () => logger.error(msg, t), sync)
+      contextLog(isErrorEnabled, ctx, () => logger.error(msg, t))
   }
 }
