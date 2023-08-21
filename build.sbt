@@ -73,6 +73,15 @@ lazy val noop = crossProject(JSPlatform, JVMPlatform, NativePlatform)
   .dependsOn(core)
   .settings(
     name := "log4cats-noop"
+  ) // migrated to core, so we check that core is compatible with old noop artifacts
+  .jvmSettings(
+    mimaCurrentClassfiles := (core.jvm / Compile / classDirectory).value
+  )
+  .jsSettings(
+    mimaCurrentClassfiles := (core.js / Compile / classDirectory).value
+  )
+  .nativeSettings(
+    mimaCurrentClassfiles := (core.native / Compile / classDirectory).value
   )
   .nativeSettings(commonNativeSettings)
 
