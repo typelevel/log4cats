@@ -19,8 +19,6 @@ package org.typelevel.log4cats.slf4j
 import cats.effect.Sync
 import org.typelevel.log4cats.SelfAwareStructuredLogger
 import org.typelevel.log4cats.slf4j.internal._
-import org.slf4j.Logger as JLogger
-import scala.annotation.nowarn
 
 trait Slf4jLoggerCompat {
 
