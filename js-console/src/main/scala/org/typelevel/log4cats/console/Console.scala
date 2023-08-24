@@ -23,6 +23,8 @@
 
 package org.typelevel.log4cats.console
 
+import org.typelevel.scalaccompat.annotation._
+
 import scala.scalajs.js
 import scala.scalajs.js.annotation.JSGlobal
 
@@ -36,6 +38,7 @@ import scala.scalajs.js.annotation.JSGlobal
  */
 @js.native
 @JSGlobal("console")
+@nowarn212("cat=unused")
 private[console] object Console extends js.Object {
 
   /**
