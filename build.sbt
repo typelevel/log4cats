@@ -64,7 +64,6 @@ lazy val mtl = crossProject(JSPlatform, JVMPlatform, NativePlatform)
     name := "log4cats-mtl",
     libraryDependencies += "org.typelevel" %%% "cats-mtl" % catsMtlV
   )
-  .nativeSettings(commonNativeSettings)
 
 lazy val testing = crossProject(JSPlatform, JVMPlatform, NativePlatform)
   .settings(commonSettings)
