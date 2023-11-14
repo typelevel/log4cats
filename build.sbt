@@ -29,7 +29,7 @@ ThisBuild / tlVersionIntroduced := Map("3" -> "2.1.1")
 val catsV = "2.10.0"
 val catsEffectV = "3.5.2"
 val slf4jV = "1.7.36"
-val munitCatsEffectV = "2.0.0-M3"
+val munitCatsEffectV = "2.0.0-M4"
 val logbackClassicV = "1.2.12"
 
 Global / onChangedBuildSource := ReloadOnSourceChanges
