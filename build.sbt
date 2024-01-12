@@ -28,13 +28,14 @@ ThisBuild / tlVersionIntroduced := Map("3" -> "2.1.1")
 
 val catsV = "2.10.0"
 val catsEffectV = "3.5.2"
+val catsMtlV = "1.4.0"
 val slf4jV = "1.7.36"
 val munitCatsEffectV = "2.0.0-M4"
 val logbackClassicV = "1.2.13"
 
 Global / onChangedBuildSource := ReloadOnSourceChanges
 
-lazy val root = tlCrossRootProject.aggregate(core, testing, noop, slf4j, docs, `js-console`)
+lazy val root = tlCrossRootProject.aggregate(core, mtl, testing, noop, slf4j, docs, `js-console`)
 
 lazy val docs = project
   .in(file("site"))
@@ -56,9 +57,17 @@ lazy val core = crossProject(JSPlatform, JVMPlatform, NativePlatform)
   )
   .nativeSettings(commonNativeSettings)
 
-lazy val testing = crossProject(JSPlatform, JVMPlatform, NativePlatform)
+lazy val mtl = crossProject(JSPlatform, JVMPlatform, NativePlatform)
   .settings(commonSettings)
   .dependsOn(core)
+  .settings(
+    name := "log4cats-mtl",
+    libraryDependencies += "org.typelevel" %%% "cats-mtl" % catsMtlV
+  )
+
+lazy val testing = crossProject(JSPlatform, JVMPlatform, NativePlatform)
+  .settings(commonSettings)
+  .dependsOn(core, mtl % Test)
   .settings(
     name := "log4cats-testing",
     libraryDependencies ++= Seq(
