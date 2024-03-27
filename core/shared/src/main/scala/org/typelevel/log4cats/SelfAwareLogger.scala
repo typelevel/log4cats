@@ -32,6 +32,15 @@ trait SelfAwareLogger[F[_]] extends Logger[F] {
 object SelfAwareLogger {
   def apply[F[_]](implicit ev: SelfAwareLogger[F]): SelfAwareLogger[F] = ev
 
+  trait Stubbed[F[_]] extends SelfAwareLogger[F] {
+    protected def F: Applicative[F]
+    def isTraceEnabled: F[Boolean] = F.pure(true)
+    def isDebugEnabled: F[Boolean] = F.pure(true)
+    def isInfoEnabled: F[Boolean] = F.pure(true)
+    def isWarnEnabled: F[Boolean] = F.pure(true)
+    def isErrorEnabled: F[Boolean] = F.pure(true)
+  }
+
   private def mapK[G[_], F[_]](f: G ~> F)(logger: SelfAwareLogger[G]): SelfAwareLogger[F] =
     new SelfAwareLogger[F] {
       def isTraceEnabled: F[Boolean] =

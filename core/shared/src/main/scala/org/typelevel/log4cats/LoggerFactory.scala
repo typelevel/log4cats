@@ -16,12 +16,13 @@
 
 package org.typelevel.log4cats
 
+import cats.Applicative
 import cats.Functor
+import cats.data.EitherT
 import cats.data.Kleisli
+import cats.data.OptionT
 import cats.syntax.functor._
 import cats.~>
-import cats.data.OptionT
-import cats.data.EitherT
 
 import scala.annotation.implicitNotFound
 
@@ -38,6 +39,18 @@ trait LoggerFactory[F[_]] extends LoggerFactoryGen[F] {
 
 object LoggerFactory extends LoggerFactoryGenCompanion {
   def apply[F[_]: LoggerFactory]: LoggerFactory[F] = implicitly
+
+  def const[F[_]](
+      logger: SelfAwareStructuredLogger[F]
+  )(implicit F: Applicative[F]): LoggerFactory[F] = new LoggerFactory[F] {
+    override def getLoggerFromName(name: String): SelfAwareStructuredLogger[F] = logger
+
+    override def fromName(name: String): F[SelfAwareStructuredLogger[F]] = F.pure(logger)
+  }
+
+  def liftF[F[_]: Applicative](f: String => F[Unit]): LoggerFactory[F] = const(
+    SelfAwareStructuredLogger.liftF(f)
+  )
 
   implicit def optionTFactory[F[_]: LoggerFactory: Functor]: LoggerFactory[OptionT[F, *]] =
     LoggerFactory[F].mapK(OptionT.liftK[F])

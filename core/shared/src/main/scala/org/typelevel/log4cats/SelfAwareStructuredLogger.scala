@@ -38,6 +38,27 @@ trait SelfAwareStructuredLogger[F[_]] extends SelfAwareLogger[F] with Structured
 }
 
 object SelfAwareStructuredLogger {
+  trait Simple[F[_]]
+      extends SelfAwareStructuredLogger[F]
+      with StructuredLogger.Fallback[F]
+      with ErrorLogger.Fallback[F]
+      with SelfAwareLogger.Stubbed[F]
+
+  def liftF[F[_]: Applicative](f: String => F[Unit]): SelfAwareStructuredLogger[F] =
+    new SelfAwareStructuredLogger.Simple[F] {
+      override protected def F: Applicative[F] = implicitly
+
+      override def error(message: => String): F[Unit] = f(message)
+
+      override def warn(message: => String): F[Unit] = f(message)
+
+      override def info(message: => String): F[Unit] = f(message)
+
+      override def debug(message: => String): F[Unit] = f(message)
+
+      override def trace(message: => String): F[Unit] = f(message)
+    }
+
   def apply[F[_]](implicit ev: SelfAwareStructuredLogger[F]): SelfAwareStructuredLogger[F] = ev
 
   def withContext[F[_]](
