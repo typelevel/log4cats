@@ -1,6 +1,6 @@
 import com.typesafe.tools.mima.core._
 
-val Scala213 = "2.13.13"
+val Scala213 = "2.13.14"
 val Scala212 = "2.12.19"
 val Scala3 = "3.3.3"
 
@@ -29,7 +29,7 @@ ThisBuild / tlVersionIntroduced := Map("3" -> "2.1.1")
 val catsV = "2.10.0"
 val catsEffectV = "3.5.4"
 val slf4jV = "1.7.36"
-val munitCatsEffectV = "2.0.0-M4"
+val munitCatsEffectV = "2.0.0-M5"
 val logbackClassicV = "1.2.13"
 
 Global / onChangedBuildSource := ReloadOnSourceChanges
