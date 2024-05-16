@@ -16,9 +16,11 @@
 
 package org.typelevel.log4cats.testing
 
+import cats.data.Chain
 import org.typelevel.log4cats.SelfAwareLogger
-import cats.effect.Sync
-import cats.implicits._
+import cats.effect.{Ref, Sync}
+import cats.implicits.*
+
 import java.util.concurrent.atomic.AtomicReference
 import scala.annotation.tailrec
 
@@ -41,12 +43,46 @@ object TestingLogger {
   final case class ERROR(message: String, throwOpt: Option[Throwable]) extends LogMessage
 
   def impl[F[_]: Sync](
-      traceEnabled: Boolean = true,
-      debugEnabled: Boolean = true,
-      infoEnabled: Boolean = true,
-      warnEnabled: Boolean = true,
-      errorEnabled: Boolean = true
-  ): TestingLogger[F] = {
+                        traceEnabled: Boolean = true,
+                        debugEnabled: Boolean = true,
+                        infoEnabled: Boolean = true,
+                        warnEnabled: Boolean = true,
+                        errorEnabled: Boolean = true
+                      ): TestingLogger[F] =
+    atomic[F](
+      traceEnabled = traceEnabled,
+      debugEnabled = debugEnabled,
+      infoEnabled = infoEnabled,
+      warnEnabled = warnEnabled,
+      errorEnabled = errorEnabled
+    )
+
+  def ref[F[_]: Sync](
+                       traceEnabled: Boolean = true,
+                       debugEnabled: Boolean = true,
+                       infoEnabled: Boolean = true,
+                       warnEnabled: Boolean = true,
+                       errorEnabled: Boolean = true
+                     ): F[TestingLogger[F]] =
+    Ref[F].empty[Chain[LogMessage]].map { ref =>
+      make[F](
+        traceEnabled = traceEnabled,
+        debugEnabled = debugEnabled,
+        infoEnabled = infoEnabled,
+        warnEnabled = warnEnabled,
+        errorEnabled = errorEnabled,
+        appendLogMessage = lm => ref.update(_.append(lm)),
+        read = () => ref.get.map(_.toVector)
+      )
+    }
+
+  def atomic[F[_]: Sync](
+                          traceEnabled: Boolean = true,
+                          debugEnabled: Boolean = true,
+                          infoEnabled: Boolean = true,
+                          warnEnabled: Boolean = true,
+                          errorEnabled: Boolean = true
+                        ): TestingLogger[F] = {
     val ar = new AtomicReference(Vector.empty[LogMessage])
     def appendLogMessage(m: LogMessage): F[Unit] = Sync[F].delay {
       @tailrec
@@ -58,9 +94,30 @@ object TestingLogger {
       }
       mod()
     }
+    def retrieveLogMessages: F[Vector[LogMessage]] = Sync[F].delay(ar.get())
 
+    make[F](
+      traceEnabled = traceEnabled,
+      debugEnabled = debugEnabled,
+      infoEnabled = infoEnabled,
+      warnEnabled = warnEnabled,
+      errorEnabled = errorEnabled,
+      appendLogMessage = appendLogMessage,
+      read = retrieveLogMessages _
+    )
+  }
+
+  def make[F[_]: Sync](
+      traceEnabled: Boolean = true,
+      debugEnabled: Boolean = true,
+      infoEnabled: Boolean = true,
+      warnEnabled: Boolean = true,
+      errorEnabled: Boolean = true,
+      appendLogMessage: LogMessage => F[Unit],
+      read: () => F[Vector[LogMessage]]
+  ): TestingLogger[F] =
     new TestingLogger[F] {
-      def logged: F[Vector[LogMessage]] = Sync[F].delay(ar.get)
+      def logged: F[Vector[LogMessage]] = read()
 
       def isTraceEnabled: F[Boolean] = Sync[F].pure(traceEnabled)
       def isDebugEnabled: F[Boolean] = Sync[F].pure(debugEnabled)
@@ -68,31 +125,32 @@ object TestingLogger {
       def isWarnEnabled: F[Boolean] = Sync[F].pure(warnEnabled)
       def isErrorEnabled: F[Boolean] = Sync[F].pure(errorEnabled)
 
+      private val noop = noop
+
       def error(message: => String): F[Unit] =
-        if (errorEnabled) appendLogMessage(ERROR(message, None)) else Sync[F].pure(())
+        if (errorEnabled) appendLogMessage(ERROR(message, None)) else noop
       def error(t: Throwable)(message: => String): F[Unit] =
-        if (errorEnabled) appendLogMessage(ERROR(message, t.some)) else Sync[F].pure(())
+        if (errorEnabled) appendLogMessage(ERROR(message, t.some)) else noop
 
       def warn(message: => String): F[Unit] =
-        if (warnEnabled) appendLogMessage(WARN(message, None)) else Sync[F].pure(())
+        if (warnEnabled) appendLogMessage(WARN(message, None)) else noop
       def warn(t: Throwable)(message: => String): F[Unit] =
-        if (warnEnabled) appendLogMessage(WARN(message, t.some)) else Sync[F].pure(())
+        if (warnEnabled) appendLogMessage(WARN(message, t.some)) else noop
 
       def info(message: => String): F[Unit] =
-        if (infoEnabled) appendLogMessage(INFO(message, None)) else Sync[F].pure(())
+        if (infoEnabled) appendLogMessage(INFO(message, None)) else noop
       def info(t: Throwable)(message: => String): F[Unit] =
-        if (infoEnabled) appendLogMessage(INFO(message, t.some)) else Sync[F].pure(())
+        if (infoEnabled) appendLogMessage(INFO(message, t.some)) else noop
 
       def debug(message: => String): F[Unit] =
-        if (debugEnabled) appendLogMessage(DEBUG(message, None)) else Sync[F].pure(())
+        if (debugEnabled) appendLogMessage(DEBUG(message, None)) else noop
       def debug(t: Throwable)(message: => String): F[Unit] =
-        if (debugEnabled) appendLogMessage(DEBUG(message, t.some)) else Sync[F].pure(())
+        if (debugEnabled) appendLogMessage(DEBUG(message, t.some)) else noop
 
       def trace(message: => String): F[Unit] =
-        if (traceEnabled) appendLogMessage(TRACE(message, None)) else Sync[F].pure(())
+        if (traceEnabled) appendLogMessage(TRACE(message, None)) else noop
       def trace(t: Throwable)(message: => String): F[Unit] =
-        if (traceEnabled) appendLogMessage(TRACE(message, t.some)) else Sync[F].pure(())
+        if (traceEnabled) appendLogMessage(TRACE(message, t.some)) else noop
     }
-  }
 
 }
