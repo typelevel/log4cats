@@ -1,8 +1,25 @@
+/*
+ * Copyright 2018 Typelevel
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package org.typelevel.log4cats.extras
 
 import cats.data.Chain
 import cats.effect.kernel.Resource.ExitCase
 import cats.effect.kernel.{Concurrent, Ref, Resource}
+import cats.kernel.Hash
 import cats.syntax.all.*
 import org.typelevel.log4cats.StructuredLogger
 import org.typelevel.log4cats.extras.DeferredStructuredLogger.DeferredStructuredLogMessage
@@ -27,9 +44,25 @@ import org.typelevel.log4cats.extras.DeferredStructuredLogger.DeferredStructured
  *       }
  *   }
  * }}}
+ *
+ * >>> WARNING: READ BEFORE USAGE! <<<
+ * https://github.com/typelevel/log4cats/blob/main/core/shared/src/main/scala/org/typelevel/log4cats/extras/README.md
+ * >>> WARNING: READ BEFORE USAGE! <<<
  */
 trait DeferredStructuredLogger[F[_]] extends StructuredLogger[F] {
+
+  /**
+   * View the logs in the buffer.
+   *
+   * This is primarily useful for testing, and will not effect the behavior of calls to `log`
+   */
   def inspect: F[Chain[DeferredStructuredLogMessage]]
+
+  /**
+   * Log the deferred messages
+   *
+   * This may be called multiple times, and each log should only be logged once.
+   */
   def log: F[Unit]
 }
 object DeferredStructuredLogger {
@@ -109,6 +142,13 @@ object DeferredStructuredLogger {
       case Error(message, Some(e), ctx) => logger.error(ctx, e)(message())
       case Error(message, None, ctx) => logger.error(ctx)(message())
     }
+
+    override def equals(obj: Any): Boolean = obj match {
+      case other: DeferredStructuredLogMessage => deferredStructuredLogMessageHash.eqv(this, other)
+      case _ => false
+    }
+
+    override def hashCode(): Int = deferredStructuredLogMessageHash.hash(this)
   }
 
   final case class Trace(
@@ -136,4 +176,17 @@ object DeferredStructuredLogger {
       throwOpt: Option[Throwable],
       ctx: Map[String, String]
   ) extends DeferredStructuredLogMessage
+
+  implicit val deferredStructuredLogMessageHash: Hash[DeferredStructuredLogMessage] = Hash.by {
+    case Trace(message, throwOpt, ctx) =>
+      (0, message(), throwOpt.map(_.getMessage), ctx)
+    case Debug(message, throwOpt, ctx) =>
+      (1, message(), throwOpt.map(_.getMessage), ctx)
+    case Info(message, throwOpt, ctx) =>
+      (2, message(), throwOpt.map(_.getMessage), ctx)
+    case Warn(message, throwOpt, ctx) =>
+      (3, message(), throwOpt.map(_.getMessage), ctx)
+    case Error(message, throwOpt, ctx) =>
+      (4, message(), throwOpt.map(_.getMessage), ctx)
+  }
 }

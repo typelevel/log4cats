@@ -1,3 +1,19 @@
+/*
+ * Copyright 2018 Typelevel
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package org.typelevel.log4cats.extras
 
 import cats.Order
@@ -6,10 +22,22 @@ import cats.effect.IO
 import cats.syntax.all.*
 import org.typelevel.log4cats.SelfAwareStructuredLogger
 import org.typelevel.log4cats.testing.TestingLoggerFactory
-import org.typelevel.log4cats.testing.TestingLoggerFactory.{Debug, Error, Info, Trace, Warn, LogMessage}
+import org.typelevel.log4cats.testing.TestingLoggerFactory.{
+  Debug,
+  Error,
+  Info,
+  LogMessage => TestLogMessage,
+  Trace,
+  Warn
+}
 
+import org.typelevel.scalaccompat.annotation.nowarn
+
+@nowarn("msg=dead code following this construct")
 class DeferredLoggerFactoryTest extends munit.CatsEffectSuite {
-  test("DeferredLoggerFactory should not log messages by default when code completes without raising an error") {
+  test(
+    "DeferredLoggerFactory should not log messages by default when code completes without raising an error"
+  ) {
     val testLoggerFactory = TestingLoggerFactory.atomic[IO]()
     DeferredLoggerFactory(testLoggerFactory)
       .use { loggerFactory =>
@@ -31,7 +59,9 @@ class DeferredLoggerFactoryTest extends munit.CatsEffectSuite {
       .assertEquals(Vector.empty)
   }
 
-  test("DeferredLoggerFactory should provide the means to log messages when code completes without raising an error") {
+  test(
+    "DeferredLoggerFactory should provide the means to log messages when code completes without raising an error"
+  ) {
     val testLoggerFactory = TestingLoggerFactory.atomic[IO]()
     DeferredLoggerFactory(testLoggerFactory)
       .use { loggerFactory =>
@@ -116,25 +146,33 @@ class DeferredLoggerFactoryTest extends munit.CatsEffectSuite {
       }
       .assert
       .flatMap(_ => testLoggerFactory.logged)
-      .map(_.sorted(Order.whenEqual[LogMessage](
-        Order.by(_.loggerName),
-        Order.by(_.level)
-      ).toOrdering))
-      .assertEquals(Vector(
-        Trace("Logger 0","Test Message",None,Map.empty),
-        Warn("Logger 0","Test Message",None,Map.empty),
-        Trace("Logger 1","Test Message",None,Map.empty),
-        Warn("Logger 1","Test Message",None,Map.empty),
-        Trace("Logger 2","Test Message",None,Map.empty),
-        Warn("Logger 2","Test Message",None,Map.empty),
-        Trace("Logger 3","Test Message",None,Map.empty),
-        Warn("Logger 3","Test Message",None,Map.empty),
-        Trace("Logger 4","Test Message",None,Map.empty),
-        Warn("Logger 4","Test Message",None,Map.empty)
-      ))
+      .map(
+        _.sorted(
+          Order
+            .whenEqual[TestLogMessage](
+              Order.by(_.loggerName),
+              Order.by(_.level)
+            )
+            .toOrdering
+        )
+      )
+      .assertEquals(
+        Vector(
+          Trace("Logger 0", "Test Message", None, Map.empty),
+          Warn("Logger 0", "Test Message", None, Map.empty),
+          Trace("Logger 1", "Test Message", None, Map.empty),
+          Warn("Logger 1", "Test Message", None, Map.empty),
+          Trace("Logger 2", "Test Message", None, Map.empty),
+          Warn("Logger 2", "Test Message", None, Map.empty),
+          Trace("Logger 3", "Test Message", None, Map.empty),
+          Warn("Logger 3", "Test Message", None, Map.empty),
+          Trace("Logger 4", "Test Message", None, Map.empty),
+          Warn("Logger 4", "Test Message", None, Map.empty)
+        )
+      )
   }
 
-  test("DeferredStructuredLogger should not lose log messages when an exception is raised") {
+  test("DeferredLoggerFactory should not lose log messages when an exception is raised") {
     val testLoggerFactory = TestingLoggerFactory.atomic[IO]()
     DeferredLoggerFactory(testLoggerFactory)
       .use { loggerFactory =>
@@ -168,30 +206,37 @@ class DeferredLoggerFactoryTest extends munit.CatsEffectSuite {
           sadPath1.attempt.map(_.toValidatedNel)
         ).parMapN(_ combine _ combine _).flatTap(_ => loggerFactory.log)
       }
-      .flatTap(value => IO.delay {
-        assertEquals(
-          value.leftMap(_.map(_.getMessage)),
-          NonEmptyList.of(
-            "Expected Exception 0",
-            "Expected Exception 1"
-          ).invalid,
-          clue(value)
-        )
-      })
+      .flatTap(value =>
+        IO.delay {
+          assertEquals(
+            value.leftMap(_.map(_.getMessage)),
+            NonEmptyList
+              .of(
+                "Expected Exception 0",
+                "Expected Exception 1"
+              )
+              .invalid,
+            clue(value)
+          )
+        }
+      )
       .flatMap(_ => testLoggerFactory.logged)
       // Have to sort because of the parTupled
       .map(_.sortBy(l => l.loggerName -> l.message))
-      .assertEquals(Vector(
-        Info("Happy Path", "Test Message 1", None, Map.empty),
-        Debug("Happy Path", "Test Message 2", None, Map.empty),
-        Info("Sad Path 0", "Test Message", None, Map.empty),
-        Warn("Sad Path 1", "Test Message 1", None, Map.empty),
-        Error("Sad Path 1", "Test Message 2", None, Map.empty)
-      ))
+      .assertEquals(
+        Vector(
+          Info("Happy Path", "Test Message 1", None, Map.empty),
+          Debug("Happy Path", "Test Message 2", None, Map.empty),
+          Info("Sad Path 0", "Test Message", None, Map.empty),
+          Warn("Sad Path 1", "Test Message 1", None, Map.empty),
+          Error("Sad Path 1", "Test Message 2", None, Map.empty)
+        )
+      )
   }
 
-  test("DeferredStructuredLogger should not duplicate log messages when an exception is raised") {
-    TestingLoggerFactory.ref[IO]()
+  test("DeferredLoggerFactory should not duplicate log messages when an exception is raised") {
+    TestingLoggerFactory
+      .ref[IO]()
       .flatMap { testLoggerFactory =>
         DeferredLoggerFactory(testLoggerFactory)
           .use { loggerFactory =>
@@ -226,26 +271,68 @@ class DeferredLoggerFactoryTest extends munit.CatsEffectSuite {
             ).parMapN(_ combine _ combine _)
               .flatTap(_ => loggerFactory.log)
           }
-          .flatTap(value => IO.delay {
-            assertEquals(
-              value.leftMap(_.map(_.getMessage)),
-              NonEmptyList.of(
-                "Expected Exception 0",
-                "Expected Exception 1"
-              ).invalid,
-              clue(value)
-            )
-          })
+          .flatTap(value =>
+            IO.delay {
+              assertEquals(
+                value.leftMap(_.map(_.getMessage)),
+                NonEmptyList
+                  .of(
+                    "Expected Exception 0",
+                    "Expected Exception 1"
+                  )
+                  .invalid,
+                clue(value)
+              )
+            }
+          )
           .flatMap(_ => testLoggerFactory.logged)
       }
       // Have to sort because of the parTupled
       .map(_.sortBy(l => l.loggerName -> l.message))
-      .assertEquals(Vector(
-        Info("Happy Path", "Test Message 1", None, Map.empty),
-        Debug("Happy Path", "Test Message 2", None, Map.empty),
-        Info("Sad Path 0", "Test Message", None, Map.empty),
-        Warn("Sad Path 1", "Test Message 1", None, Map.empty),
-        Error("Sad Path 1", "Test Message 2", None, Map.empty)
-      ))
+      .assertEquals(
+        Vector(
+          Info("Happy Path", "Test Message 1", None, Map.empty),
+          Debug("Happy Path", "Test Message 2", None, Map.empty),
+          Info("Sad Path 0", "Test Message", None, Map.empty),
+          Warn("Sad Path 1", "Test Message 1", None, Map.empty),
+          Error("Sad Path 1", "Test Message 2", None, Map.empty)
+        )
+      )
+  }
+
+  test("DeferredLoggerFactory should respect log levels") {
+    val testLoggerFactory = TestingLoggerFactory.atomic[IO](
+      debugEnabled = false
+    )
+    DeferredLoggerFactory(testLoggerFactory).use { loggerFactory =>
+      val loggerName = "Test Logger"
+      val logger = loggerFactory.getLoggerFromName(loggerName)
+      for {
+        _ <- logger.trace("Test Message 0")
+        _ <- logger.debug("Test Message 1")
+        _ <- logger.info("Test Message 2")
+        _ <- testLoggerFactory.logged.assertEquals(
+          Vector.empty,
+          clue("Checking that logging is deferred")
+        )
+        _ <- loggerFactory.inspect
+          .map(_.toVector)
+          .assertEquals(
+            Vector(
+              DeferredStructuredLogger.Trace(() => "Test Message 0", none, Map.empty),
+              DeferredStructuredLogger.Info(() => "Test Message 2", none, Map.empty)
+            ),
+            clue("Checking that the debug message was not buffered")
+          )
+        _ <- loggerFactory.log
+        _ <- testLoggerFactory.logged.assertEquals(
+          Vector(
+            Trace(loggerName, "Test Message 0", none),
+            Info(loggerName, "Test Message 2", none)
+          ),
+          clue("Checking that logs were sent to test logger")
+        )
+      } yield ()
+    }.assert
   }
 }

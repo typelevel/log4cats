@@ -43,12 +43,12 @@ object TestingLogger {
   final case class ERROR(message: String, throwOpt: Option[Throwable]) extends LogMessage
 
   def impl[F[_]: Sync](
-                        traceEnabled: Boolean = true,
-                        debugEnabled: Boolean = true,
-                        infoEnabled: Boolean = true,
-                        warnEnabled: Boolean = true,
-                        errorEnabled: Boolean = true
-                      ): TestingLogger[F] =
+      traceEnabled: Boolean = true,
+      debugEnabled: Boolean = true,
+      infoEnabled: Boolean = true,
+      warnEnabled: Boolean = true,
+      errorEnabled: Boolean = true
+  ): TestingLogger[F] =
     atomic[F](
       traceEnabled = traceEnabled,
       debugEnabled = debugEnabled,
@@ -58,12 +58,12 @@ object TestingLogger {
     )
 
   def ref[F[_]: Sync](
-                       traceEnabled: Boolean = true,
-                       debugEnabled: Boolean = true,
-                       infoEnabled: Boolean = true,
-                       warnEnabled: Boolean = true,
-                       errorEnabled: Boolean = true
-                     ): F[TestingLogger[F]] =
+      traceEnabled: Boolean = true,
+      debugEnabled: Boolean = true,
+      infoEnabled: Boolean = true,
+      warnEnabled: Boolean = true,
+      errorEnabled: Boolean = true
+  ): F[TestingLogger[F]] =
     Ref[F].empty[Chain[LogMessage]].map { ref =>
       make[F](
         traceEnabled = traceEnabled,
@@ -77,12 +77,12 @@ object TestingLogger {
     }
 
   def atomic[F[_]: Sync](
-                          traceEnabled: Boolean = true,
-                          debugEnabled: Boolean = true,
-                          infoEnabled: Boolean = true,
-                          warnEnabled: Boolean = true,
-                          errorEnabled: Boolean = true
-                        ): TestingLogger[F] = {
+      traceEnabled: Boolean = true,
+      debugEnabled: Boolean = true,
+      infoEnabled: Boolean = true,
+      warnEnabled: Boolean = true,
+      errorEnabled: Boolean = true
+  ): TestingLogger[F] = {
     val ar = new AtomicReference(Vector.empty[LogMessage])
     def appendLogMessage(m: LogMessage): F[Unit] = Sync[F].delay {
       @tailrec
@@ -94,7 +94,6 @@ object TestingLogger {
       }
       mod()
     }
-    def retrieveLogMessages: F[Vector[LogMessage]] = Sync[F].delay(ar.get())
 
     make[F](
       traceEnabled = traceEnabled,
@@ -103,7 +102,7 @@ object TestingLogger {
       warnEnabled = warnEnabled,
       errorEnabled = errorEnabled,
       appendLogMessage = appendLogMessage,
-      read = retrieveLogMessages _
+      read = () => Sync[F].delay(ar.get())
     )
   }
 
@@ -125,7 +124,7 @@ object TestingLogger {
       def isWarnEnabled: F[Boolean] = Sync[F].pure(warnEnabled)
       def isErrorEnabled: F[Boolean] = Sync[F].pure(errorEnabled)
 
-      private val noop = noop
+      private val noop = Sync[F].unit
 
       def error(message: => String): F[Unit] =
         if (errorEnabled) appendLogMessage(ERROR(message, None)) else noop
