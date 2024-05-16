@@ -18,7 +18,7 @@ class DeferredStructuredLoggerTest extends munit.CatsEffectSuite {
           _ <- testLogger.logged.assertEquals(Vector.empty)
         } yield ()
       }
-      .assertEquals(())
+      .assert
       .flatMap(_ => testLogger.logged)
       .assertEquals(Vector.empty)
   }
@@ -77,7 +77,7 @@ class DeferredStructuredLoggerTest extends munit.CatsEffectSuite {
           )
         } yield ()
       }
-      .assertEquals(())
+      .assert
       .flatMap(_ => testLogger.logged)
       .assertEquals(
         Vector(
