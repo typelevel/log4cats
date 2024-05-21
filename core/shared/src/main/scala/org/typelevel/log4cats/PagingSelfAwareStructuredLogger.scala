@@ -120,12 +120,15 @@ object PagingSelfAwareStructuredLogger {
     ): F[(String, Map[String, String])] =
       randomUUID.map { uuid =>
         val logSplitId = uuid.show
+        val msgLength = msg.length.show
         (
           logSplitId,
           ctx
             .updated(logSplitIdN, logSplitId)
             .updated("page_size", s"${pageSizeK.show} Kib")
-            .updated("log_size", s"${msg.length.show} Byte")
+            .updated("log_size_bytes", msgLength)
+            // The following is deprecated
+            .updated("log_size", s"${msgLength} Byte")
         )
       }
 
