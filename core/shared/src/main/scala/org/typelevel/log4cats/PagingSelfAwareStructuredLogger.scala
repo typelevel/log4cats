@@ -87,14 +87,15 @@ object PagingSelfAwareStructuredLogger {
     private val pageSize = pageSizeK * 1024
 
     private def pagedLogging(
-        loggingOp: (=> String) => F[Unit],
+      logOpWithCtx: Map[String, String] => (=> String) => F[Unit],
+      ctx: Map[String, String],
         logSplitId: String,
         msg: => String
     ): F[Unit] = {
       val numOfPagesRaw = (msg.length - 1) / pageSize + 1
       val numOfPages = Math.min(numOfPagesRaw, maxPageNeeded)
       if (numOfPages <= 1)
-        loggingOp(msg)
+        logOpWithCtx(addPageCtx(msg, 1, 1, ctx))(msg)
       else {
         val logSplitIdPart1 = logSplitId.split('-').head
         val pageHeaderTail = s"$numOfPages $logSplitIdPart1"
@@ -105,16 +106,18 @@ object PagingSelfAwareStructuredLogger {
             val beginIndex = (pi - 1) * pageSize
             val pageContent = msg.slice(beginIndex, beginIndex + pageSize)
 
-            loggingOp(show"""Page $pi/$pageHeaderTail
+            val page = show"""Page $pi/$pageHeaderTail
                             |
                             |$pageContent
                             |
-                            |Page $pi/$pageFooterTail""".stripMargin)
+                            |Page $pi/$pageFooterTail""".stripMargin
+
+            logOpWithCtx(addPageCtx(page, pi, numOfPages, ctx))(page)
           }
       }
     }
 
-    private def addCtx(
+    private def addMsgCtx(
         msg: => String,
         ctx: Map[String, String]
     ): F[(String, Map[String, String])] =
@@ -126,11 +129,22 @@ object PagingSelfAwareStructuredLogger {
           ctx
             .updated(logSplitIdN, logSplitId)
             .updated("page_size", s"${pageSizeK.show} Kib")
-            .updated("log_size_bytes", msgLength)
+            .updated("whole_message_size_bytes", msgLength)
             // The following is deprecated
             .updated("log_size", s"${msgLength} Byte")
         )
       }
+
+    private def addPageCtx(
+      page: => String,
+      pageNum: => Int,
+      totalPages: => Int,
+      ctx: Map[String, String]
+    ): Map[String, String] =
+      ctx
+        .updated("total_pages", totalPages.show)
+        .updated("page_num", pageNum.show)
+        .updated("log_size_bytes", page.length.show)
 
     private def doLogging(
         loggingLevelChk: => F[Boolean],
@@ -139,8 +153,8 @@ object PagingSelfAwareStructuredLogger {
         ctx: Map[String, String] = Map()
     ): F[Unit] = {
       loggingLevelChk.ifM(
-        addCtx(msg, ctx).flatMap { case (logSplitId, newCtx) =>
-          pagedLogging(logOpWithCtx(newCtx), logSplitId, msg)
+        addMsgCtx(msg, ctx).flatMap { case (logSplitId, newCtx) =>
+          pagedLogging(logOpWithCtx, newCtx, logSplitId, msg)
         },
         Applicative[F].unit
       )
