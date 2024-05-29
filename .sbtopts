@@ -1,0 +1,6 @@
+-J-Dfile.encoding=UTF-8
+-J-Xms1G
+-J-Xmx6G
+-J-Xss8m
+-J-XX:ReservedCodeCacheSize=512m
+-J-XX:+UseG1GC
