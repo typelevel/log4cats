@@ -19,7 +19,7 @@ package org.typelevel.log4cats.extras
 import cats.Order
 import cats.data.NonEmptyList
 import cats.effect.IO
-import cats.syntax.all.*
+import cats.syntax.all._
 import org.typelevel.log4cats.SelfAwareStructuredLogger
 import org.typelevel.log4cats.testing.TestingLoggerFactory
 import org.typelevel.log4cats.testing.TestingLoggerFactory.{

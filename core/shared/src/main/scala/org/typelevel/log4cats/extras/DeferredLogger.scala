@@ -19,7 +19,7 @@ package org.typelevel.log4cats.extras
 import cats.data.Chain
 import cats.effect.kernel.Resource.ExitCase
 import cats.effect.kernel.{Concurrent, Ref, Resource}
-import cats.syntax.all.*
+import cats.syntax.all._
 import org.typelevel.log4cats.Logger
 import org.typelevel.log4cats.extras.DeferredLogger.DeferredLogMessage
 

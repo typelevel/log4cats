@@ -17,7 +17,7 @@
 package org.typelevel.log4cats.extras
 
 import cats.effect.IO
-import cats.syntax.all.*
+import cats.syntax.all._
 import org.typelevel.log4cats.testing.TestingLogger
 import org.typelevel.scalaccompat.annotation.nowarn
 
