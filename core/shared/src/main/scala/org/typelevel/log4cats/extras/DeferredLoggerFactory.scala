@@ -19,9 +19,8 @@ package org.typelevel.log4cats.extras
 import cats.Show.Shown
 import cats.data.Chain
 import cats.effect.kernel.{Concurrent, Resource}
-import cats.syntax.all.*
+import cats.syntax.all._
 import cats.{~>, Functor}
-import org.typelevel.log4cats.extras.DeferredStructuredLogger.DeferredStructuredLogMessage
 import org.typelevel.log4cats.{LoggerFactory, SelfAwareStructuredLogger}
 
 /**
@@ -37,22 +36,7 @@ import org.typelevel.log4cats.{LoggerFactory, SelfAwareStructuredLogger}
  * https://github.com/typelevel/log4cats/blob/main/core/shared/src/main/scala/org/typelevel/log4cats/extras/README.md
  * >>> WARNING: READ BEFORE USAGE! <<<
  */
-trait DeferredLoggerFactory[F[_]] extends LoggerFactory[F] {
-
-  /**
-   * View the logs in the buffer.
-   *
-   * This is primarily useful for testing, and will not effect the behavior of calls to `log`
-   */
-  def inspect: F[Chain[DeferredStructuredLogMessage]]
-
-  /**
-   * Log the deferred messages
-   *
-   * This may be called multiple times, and each log should only be logged once.
-   */
-  def log: F[Unit]
-
+trait DeferredLoggerFactory[F[_]] extends LoggerFactory[F] with DeferredLogging[F] {
   override def getLoggerFromName(name: String): SelfAwareStructuredLogger[F]
 
   override def addContext(ctx: Map[String, String])(implicit
@@ -80,13 +64,13 @@ object DeferredLoggerFactory {
   ): Resource[F, DeferredLoggerFactory[F]] =
     DeferredSelfAwareStructuredLogger.makeCache[F].map { cache =>
       new DeferredLoggerFactory[F] {
-        override def inspect: F[Chain[DeferredStructuredLogMessage]] = cache.get.map(_._1F)
+        override def inspect: F[Chain[DeferredLogMessage]] = cache.get.map(_._1F)
 
         override def log: F[Unit] = {
           cache
             .getAndSet(Chain.empty)
             .flatMap(_.traverse_ { case (msg, logger) =>
-              msg.log(logger)
+              msg.logStructured(logger)
             })
         }
 
@@ -102,7 +86,7 @@ object DeferredLoggerFactory {
       fk: F ~> G
   )(lf: DeferredLoggerFactory[F]): DeferredLoggerFactory[G] =
     new DeferredLoggerFactory[G] {
-      override def inspect: G[Chain[DeferredStructuredLogger.DeferredStructuredLogMessage]] = fk(
+      override def inspect: G[Chain[DeferredLogMessage]] = fk(
         lf.inspect
       )
       override def log: G[Unit] = fk(lf.log)
@@ -120,8 +104,7 @@ object DeferredLoggerFactory {
       ctx: Map[String, String]
   ): DeferredLoggerFactory[F] =
     new DeferredLoggerFactory[F] {
-      override def inspect: F[Chain[DeferredStructuredLogger.DeferredStructuredLogMessage]] =
-        lf.inspect
+      override def inspect: F[Chain[DeferredLogMessage]] = lf.inspect
       override def log: F[Unit] = lf.log
 
       override def getLoggerFromName(name: String): SelfAwareStructuredLogger[F] =
@@ -136,8 +119,7 @@ object DeferredLoggerFactory {
       f: String => String
   ): DeferredLoggerFactory[F] =
     new DeferredLoggerFactory[F] {
-      override def inspect: F[Chain[DeferredStructuredLogger.DeferredStructuredLogMessage]] =
-        lf.inspect
+      override def inspect: F[Chain[DeferredLogMessage]] = lf.inspect
       override def log: F[Unit] = lf.log
 
       override def getLoggerFromName(name: String): SelfAwareStructuredLogger[F] =

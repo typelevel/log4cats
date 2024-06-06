@@ -16,8 +16,9 @@
 
 package org.typelevel.log4cats.extras
 
+import cats.arrow.FunctionK
 import cats.effect.IO
-import cats.syntax.all.*
+import cats.syntax.all._
 import org.typelevel.log4cats.testing.TestingLogger
 import org.typelevel.scalaccompat.annotation.nowarn
 
@@ -148,5 +149,43 @@ class DeferredLoggerTest extends munit.CatsEffectSuite {
           TestingLogger.INFO("Test Message 1", none)
         )
       )
+  }
+
+  test("DeferredLogger doesn't lose the ability to log when message is modified") {
+    val testLogger = TestingLogger.impl[IO]()
+    DeferredLogger(testLogger)
+      .map(_.withModifiedString(_.toUpperCase))
+      .use { logger =>
+        for {
+          _ <- logger.trace("Test Message")
+          _ <- testLogger.logged.assertEquals(
+            Vector.empty,
+            clue("Checking that logging is deferred")
+          )
+          _ <- logger.log
+        } yield ()
+      }
+      .assertEquals(())
+      .flatMap(_ => testLogger.logged)
+      .assertEquals(Vector(TestingLogger.TRACE("TEST MESSAGE", none)))
+  }
+
+  test("DeferredLogger doesn't lose the ability to log when mapK is called") {
+    val testLogger = TestingLogger.impl[IO]()
+    DeferredLogger(testLogger)
+      .map(_.mapK[IO](FunctionK.id[IO]))
+      .use { logger =>
+        for {
+          _ <- logger.trace("Test Message")
+          _ <- testLogger.logged.assertEquals(
+            Vector.empty,
+            clue("Checking that logging is deferred")
+          )
+          _ <- logger.log
+        } yield ()
+      }
+      .assertEquals(())
+      .flatMap(_ => testLogger.logged)
+      .assertEquals(Vector(TestingLogger.TRACE("Test Message", none)))
   }
 }

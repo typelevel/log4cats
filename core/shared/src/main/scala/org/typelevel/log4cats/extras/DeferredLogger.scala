@@ -20,8 +20,8 @@ import cats.data.Chain
 import cats.effect.kernel.Resource.ExitCase
 import cats.effect.kernel.{Concurrent, Ref, Resource}
 import cats.syntax.all.*
+import cats.~>
 import org.typelevel.log4cats.Logger
-import org.typelevel.log4cats.extras.DeferredLogger.DeferredLogMessage
 
 /**
  * `Logger` that does not immediately log.
@@ -48,21 +48,10 @@ import org.typelevel.log4cats.extras.DeferredLogger.DeferredLogMessage
  * https://github.com/typelevel/log4cats/blob/main/core/shared/src/main/scala/org/typelevel/log4cats/extras/README.md
  * >>> WARNING: READ BEFORE USAGE! <<<
  */
-trait DeferredLogger[F[_]] extends Logger[F] {
-
-  /**
-   * View the logs in the buffer.
-   *
-   * This is primarily useful for testing, and will not effect the behavior of calls to `log`
-   */
-  def inspect: F[Chain[DeferredLogMessage]]
-
-  /**
-   * Log the deferred messages
-   *
-   * This may be called multiple times, and each log should only be logged once.
-   */
-  def log: F[Unit]
+trait DeferredLogger[F[_]] extends Logger[F] with DeferredLogging[F] {
+  override def withModifiedString(f: String => String): DeferredLogger[F] =
+    DeferredLogger.withModifiedString(this, f)
+  override def mapK[G[_]](fk: F ~> G): DeferredLogger[G] = DeferredLogger.mapK(this, fk)
 }
 object DeferredLogger {
   def apply[F[_]](logger: Logger[F])(implicit F: Concurrent[F]): Resource[F, DeferredLogger[F]] =
@@ -77,17 +66,27 @@ object DeferredLogger {
         new DeferredLogger[F] {
           private def save(lm: DeferredLogMessage): F[Unit] = ref.update(_.append(lm))
 
-          override def trace(t: Throwable)(msg: => String): F[Unit] = save(Trace(() => msg, t.some))
-          override def debug(t: Throwable)(msg: => String): F[Unit] = save(Debug(() => msg, t.some))
-          override def info(t: Throwable)(msg: => String): F[Unit] = save(Info(() => msg, t.some))
-          override def warn(t: Throwable)(msg: => String): F[Unit] = save(Warn(() => msg, t.some))
-          override def error(t: Throwable)(msg: => String): F[Unit] = save(Error(() => msg, t.some))
+          override def trace(t: Throwable)(msg: => String): F[Unit] =
+            save(DeferredLogMessage.trace(Map.empty, t.some, () => msg))
+          override def debug(t: Throwable)(msg: => String): F[Unit] =
+            save(DeferredLogMessage.debug(Map.empty, t.some, () => msg))
+          override def info(t: Throwable)(msg: => String): F[Unit] =
+            save(DeferredLogMessage.info(Map.empty, t.some, () => msg))
+          override def warn(t: Throwable)(msg: => String): F[Unit] =
+            save(DeferredLogMessage.warn(Map.empty, t.some, () => msg))
+          override def error(t: Throwable)(msg: => String): F[Unit] =
+            save(DeferredLogMessage.error(Map.empty, t.some, () => msg))
 
-          override def trace(msg: => String): F[Unit] = save(Trace(() => msg, none))
-          override def debug(msg: => String): F[Unit] = save(Debug(() => msg, none))
-          override def info(msg: => String): F[Unit] = save(Info(() => msg, none))
-          override def warn(msg: => String): F[Unit] = save(Warn(() => msg, none))
-          override def error(msg: => String): F[Unit] = save(Error(() => msg, none))
+          override def trace(msg: => String): F[Unit] =
+            save(DeferredLogMessage.trace(Map.empty, none, () => msg))
+          override def debug(msg: => String): F[Unit] =
+            save(DeferredLogMessage.debug(Map.empty, none, () => msg))
+          override def info(msg: => String): F[Unit] =
+            save(DeferredLogMessage.info(Map.empty, none, () => msg))
+          override def warn(msg: => String): F[Unit] =
+            save(DeferredLogMessage.warn(Map.empty, none, () => msg))
+          override def error(msg: => String): F[Unit] =
+            save(DeferredLogMessage.error(Map.empty, none, () => msg))
 
           override def inspect: F[Chain[DeferredLogMessage]] = ref.get
 
@@ -95,42 +94,49 @@ object DeferredLogger {
         }
       }
 
-  sealed trait DeferredLogMessage {
-    def message: () => String
-    def throwOpt: Option[Throwable]
+  private def mapK[F[_], G[_]](
+      logger: DeferredLogger[F],
+      fk: F ~> G
+  ): DeferredLogger[G] =
+    new DeferredLogger[G] {
+      override def inspect: G[Chain[DeferredLogMessage]] = fk(logger.inspect)
+      override def log: G[Unit] = fk(logger.log)
 
-    def log[F[_]](logger: Logger[F]): F[Unit] = this match {
-      case Trace(message, Some(e)) => logger.trace(e)(message())
-      case Trace(message, None) => logger.trace(message())
-      case Debug(message, Some(e)) => logger.debug(e)(message())
-      case Debug(message, None) => logger.debug(message())
-      case Info(message, Some(e)) => logger.info(e)(message())
-      case Info(message, None) => logger.info(message())
-      case Warn(message, Some(e)) => logger.warn(e)(message())
-      case Warn(message, None) => logger.warn(message())
-      case Error(message, Some(e)) => logger.error(e)(message())
-      case Error(message, None) => logger.error(message())
+      override def trace(t: Throwable)(message: => String): G[Unit] = fk(logger.trace(t)(message))
+      override def debug(t: Throwable)(message: => String): G[Unit] = fk(logger.debug(t)(message))
+      override def info(t: Throwable)(message: => String): G[Unit] = fk(logger.info(t)(message))
+      override def warn(t: Throwable)(message: => String): G[Unit] = fk(logger.warn(t)(message))
+      override def error(t: Throwable)(message: => String): G[Unit] = fk(logger.error(t)(message))
+
+      override def trace(message: => String): G[Unit] = fk(logger.trace(message))
+      override def debug(message: => String): G[Unit] = fk(logger.debug(message))
+      override def info(message: => String): G[Unit] = fk(logger.info(message))
+      override def warn(message: => String): G[Unit] = fk(logger.warn(message))
+      override def error(message: => String): G[Unit] = fk(logger.error(message))
+
+      override def withModifiedString(f: String => String): DeferredLogger[G] =
+        DeferredLogger.withModifiedString(this, f)
+      override def mapK[H[_]](fk: G ~> H): DeferredLogger[H] = DeferredLogger.mapK(this, fk)
     }
-  }
 
-  final case class Trace(
-      message: () => String,
-      throwOpt: Option[Throwable]
-  ) extends DeferredLogMessage
-  final case class Debug(
-      message: () => String,
-      throwOpt: Option[Throwable]
-  ) extends DeferredLogMessage
-  final case class Info(
-      message: () => String,
-      throwOpt: Option[Throwable]
-  ) extends DeferredLogMessage
-  final case class Warn(
-      message: () => String,
-      throwOpt: Option[Throwable]
-  ) extends DeferredLogMessage
-  final case class Error(
-      message: () => String,
-      throwOpt: Option[Throwable]
-  ) extends DeferredLogMessage
+  def withModifiedString[F[_]](
+      logger: DeferredLogger[F],
+      f: String => String
+  ): DeferredLogger[F] =
+    new DeferredLogger[F] {
+      override def inspect: F[Chain[DeferredLogMessage]] = logger.inspect
+      override def log: F[Unit] = logger.log
+
+      override def trace(t: Throwable)(message: => String): F[Unit] = logger.trace(t)(f(message))
+      override def debug(t: Throwable)(message: => String): F[Unit] = logger.debug(t)(f(message))
+      override def info(t: Throwable)(message: => String): F[Unit] = logger.info(t)(f(message))
+      override def warn(t: Throwable)(message: => String): F[Unit] = logger.warn(t)(f(message))
+      override def error(t: Throwable)(message: => String): F[Unit] = logger.error(t)(f(message))
+
+      override def trace(message: => String): F[Unit] = logger.trace(f(message))
+      override def debug(message: => String): F[Unit] = logger.debug(f(message))
+      override def info(message: => String): F[Unit] = logger.info(f(message))
+      override def warn(message: => String): F[Unit] = logger.warn(f(message))
+      override def error(message: => String): F[Unit] = logger.error(f(message))
+    }
 }

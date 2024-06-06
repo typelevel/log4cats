@@ -17,20 +17,20 @@
 package org.typelevel.log4cats.extras
 
 import cats.Order
+import cats.arrow.FunctionK
 import cats.data.NonEmptyList
 import cats.effect.IO
-import cats.syntax.all.*
+import cats.syntax.all._
 import org.typelevel.log4cats.SelfAwareStructuredLogger
 import org.typelevel.log4cats.testing.TestingLoggerFactory
 import org.typelevel.log4cats.testing.TestingLoggerFactory.{
   Debug,
   Error,
   Info,
-  LogMessage => TestLogMessage,
+  LogMessage as TestLogMessage,
   Trace,
   Warn
 }
-
 import org.typelevel.scalaccompat.annotation.nowarn
 
 @nowarn("msg=dead code following this construct")
@@ -319,8 +319,8 @@ class DeferredLoggerFactoryTest extends munit.CatsEffectSuite {
           .map(_.toVector)
           .assertEquals(
             Vector(
-              DeferredStructuredLogger.Trace(() => "Test Message 0", none, Map.empty),
-              DeferredStructuredLogger.Info(() => "Test Message 2", none, Map.empty)
+              DeferredLogMessage.trace(Map.empty, none, () => "Test Message 0"),
+              DeferredLogMessage.info(Map.empty, none, () => "Test Message 2")
             ),
             clue("Checking that the debug message was not buffered")
           )
@@ -334,5 +334,139 @@ class DeferredLoggerFactoryTest extends munit.CatsEffectSuite {
         )
       } yield ()
     }.assert
+  }
+
+  test("DeferredLoggerFactory doesn't lose the ability to log when message is modified") {
+    val testLoggerFactory = TestingLoggerFactory.atomic[IO]()
+    DeferredLoggerFactory(testLoggerFactory)
+      .map(_.withModifiedString(_.prependedAll("[DLF]")))
+      .use { loggerFactory =>
+        def logStuff(logger: SelfAwareStructuredLogger[IO]): IO[Unit] =
+          for {
+            _ <- logger.trace("Test Message")
+            _ <- logger.withModifiedString(_.prependedAll("[DSL]")).warn("Test Message")
+          } yield ()
+
+        (0 until 5).toVector
+          .parTraverse_ { idx =>
+            logStuff(loggerFactory.getLoggerFromName(s"Logger $idx"))
+          }
+          .flatTap(_ => loggerFactory.log)
+      }
+      .assert
+      .flatMap(_ => testLoggerFactory.logged)
+      .map(
+        _.sorted(
+          Order
+            .whenEqual[TestLogMessage](
+              Order.by(_.loggerName),
+              Order.by(_.level)
+            )
+            .toOrdering
+        )
+      )
+      .assertEquals(
+        Vector(
+          Trace("Logger 0", "[DLF]Test Message", None, Map.empty),
+          Warn("Logger 0", "[DLF][DSL]Test Message", None, Map.empty),
+          Trace("Logger 1", "[DLF]Test Message", None, Map.empty),
+          Warn("Logger 1", "[DLF][DSL]Test Message", None, Map.empty),
+          Trace("Logger 2", "[DLF]Test Message", None, Map.empty),
+          Warn("Logger 2", "[DLF][DSL]Test Message", None, Map.empty),
+          Trace("Logger 3", "[DLF]Test Message", None, Map.empty),
+          Warn("Logger 3", "[DLF][DSL]Test Message", None, Map.empty),
+          Trace("Logger 4", "[DLF]Test Message", None, Map.empty),
+          Warn("Logger 4", "[DLF][DSL]Test Message", None, Map.empty)
+        )
+      )
+  }
+
+  test("DeferredLoggerFactory doesn't lose the ability to log when mapK is called") {
+    val testLoggerFactory = TestingLoggerFactory.atomic[IO]()
+    DeferredLoggerFactory(testLoggerFactory)
+      .map(_.mapK(FunctionK.id[IO]))
+      .use { loggerFactory =>
+        val logger = loggerFactory.getLoggerFromName("Test Logger")
+        for {
+          _ <- logger.trace("Test Message 0")
+          _ <- logger.debug("Test Message 1")
+          _ <- logger.info("Test Message 2")
+          _ <- testLoggerFactory.logged.assertEquals(
+            Vector.empty,
+            clue("Checking that logging is deferred")
+          )
+          _ <- loggerFactory.log
+        } yield ()
+      }
+      .assert
+      .flatMap(_ => testLoggerFactory.logged)
+      .assertEquals(
+        Vector(
+          Trace("Test Logger", "Test Message 0", none),
+          Debug("Test Logger", "Test Message 1", none),
+          Info("Test Logger", "Test Message 2", none)
+        )
+      )
+  }
+
+  test("DeferredLoggerFactory doesn't lose the ability to log when context is added") {
+    val testLoggerFactory = TestingLoggerFactory.atomic[IO]()
+    val factoryCtx = Map.newBuilder[String, String].addOne("factory" -> "added").result()
+    def loggerCtx(idx: Int) =
+      Map.newBuilder[String, String].addOne(s"logger $idx" -> "added").result()
+    def msgCtx(idx: Int) = Map.newBuilder[String, String].addOne(s"log $idx" -> "added").result()
+    DeferredLoggerFactory(testLoggerFactory)
+      .map(_.addContext(factoryCtx))
+      .use { loggerFactory =>
+        (0 until 5).toVector
+          .parTraverse_ { idx =>
+            loggerFactory
+              .getLoggerFromName(s"Logger $idx")
+              .addContext(loggerCtx(idx))
+              .trace(msgCtx(idx))("Test Message")
+          }
+          .flatTap(_ => loggerFactory.log)
+      }
+      .assert
+      .flatMap(_ => testLoggerFactory.logged)
+      .map(
+        _.sorted(
+          Order
+            .whenEqual[TestLogMessage](
+              Order.by(_.loggerName),
+              Order.by(_.level)
+            )
+            .toOrdering
+        )
+      )
+      .assertEquals(
+        Vector(
+          Trace(
+            "Logger 0",
+            "Test Message",
+            None,
+            factoryCtx.concat(loggerCtx(0)).concat(msgCtx(0))
+          ),
+          Trace(
+            "Logger 1",
+            "Test Message",
+            None,
+            factoryCtx.concat(loggerCtx(1)).concat(msgCtx(1))
+          ),
+          Trace(
+            "Logger 2",
+            "Test Message",
+            None,
+            factoryCtx.concat(loggerCtx(2)).concat(msgCtx(2))
+          ),
+          Trace(
+            "Logger 3",
+            "Test Message",
+            None,
+            factoryCtx.concat(loggerCtx(3)).concat(msgCtx(3))
+          ),
+          Trace("Logger 4", "Test Message", None, factoryCtx.concat(loggerCtx(4)).concat(msgCtx(4)))
+        )
+      )
   }
 }

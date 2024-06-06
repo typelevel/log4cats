@@ -16,10 +16,10 @@
 
 package org.typelevel.log4cats.extras
 
+import cats.arrow.FunctionK
 import cats.effect.IO
-import cats.syntax.all.*
+import cats.syntax.all._
 import org.typelevel.log4cats.testing.StructuredTestingLogger
-
 import org.typelevel.scalaccompat.annotation.nowarn
 
 @nowarn("msg=dead code following this construct")
@@ -151,5 +151,63 @@ class DeferredStructuredLoggerTest extends munit.CatsEffectSuite {
           StructuredTestingLogger.INFO("Test Message 1", none)
         )
       )
+  }
+
+  test("DeferredStructuredLogger doesn't lose the ability to log when message is modified") {
+    val testLogger = StructuredTestingLogger.impl[IO]()
+    DeferredStructuredLogger(testLogger)
+      .map(_.withModifiedString(_.toUpperCase))
+      .use { logger =>
+        for {
+          _ <- logger.trace("Test Message")
+          _ <- testLogger.logged.assertEquals(
+            Vector.empty,
+            clue("Checking that logging is deferred")
+          )
+          _ <- logger.log
+        } yield ()
+      }
+      .assertEquals(())
+      .flatMap(_ => testLogger.logged)
+      .assertEquals(Vector(StructuredTestingLogger.TRACE("TEST MESSAGE", none)))
+  }
+
+  test("DeferredStructuredLogger doesn't lose the ability to log when mapK is called") {
+    val testLogger = StructuredTestingLogger.impl[IO]()
+    DeferredStructuredLogger(testLogger)
+      .map(_.mapK[IO](FunctionK.id[IO]))
+      .use { logger =>
+        for {
+          _ <- logger.trace("Test Message")
+          _ <- testLogger.logged.assertEquals(
+            Vector.empty,
+            clue("Checking that logging is deferred")
+          )
+          _ <- logger.log
+        } yield ()
+      }
+      .assertEquals(())
+      .flatMap(_ => testLogger.logged)
+      .assertEquals(Vector(StructuredTestingLogger.TRACE("Test Message", none)))
+  }
+
+  test("DeferredStructuredLogger doesn't lose the ability to log when context is added") {
+    val testLogger = StructuredTestingLogger.impl[IO]()
+    val context = Map.newBuilder[String, String].addOne("test" -> "context").result()
+    DeferredStructuredLogger(testLogger)
+      .map(_.addContext(context))
+      .use { logger =>
+        for {
+          _ <- logger.trace("Test Message")
+          _ <- testLogger.logged.assertEquals(
+            Vector.empty,
+            clue("Checking that logging is deferred")
+          )
+          _ <- logger.log
+        } yield ()
+      }
+      .assertEquals(())
+      .flatMap(_ => testLogger.logged)
+      .assertEquals(Vector(StructuredTestingLogger.TRACE("Test Message", none, context)))
   }
 }
