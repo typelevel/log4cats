@@ -193,7 +193,7 @@ class DeferredStructuredLoggerTest extends munit.CatsEffectSuite {
 
   test("DeferredStructuredLogger doesn't lose the ability to log when context is added") {
     val testLogger = StructuredTestingLogger.impl[IO]()
-    val context = Map.newBuilder[String, String].addOne("test" -> "context").result()
+    val context = List("test" -> "context").toMap
     DeferredStructuredLogger(testLogger)
       .map(_.addContext(context))
       .use { logger =>

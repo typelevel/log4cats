@@ -339,12 +339,12 @@ class DeferredLoggerFactoryTest extends munit.CatsEffectSuite {
   test("DeferredLoggerFactory doesn't lose the ability to log when message is modified") {
     val testLoggerFactory = TestingLoggerFactory.atomic[IO]()
     DeferredLoggerFactory(testLoggerFactory)
-      .map(_.withModifiedString(_.prependedAll("[DLF]")))
+      .map(_.withModifiedString(msg => s"[DLF]$msg"))
       .use { loggerFactory =>
         def logStuff(logger: SelfAwareStructuredLogger[IO]): IO[Unit] =
           for {
             _ <- logger.trace("Test Message")
-            _ <- logger.withModifiedString(_.prependedAll("[DSL]")).warn("Test Message")
+            _ <- logger.withModifiedString(msg => s"[DSL]$msg").warn("Test Message")
           } yield ()
 
         (0 until 5).toVector
@@ -411,10 +411,9 @@ class DeferredLoggerFactoryTest extends munit.CatsEffectSuite {
 
   test("DeferredLoggerFactory doesn't lose the ability to log when context is added") {
     val testLoggerFactory = TestingLoggerFactory.atomic[IO]()
-    val factoryCtx = Map.newBuilder[String, String].addOne("factory" -> "added").result()
-    def loggerCtx(idx: Int) =
-      Map.newBuilder[String, String].addOne(s"logger $idx" -> "added").result()
-    def msgCtx(idx: Int) = Map.newBuilder[String, String].addOne(s"log $idx" -> "added").result()
+    val factoryCtx = List("factory" -> "added").toMap
+    def loggerCtx(idx: Int) = List(s"logger $idx" -> "added").toMap
+    def msgCtx(idx: Int) = List(s"log $idx" -> "added").toMap
     DeferredLoggerFactory(testLoggerFactory)
       .map(_.addContext(factoryCtx))
       .use { loggerFactory =>
@@ -445,27 +444,27 @@ class DeferredLoggerFactoryTest extends munit.CatsEffectSuite {
             "Logger 0",
             "Test Message",
             None,
-            factoryCtx.concat(loggerCtx(0)).concat(msgCtx(0))
+            factoryCtx ++ loggerCtx(0) ++ msgCtx(0)
           ),
           Trace(
             "Logger 1",
             "Test Message",
             None,
-            factoryCtx.concat(loggerCtx(1)).concat(msgCtx(1))
+            factoryCtx ++ loggerCtx(1) ++ msgCtx(1)
           ),
           Trace(
             "Logger 2",
             "Test Message",
             None,
-            factoryCtx.concat(loggerCtx(2)).concat(msgCtx(2))
+            factoryCtx ++ loggerCtx(2) ++ msgCtx(2)
           ),
           Trace(
             "Logger 3",
             "Test Message",
             None,
-            factoryCtx.concat(loggerCtx(3)).concat(msgCtx(3))
+            factoryCtx ++ loggerCtx(3) ++ msgCtx(3)
           ),
-          Trace("Logger 4", "Test Message", None, factoryCtx.concat(loggerCtx(4)).concat(msgCtx(4)))
+          Trace("Logger 4", "Test Message", None, factoryCtx ++ loggerCtx(4) ++ msgCtx(4))
         )
       )
   }
