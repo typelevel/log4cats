@@ -123,15 +123,15 @@ object PagingSelfAwareStructuredLogger {
     ): F[(String, Map[String, String])] =
       randomUUID.map { uuid =>
         val logSplitId = uuid.show
-        val msgLength = msg.length.show
+        val msgLength = msg.length
         (
           logSplitId,
           ctx
             .updated(logSplitIdN, logSplitId)
-            .updated("page_size", s"${pageSizeK.show} Kib")
-            .updated("whole_message_size_bytes", msgLength)
+            .updated("page_size", s"$pageSizeK Kib")
+            .updated("whole_message_size_bytes", s"$msgLength")
             // The following is deprecated
-            .updated("log_size", s"${msgLength} Byte")
+            .updated("log_size", s"$msgLength Byte")
         )
       }
 
@@ -142,9 +142,9 @@ object PagingSelfAwareStructuredLogger {
         ctx: Map[String, String]
     ): Map[String, String] =
       ctx
-        .updated("total_pages", totalPages.show)
-        .updated("page_num", pageNum.show)
-        .updated("log_size_bytes", page.length.show)
+        .updated("total_pages", s"$totalPages")
+        .updated("page_num", s"$pageNum")
+        .updated("log_size_bytes", s"${page.length}")
 
     private def doLogging(
         loggingLevelChk: => F[Boolean],
