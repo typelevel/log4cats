@@ -87,10 +87,10 @@ object PagingSelfAwareStructuredLogger {
     private val pageSize = pageSizeK * 1024
 
     private def pagedLogging(
-        logOpWithCtx: Map[String, String] => (=> String) => F[Unit],
+        logOpWithCtx: Map[String, String] => String => F[Unit],
         ctx: Map[String, String],
         logSplitId: String,
-        msg: => String
+        msg: String
     ): F[Unit] = {
       val numOfPagesRaw = (msg.length - 1) / pageSize + 1
       val numOfPages = Math.min(numOfPagesRaw, maxPageNeeded)
@@ -118,7 +118,7 @@ object PagingSelfAwareStructuredLogger {
     }
 
     private def addMsgCtx(
-        msg: => String,
+        msg: String,
         ctx: Map[String, String]
     ): F[(String, Map[String, String])] =
       randomUUID.map { uuid =>
@@ -136,9 +136,9 @@ object PagingSelfAwareStructuredLogger {
       }
 
     private def addPageCtx(
-        page: => String,
-        pageNum: => Int,
-        totalPages: => Int,
+        page: String,
+        pageNum: Int,
+        totalPages: Int,
         ctx: Map[String, String]
     ): Map[String, String] =
       ctx
@@ -148,13 +148,19 @@ object PagingSelfAwareStructuredLogger {
 
     private def doLogging(
         loggingLevelChk: => F[Boolean],
-        logOpWithCtx: Map[String, String] => (=> String) => F[Unit],
+        logOpWithCtx: Map[String, String] => String => F[Unit],
         msg: => String,
         ctx: Map[String, String] = Map()
     ): F[Unit] = {
       loggingLevelChk.ifM(
-        addMsgCtx(msg, ctx).flatMap { case (logSplitId, newCtx) =>
-          pagedLogging(logOpWithCtx, newCtx, logSplitId, msg)
+        {
+          // At this point we know we're going to log and/or interact
+          // with msg, so we materialize the message here so we don't
+          // materialize it multiple times
+          val materializedMsg = msg
+          addMsgCtx(materializedMsg, ctx).flatMap { case (logSplitId, newCtx) =>
+            pagedLogging(logOpWithCtx, newCtx, logSplitId, materializedMsg)
+          }
         },
         Applicative[F].unit
       )
