@@ -43,100 +43,56 @@ object WriterTStructuredLogger {
     new SelfAwareStructuredLogger[WriterT[F, G[StructuredLogMessage], *]] {
       type LoggerF[A] = WriterT[F, G[StructuredLogMessage], A]
 
-      override def isTraceEnabled: LoggerF[Boolean] = isEnabled(traceEnabled)
-
-      override def isDebugEnabled: LoggerF[Boolean] = isEnabled(debugEnabled)
-
-      override def isInfoEnabled: LoggerF[Boolean] = isEnabled(infoEnabled)
-
-      override def isWarnEnabled: LoggerF[Boolean] = isEnabled(warnEnabled)
-
-      override def isErrorEnabled: LoggerF[Boolean] = isEnabled(errorEnabled)
-
-      override def trace(t: Throwable)(message: => String): LoggerF[Unit] =
-        build(Map.empty, traceEnabled, LogLevel.Trace, t.some, message)
-
-      override def trace(message: => String): LoggerF[Unit] =
-        build(Map.empty, traceEnabled, LogLevel.Trace, None, message)
-
-      override def debug(t: Throwable)(message: => String): LoggerF[Unit] =
-        build(Map.empty, debugEnabled, LogLevel.Debug, t.some, message)
-
-      override def debug(message: => String): LoggerF[Unit] =
-        build(Map.empty, debugEnabled, LogLevel.Debug, None, message)
-
-      override def info(t: Throwable)(message: => String): LoggerF[Unit] =
-        build(Map.empty, infoEnabled, LogLevel.Info, t.some, message)
-
-      override def info(message: => String): LoggerF[Unit] =
-        build(Map.empty, infoEnabled, LogLevel.Info, None, message)
-
-      override def warn(t: Throwable)(message: => String): LoggerF[Unit] =
-        build(Map.empty, warnEnabled, LogLevel.Warn, t.some, message)
-
-      override def warn(message: => String): LoggerF[Unit] =
-        build(Map.empty, warnEnabled, LogLevel.Warn, None, message)
-
-      override def error(t: Throwable)(message: => String): LoggerF[Unit] =
-        build(Map.empty, errorEnabled, LogLevel.Error, t.some, message)
-
-      override def error(message: => String): LoggerF[Unit] =
-        build(Map.empty, errorEnabled, LogLevel.Error, None, message)
-
-      private def isEnabled(enabled: Boolean): LoggerF[Boolean] =
-        WriterT.liftF[F, G[StructuredLogMessage], Boolean](Applicative[F].pure(enabled))
-
-      private def build(
-          ctx: Map[String, String],
-          enabled: Boolean,
-          level: LogLevel,
-          t: Option[Throwable],
-          message: => String
-      ): LoggerF[Unit] =
-        if (enabled)
-          WriterT.tell[F, G[StructuredLogMessage]](Applicative[G].pure {
-            StructuredLogMessage(level, ctx, t, message)
-          })
-        else WriterT.value[F, G[StructuredLogMessage], Unit](())
-
       private implicit val monoidGLogMessage: Monoid[G[StructuredLogMessage]] =
         Alternative[G].algebra[StructuredLogMessage]
 
-      override def trace(ctx: Map[String, String])(message: => String): LoggerF[Unit] =
-        build(ctx, traceEnabled, LogLevel.Trace, None, message)
+      private def shouldLog(ll: LogLevel): Boolean = ll match {
+        case LogLevel.Error => errorEnabled
+        case LogLevel.Warn => warnEnabled
+        case LogLevel.Info => infoEnabled
+        case LogLevel.Debug => debugEnabled
+        case LogLevel.Trace => traceEnabled
+      }
 
-      override def trace(ctx: Map[String, String], t: Throwable)(
+      private def build(
+          level: LogLevel,
+          ctx: Map[String, String],
+          t: Option[Throwable],
           message: => String
       ): LoggerF[Unit] =
-        build(ctx, traceEnabled, LogLevel.Trace, t.some, message)
+        Applicative[LoggerF].whenA(shouldLog(level)) {
+          WriterT.tell[F, G[StructuredLogMessage]](Applicative[G].pure {
+            StructuredLogMessage(level, ctx, t, message)
+          })
+        }
 
-      override def debug(ctx: Map[String, String])(message: => String): LoggerF[Unit] =
-        build(ctx, debugEnabled, LogLevel.Debug, None, message)
+      override def isEnabled(ll: LogLevel): WriterT[F, G[StructuredLogMessage], Boolean] =
+        WriterT.liftF[F, G[StructuredLogMessage], Boolean](Applicative[F].pure(shouldLog(ll)))
 
-      override def debug(ctx: Map[String, String], t: Throwable)(
-          message: => String
-      ): LoggerF[Unit] =
-        build(ctx, debugEnabled, LogLevel.Debug, t.some, message)
+      override def log(ll: LogLevel, msg: => String): WriterT[F, G[StructuredLogMessage], Unit] =
+        build(ll, Map.empty, none, msg)
 
-      override def info(ctx: Map[String, String])(message: => String): LoggerF[Unit] =
-        build(ctx, infoEnabled, LogLevel.Info, None, message)
+      override def log(
+          ll: LogLevel,
+          t: Throwable,
+          msg: => String
+      ): WriterT[F, G[StructuredLogMessage], Unit] =
+        build(ll, Map.empty, t.some, msg)
 
-      override def info(ctx: Map[String, String], t: Throwable)(message: => String): LoggerF[Unit] =
-        build(ctx, infoEnabled, LogLevel.Info, t.some, message)
+      override def log(
+          ll: LogLevel,
+          ctx: Map[String, String],
+          msg: => String
+      ): WriterT[F, G[StructuredLogMessage], Unit] =
+        build(ll, ctx, none, msg)
 
-      override def warn(ctx: Map[String, String])(message: => String): LoggerF[Unit] =
-        build(ctx, warnEnabled, LogLevel.Warn, None, message)
-
-      override def warn(ctx: Map[String, String], t: Throwable)(message: => String): LoggerF[Unit] =
-        build(ctx, warnEnabled, LogLevel.Warn, t.some, message)
-
-      override def error(ctx: Map[String, String])(message: => String): LoggerF[Unit] =
-        build(ctx, errorEnabled, LogLevel.Error, None, message)
-
-      override def error(ctx: Map[String, String], t: Throwable)(
-          message: => String
-      ): LoggerF[Unit] =
-        build(ctx, errorEnabled, LogLevel.Error, t.some, message)
+      override def log(
+          ll: LogLevel,
+          ctx: Map[String, String],
+          t: Throwable,
+          msg: => String
+      ): WriterT[F, G[StructuredLogMessage], Unit] =
+        build(ll, ctx, t.some, msg)
     }
 
   def run[F[_]: Monad, G[_]: Foldable](

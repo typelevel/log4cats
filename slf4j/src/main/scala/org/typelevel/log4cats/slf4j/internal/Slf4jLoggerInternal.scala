@@ -16,11 +16,12 @@
 
 package org.typelevel.log4cats.slf4j.internal
 
-import org.typelevel.log4cats._
-import cats.syntax.all._
-import cats.effect._
-import org.slf4j.{Logger => JLogger}
+import org.typelevel.log4cats.*
+import cats.syntax.all.*
+import cats.effect.*
+import org.slf4j.Logger as JLogger
 import org.slf4j.MDC
+import org.typelevel.log4cats.extras.LogLevel
 
 private[slf4j] object Slf4jLoggerInternal {
 
@@ -125,5 +126,51 @@ private[slf4j] object Slf4jLoggerInternal {
       contextLog(isWarnEnabled, ctx, () => logger.warn(msg, t))
     override def error(ctx: Map[String, String], t: Throwable)(msg: => String): F[Unit] =
       contextLog(isErrorEnabled, ctx, () => logger.error(msg, t))
+
+    override def isEnabled(ll: LogLevel): F[Boolean] = ll match {
+      case LogLevel.Error => isErrorEnabled
+      case LogLevel.Warn => isWarnEnabled
+      case LogLevel.Info => isInfoEnabled
+      case LogLevel.Debug => isDebugEnabled
+      case LogLevel.Trace => isTraceEnabled
+    }
+
+    override def log(
+        ll: LogLevel,
+        ctx: Map[String, String],
+        t: Throwable,
+        msg: => String
+    ): F[Unit] =
+      ll match {
+        case LogLevel.Error => error(ctx, t)(msg)
+        case LogLevel.Warn => warn(ctx, t)(msg)
+        case LogLevel.Info => info(ctx, t)(msg)
+        case LogLevel.Debug => debug(ctx, t)(msg)
+        case LogLevel.Trace => trace(ctx, t)(msg)
+      }
+
+    override def log(ll: LogLevel, ctx: Map[String, String], msg: => String): F[Unit] = ll match {
+      case LogLevel.Error => error(ctx)(msg)
+      case LogLevel.Warn => warn(ctx)(msg)
+      case LogLevel.Info => info(ctx)(msg)
+      case LogLevel.Debug => debug(ctx)(msg)
+      case LogLevel.Trace => trace(ctx)(msg)
+    }
+
+    override def log(ll: LogLevel, t: Throwable, msg: => String): F[Unit] = ll match {
+      case LogLevel.Error => error(t)(msg)
+      case LogLevel.Warn => warn(t)(msg)
+      case LogLevel.Info => info(t)(msg)
+      case LogLevel.Debug => debug(t)(msg)
+      case LogLevel.Trace => trace(t)(msg)
+    }
+
+    override def log(ll: LogLevel, msg: => String): F[Unit] = ll match {
+      case LogLevel.Error => error(msg)
+      case LogLevel.Warn => warn(msg)
+      case LogLevel.Info => info(msg)
+      case LogLevel.Debug => debug(msg)
+      case LogLevel.Trace => trace(msg)
+    }
   }
 }

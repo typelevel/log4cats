@@ -19,7 +19,8 @@ package org.typelevel.log4cats.testing
 import cats.data.Chain
 import org.typelevel.log4cats.SelfAwareLogger
 import cats.effect.{Ref, Sync}
-import cats.syntax.all._
+import cats.syntax.all.*
+import org.typelevel.log4cats.extras.LogLevel
 
 import java.util.concurrent.atomic.AtomicReference
 import scala.annotation.tailrec
@@ -118,38 +119,28 @@ object TestingLogger {
     new TestingLogger[F] {
       def logged: F[Vector[LogMessage]] = read()
 
-      def isTraceEnabled: F[Boolean] = Sync[F].pure(traceEnabled)
-      def isDebugEnabled: F[Boolean] = Sync[F].pure(debugEnabled)
-      def isInfoEnabled: F[Boolean] = Sync[F].pure(infoEnabled)
-      def isWarnEnabled: F[Boolean] = Sync[F].pure(warnEnabled)
-      def isErrorEnabled: F[Boolean] = Sync[F].pure(errorEnabled)
+      private def shouldLog(ll: LogLevel): Boolean = ll match {
+        case LogLevel.Error => errorEnabled
+        case LogLevel.Warn => warnEnabled
+        case LogLevel.Info => infoEnabled
+        case LogLevel.Debug => debugEnabled
+        case LogLevel.Trace => traceEnabled
+      }
 
-      private val noop = Sync[F].unit
+      private def save(ll: LogLevel, t: Option[Throwable], msg: => String): F[Unit] =
+        Sync[F].whenA(shouldLog(ll))(appendLogMessage(ll match {
+          case LogLevel.Error => ERROR(msg, t)
+          case LogLevel.Warn => WARN(msg, t)
+          case LogLevel.Info => INFO(msg, t)
+          case LogLevel.Debug => DEBUG(msg, t)
+          case LogLevel.Trace => TRACE(msg, t)
+        }))
 
-      def error(message: => String): F[Unit] =
-        if (errorEnabled) appendLogMessage(ERROR(message, None)) else noop
-      def error(t: Throwable)(message: => String): F[Unit] =
-        if (errorEnabled) appendLogMessage(ERROR(message, t.some)) else noop
+      override def isEnabled(ll: LogLevel): F[Boolean] = Sync[F].pure(shouldLog(ll))
 
-      def warn(message: => String): F[Unit] =
-        if (warnEnabled) appendLogMessage(WARN(message, None)) else noop
-      def warn(t: Throwable)(message: => String): F[Unit] =
-        if (warnEnabled) appendLogMessage(WARN(message, t.some)) else noop
+      override def log(ll: LogLevel, t: Throwable, msg: => String): F[Unit] = save(ll, t.some, msg)
 
-      def info(message: => String): F[Unit] =
-        if (infoEnabled) appendLogMessage(INFO(message, None)) else noop
-      def info(t: Throwable)(message: => String): F[Unit] =
-        if (infoEnabled) appendLogMessage(INFO(message, t.some)) else noop
-
-      def debug(message: => String): F[Unit] =
-        if (debugEnabled) appendLogMessage(DEBUG(message, None)) else noop
-      def debug(t: Throwable)(message: => String): F[Unit] =
-        if (debugEnabled) appendLogMessage(DEBUG(message, t.some)) else noop
-
-      def trace(message: => String): F[Unit] =
-        if (traceEnabled) appendLogMessage(TRACE(message, None)) else noop
-      def trace(t: Throwable)(message: => String): F[Unit] =
-        if (traceEnabled) appendLogMessage(TRACE(message, t.some)) else noop
+      override def log(ll: LogLevel, msg: => String): F[Unit] = save(ll, none, msg)
     }
 
 }

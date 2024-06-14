@@ -16,10 +16,11 @@
 
 package org.typelevel.log4cats.extras
 
-import cats._
-import cats.data._
-import cats.syntax.all._
-import org.typelevel.log4cats._
+import cats.*
+import cats.data.*
+import cats.kernel.Monoid
+import cats.syntax.all.*
+import org.typelevel.log4cats.*
 
 /**
  * A `SelfAwareLogger` implemented using `cats.data.WriterT`.
@@ -40,52 +41,38 @@ object WriterTLogger {
       errorEnabled: Boolean = true
   ): SelfAwareLogger[WriterT[F, G[LogMessage], *]] =
     new SelfAwareLogger[WriterT[F, G[LogMessage], *]] {
-      override def isTraceEnabled: WriterT[F, G[LogMessage], Boolean] = isEnabled(traceEnabled)
-      override def isDebugEnabled: WriterT[F, G[LogMessage], Boolean] = isEnabled(debugEnabled)
-      override def isInfoEnabled: WriterT[F, G[LogMessage], Boolean] = isEnabled(infoEnabled)
-      override def isWarnEnabled: WriterT[F, G[LogMessage], Boolean] = isEnabled(warnEnabled)
-      override def isErrorEnabled: WriterT[F, G[LogMessage], Boolean] = isEnabled(errorEnabled)
-
-      override def trace(t: Throwable)(message: => String): WriterT[F, G[LogMessage], Unit] =
-        build(traceEnabled, LogLevel.Trace, t.some, message)
-      override def trace(message: => String): WriterT[F, G[LogMessage], Unit] =
-        build(traceEnabled, LogLevel.Trace, None, message)
-
-      override def debug(t: Throwable)(message: => String): WriterT[F, G[LogMessage], Unit] =
-        build(debugEnabled, LogLevel.Debug, t.some, message)
-      override def debug(message: => String): WriterT[F, G[LogMessage], Unit] =
-        build(debugEnabled, LogLevel.Debug, None, message)
-
-      override def info(t: Throwable)(message: => String): WriterT[F, G[LogMessage], Unit] =
-        build(infoEnabled, LogLevel.Info, t.some, message)
-      override def info(message: => String): WriterT[F, G[LogMessage], Unit] =
-        build(infoEnabled, LogLevel.Info, None, message)
-
-      override def warn(t: Throwable)(message: => String): WriterT[F, G[LogMessage], Unit] =
-        build(warnEnabled, LogLevel.Warn, t.some, message)
-      override def warn(message: => String): WriterT[F, G[LogMessage], Unit] =
-        build(warnEnabled, LogLevel.Warn, None, message)
-
-      override def error(t: Throwable)(message: => String): WriterT[F, G[LogMessage], Unit] =
-        build(errorEnabled, LogLevel.Error, t.some, message)
-      override def error(message: => String): WriterT[F, G[LogMessage], Unit] =
-        build(errorEnabled, LogLevel.Error, None, message)
-
-      private def isEnabled(enabled: Boolean): WriterT[F, G[LogMessage], Boolean] =
-        WriterT.liftF[F, G[LogMessage], Boolean](Applicative[F].pure(enabled))
-
-      private def build(
-          enabled: Boolean,
-          level: LogLevel,
-          t: Option[Throwable],
-          message: => String
-      ): WriterT[F, G[LogMessage], Unit] =
-        if (enabled)
-          WriterT.tell[F, G[LogMessage]](Applicative[G].pure(LogMessage(level, t, message)))
-        else WriterT.value[F, G[LogMessage], Unit](())
+      type LoggerF[A] = WriterT[F, G[LogMessage], A]
 
       private implicit val monoidGLogMessage: Monoid[G[LogMessage]] =
         Alternative[G].algebra[LogMessage]
+
+      private def shouldLog(ll: LogLevel): Boolean = ll match {
+        case LogLevel.Error => errorEnabled
+        case LogLevel.Warn => warnEnabled
+        case LogLevel.Info => infoEnabled
+        case LogLevel.Debug => debugEnabled
+        case LogLevel.Trace => traceEnabled
+      }
+
+      private def build(level: LogLevel, t: Option[Throwable], message: => String): LoggerF[Unit] =
+        Applicative[LoggerF].whenA(shouldLog(level)) {
+          WriterT.tell[F, G[LogMessage]](Applicative[G].pure {
+            LogMessage(level, t, message)
+          })
+        }
+
+      override def isEnabled(ll: LogLevel): WriterT[F, G[LogMessage], Boolean] =
+        WriterT.liftF[F, G[LogMessage], Boolean](Applicative[F].pure(shouldLog(ll)))
+
+      override def log(
+          ll: LogLevel,
+          t: Throwable,
+          msg: => String
+      ): WriterT[F, G[LogMessage], Unit] =
+        build(ll, t.some, msg)
+
+      override def log(ll: LogLevel, msg: => String): WriterT[F, G[LogMessage], Unit] =
+        build(ll, none, msg)
     }
 
   def run[F[_]: Monad, G[_]: Foldable](l: Logger[F]): WriterT[F, G[LogMessage], *] ~> F =

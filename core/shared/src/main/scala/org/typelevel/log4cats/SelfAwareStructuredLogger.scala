@@ -16,8 +16,9 @@
 
 package org.typelevel.log4cats
 
-import cats._
+import cats.*
 import cats.Show.Shown
+import org.typelevel.log4cats.extras.LogLevel
 
 trait SelfAwareStructuredLogger[F[_]] extends SelfAwareLogger[F] with StructuredLogger[F] {
   override def mapK[G[_]](fk: F ~> G): SelfAwareStructuredLogger[G] =
@@ -49,49 +50,25 @@ object SelfAwareStructuredLogger {
       modify: Map[String, String] => Map[String, String]
   ) extends SelfAwareStructuredLogger[F] {
     private lazy val defaultCtx: Map[String, String] = modify(Map.empty)
-    def error(message: => String): F[Unit] = sl.error(defaultCtx)(message)
-    def warn(message: => String): F[Unit] = sl.warn(defaultCtx)(message)
-    def info(message: => String): F[Unit] = sl.info(defaultCtx)(message)
-    def debug(message: => String): F[Unit] = sl.debug(defaultCtx)(message)
-    def trace(message: => String): F[Unit] = sl.trace(defaultCtx)(message)
-    def trace(ctx: Map[String, String])(msg: => String): F[Unit] =
-      sl.trace(modify(ctx))(msg)
-    def debug(ctx: Map[String, String])(msg: => String): F[Unit] =
-      sl.debug(modify(ctx))(msg)
-    def info(ctx: Map[String, String])(msg: => String): F[Unit] =
-      sl.info(modify(ctx))(msg)
-    def warn(ctx: Map[String, String])(msg: => String): F[Unit] =
-      sl.warn(modify(ctx))(msg)
-    def error(ctx: Map[String, String])(msg: => String): F[Unit] =
-      sl.error(modify(ctx))(msg)
 
-    def isTraceEnabled: F[Boolean] = sl.isTraceEnabled
-    def isDebugEnabled: F[Boolean] = sl.isDebugEnabled
-    def isInfoEnabled: F[Boolean] = sl.isInfoEnabled
-    def isWarnEnabled: F[Boolean] = sl.isWarnEnabled
-    def isErrorEnabled: F[Boolean] = sl.isErrorEnabled
+    override def log(ll: LogLevel, ctx: Map[String, String], msg: => String): F[Unit] =
+      sl.log(ll, modify(ctx), msg)
 
-    def error(t: Throwable)(message: => String): F[Unit] =
-      sl.error(defaultCtx, t)(message)
-    def warn(t: Throwable)(message: => String): F[Unit] =
-      sl.warn(defaultCtx, t)(message)
-    def info(t: Throwable)(message: => String): F[Unit] =
-      sl.info(defaultCtx, t)(message)
-    def debug(t: Throwable)(message: => String): F[Unit] =
-      sl.debug(defaultCtx, t)(message)
-    def trace(t: Throwable)(message: => String): F[Unit] =
-      sl.trace(defaultCtx, t)(message)
+    override def log(
+        ll: LogLevel,
+        ctx: Map[String, String],
+        t: Throwable,
+        msg: => String
+    ): F[Unit] =
+      sl.log(ll, modify(ctx), t, msg)
 
-    def error(ctx: Map[String, String], t: Throwable)(message: => String): F[Unit] =
-      sl.error(modify(ctx), t)(message)
-    def warn(ctx: Map[String, String], t: Throwable)(message: => String): F[Unit] =
-      sl.warn(modify(ctx), t)(message)
-    def info(ctx: Map[String, String], t: Throwable)(message: => String): F[Unit] =
-      sl.info(modify(ctx), t)(message)
-    def debug(ctx: Map[String, String], t: Throwable)(message: => String): F[Unit] =
-      sl.debug(modify(ctx), t)(message)
-    def trace(ctx: Map[String, String], t: Throwable)(message: => String): F[Unit] =
-      sl.trace(modify(ctx), t)(message)
+    override def log(ll: LogLevel, t: Throwable, msg: => String): F[Unit] =
+      sl.log(ll, defaultCtx, t, msg)
+
+    override def log(ll: LogLevel, msg: => String): F[Unit] =
+      sl.log(ll, defaultCtx, msg)
+
+    override def isEnabled(ll: LogLevel): F[Boolean] = sl.isEnabled(ll)
   }
 
   private def withModifiedString[F[_]](
@@ -99,95 +76,47 @@ object SelfAwareStructuredLogger {
       f: String => String
   ): SelfAwareStructuredLogger[F] =
     new SelfAwareStructuredLogger[F] {
-      def isTraceEnabled: F[Boolean] = l.isTraceEnabled
-      def isDebugEnabled: F[Boolean] = l.isDebugEnabled
-      def isInfoEnabled: F[Boolean] = l.isInfoEnabled
-      def isWarnEnabled: F[Boolean] = l.isWarnEnabled
-      def isErrorEnabled: F[Boolean] = l.isErrorEnabled
+      override def log(ll: LogLevel, ctx: Map[String, String], msg: => String): F[Unit] =
+        l.log(ll, ctx, f(msg))
 
-      override def trace(ctx: Map[String, String])(msg: => String): F[Unit] = l.trace(ctx)(f(msg))
-      override def trace(ctx: Map[String, String], t: Throwable)(msg: => String): F[Unit] =
-        l.trace(ctx, t)(f(msg))
-      override def debug(ctx: Map[String, String])(msg: => String): F[Unit] = l.debug(ctx)(f(msg))
-      override def debug(ctx: Map[String, String], t: Throwable)(msg: => String): F[Unit] =
-        l.debug(ctx, t)(f(msg))
-      override def info(ctx: Map[String, String])(msg: => String): F[Unit] = l.info(ctx)(f(msg))
-      override def info(ctx: Map[String, String], t: Throwable)(msg: => String): F[Unit] =
-        l.info(ctx, t)(f(msg))
-      override def warn(ctx: Map[String, String])(msg: => String): F[Unit] = l.warn(ctx)(f(msg))
-      override def warn(ctx: Map[String, String], t: Throwable)(msg: => String): F[Unit] =
-        l.warn(ctx, t)(f(msg))
-      override def error(ctx: Map[String, String])(msg: => String): F[Unit] = l.error(ctx)(f(msg))
-      override def error(ctx: Map[String, String], t: Throwable)(msg: => String): F[Unit] =
-        l.error(ctx, t)(f(msg))
-      override def error(message: => String): F[Unit] = l.error(f(message))
-      override def error(t: Throwable)(message: => String): F[Unit] = l.error(t)(f(message))
-      override def warn(message: => String): F[Unit] = l.warn(f(message))
-      override def warn(t: Throwable)(message: => String): F[Unit] = l.warn(t)(f(message))
-      override def info(message: => String): F[Unit] = l.info(f(message))
-      override def info(t: Throwable)(message: => String): F[Unit] = l.info(t)(f(message))
-      override def debug(message: => String): F[Unit] = l.debug(f(message))
-      override def debug(t: Throwable)(message: => String): F[Unit] = l.debug(t)(f(message))
-      override def trace(message: => String): F[Unit] = l.trace(f(message))
-      override def trace(t: Throwable)(message: => String): F[Unit] = l.trace(t)(f(message))
+      override def log(
+          ll: LogLevel,
+          ctx: Map[String, String],
+          t: Throwable,
+          msg: => String
+      ): F[Unit] =
+        l.log(ll, ctx, t, f(msg))
+
+      override def log(ll: LogLevel, t: Throwable, msg: => String): F[Unit] =
+        l.log(ll, t, f(msg))
+
+      override def log(ll: LogLevel, msg: => String): F[Unit] =
+        l.log(ll, f(msg))
+
+      override def isEnabled(ll: LogLevel): F[Boolean] = l.isEnabled(ll)
     }
 
   private def mapK[G[_], F[_]](
       f: G ~> F
   )(logger: SelfAwareStructuredLogger[G]): SelfAwareStructuredLogger[F] =
     new SelfAwareStructuredLogger[F] {
-      def isTraceEnabled: F[Boolean] =
-        f(logger.isTraceEnabled)
-      def isDebugEnabled: F[Boolean] =
-        f(logger.isDebugEnabled)
-      def isInfoEnabled: F[Boolean] =
-        f(logger.isInfoEnabled)
-      def isWarnEnabled: F[Boolean] =
-        f(logger.isWarnEnabled)
-      def isErrorEnabled: F[Boolean] =
-        f(logger.isErrorEnabled)
+      override def log(ll: LogLevel, ctx: Map[String, String], msg: => String): F[Unit] =
+        f(logger.log(ll, ctx, msg))
 
-      def trace(ctx: Map[String, String])(msg: => String): F[Unit] =
-        f(logger.trace(ctx)(msg))
-      def debug(ctx: Map[String, String])(msg: => String): F[Unit] =
-        f(logger.debug(ctx)(msg))
-      def info(ctx: Map[String, String])(msg: => String): F[Unit] =
-        f(logger.info(ctx)(msg))
-      def warn(ctx: Map[String, String])(msg: => String): F[Unit] =
-        f(logger.warn(ctx)(msg))
-      def error(ctx: Map[String, String])(msg: => String): F[Unit] =
-        f(logger.error(ctx)(msg))
+      override def log(
+          ll: LogLevel,
+          ctx: Map[String, String],
+          t: Throwable,
+          msg: => String
+      ): F[Unit] =
+        f(logger.log(ll, ctx, t, msg))
 
-      def error(t: Throwable)(message: => String): F[Unit] =
-        f(logger.error(t)(message))
-      def warn(t: Throwable)(message: => String): F[Unit] =
-        f(logger.warn(t)(message))
-      def info(t: Throwable)(message: => String): F[Unit] =
-        f(logger.info(t)(message))
-      def debug(t: Throwable)(message: => String): F[Unit] =
-        f(logger.debug(t)(message))
-      def trace(t: Throwable)(message: => String): F[Unit] =
-        f(logger.trace(t)(message))
-      def error(message: => String): F[Unit] =
-        f(logger.error(message))
-      def warn(message: => String): F[Unit] =
-        f(logger.warn(message))
-      def info(message: => String): F[Unit] =
-        f(logger.info(message))
-      def debug(message: => String): F[Unit] =
-        f(logger.debug(message))
-      def trace(message: => String): F[Unit] =
-        f(logger.trace(message))
+      override def log(ll: LogLevel, t: Throwable, msg: => String): F[Unit] =
+        f(logger.log(ll, t, msg))
 
-      def trace(ctx: Map[String, String], t: Throwable)(msg: => String): F[Unit] =
-        f(logger.trace(ctx, t)(msg))
-      def debug(ctx: Map[String, String], t: Throwable)(msg: => String): F[Unit] =
-        f(logger.debug(ctx, t)(msg))
-      def info(ctx: Map[String, String], t: Throwable)(msg: => String): F[Unit] =
-        f(logger.info(ctx, t)(msg))
-      def warn(ctx: Map[String, String], t: Throwable)(msg: => String): F[Unit] =
-        f(logger.warn(ctx, t)(msg))
-      def error(ctx: Map[String, String], t: Throwable)(msg: => String): F[Unit] =
-        f(logger.error(ctx, t)(msg))
+      override def log(ll: LogLevel, msg: => String): F[Unit] =
+        f(logger.log(ll, msg))
+
+      override def isEnabled(ll: LogLevel): F[Boolean] = f(logger.isEnabled(ll))
     }
 }
