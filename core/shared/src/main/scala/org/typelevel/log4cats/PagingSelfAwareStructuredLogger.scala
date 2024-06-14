@@ -87,7 +87,7 @@ object PagingSelfAwareStructuredLogger {
     private val pageSize = pageSizeK * 1024
 
     private def pagedLogging(
-        logOpWithCtx: Map[String, String] => String => F[Unit],
+        logOpWithCtx: Map[String, String] => (=> String) => F[Unit],
         ctx: Map[String, String],
         logSplitId: String,
         msg: String
@@ -148,7 +148,7 @@ object PagingSelfAwareStructuredLogger {
 
     private def doLogging(
         loggingLevelChk: => F[Boolean],
-        logOpWithCtx: Map[String, String] => String => F[Unit],
+        logOpWithCtx: Map[String, String] => (=> String) => F[Unit],
         msg: => String,
         ctx: Map[String, String] = Map()
     ): F[Unit] = {
