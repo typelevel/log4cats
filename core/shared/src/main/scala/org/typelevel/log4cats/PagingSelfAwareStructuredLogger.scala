@@ -88,10 +88,10 @@ object PagingSelfAwareStructuredLogger {
     private val pageSize = pageSizeK * 1024
 
     private def pagedLogging(
-       logLevel: LogLevel,
-       ctx: Map[String, String],
-       logSplitId: String,
-       msg: String
+        logLevel: LogLevel,
+        ctx: Map[String, String],
+        logSplitId: String,
+        msg: String
     ): F[Unit] = {
       val numOfPagesRaw = (msg.length - 1) / pageSize + 1
       val numOfPages = Math.min(numOfPagesRaw, maxPageNeeded)
@@ -156,10 +156,10 @@ object PagingSelfAwareStructuredLogger {
         )
 
     private def doLoggingThrowable(
-       logLevel: LogLevel,
-       ctx: Map[String, String],
-       t: Throwable,
-       msg: => String
+        logLevel: LogLevel,
+        ctx: Map[String, String],
+        t: Throwable,
+        msg: => String
     ): F[Unit] = doLogging(logLevel, ctx, s"$msg\n${getStackTrace(t)}")
 
     def getStackTrace(t: Throwable): String = {
@@ -181,11 +181,11 @@ object PagingSelfAwareStructuredLogger {
       doLogging(ll, ctx, msg)
 
     override def log(
-                      ll: LogLevel,
-                      ctx: Map[String, String],
-                      t: Throwable,
-                      msg: => String
-                    ): F[Unit] =
+        ll: LogLevel,
+        ctx: Map[String, String],
+        t: Throwable,
+        msg: => String
+    ): F[Unit] =
       doLoggingThrowable(ll, ctx, t, msg)
   }
 }
