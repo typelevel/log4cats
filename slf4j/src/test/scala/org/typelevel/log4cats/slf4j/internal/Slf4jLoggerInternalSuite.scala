@@ -26,10 +26,15 @@ import java.util.concurrent.ThreadFactory
 import org.slf4j.MDC
 import munit.CatsEffectSuite
 import org.typelevel.log4cats.extras.DeferredLogMessage
+import org.typelevel.log4cats.slf4j.internal.JTestLogger.TestLogMessage
 
+import java.util
+import java.util.function
+import java.util.function.{BiConsumer, BinaryOperator, Supplier}
+import java.util.stream.Collector
+import scala.collection.mutable.ListBuffer
 import scala.concurrent.ExecutionContext
 import scala.concurrent.ExecutionContextExecutorService
-import scala.jdk.CollectionConverters.*
 import scala.util.control.NoStackTrace
 
 class Slf4jLoggerInternalSuite extends CatsEffectSuite {
@@ -95,12 +100,47 @@ class Slf4jLoggerInternalSuite extends CatsEffectSuite {
       .assertEquals(initial)
   }
 
+  // Collections compat with Java is really annoying across the 2.12 / 2.13 boundary
+  //
+  // If you are reading this and support for 2.12 has been dropped, kindly rip this
+  // out and call one of the helpers from scala.jdk.javaapi instead.
+  private def toScalaList[A]: Collector[A, ListBuffer[A], List[A]] =
+    new Collector[A, ListBuffer[A], List[A]] {
+      override val characteristics: util.Set[Collector.Characteristics] =
+        new util.HashSet[Collector.Characteristics]()
+
+      override val supplier: Supplier[ListBuffer[A]] = () => new ListBuffer[A]
+
+      override val accumulator: BiConsumer[ListBuffer[A], A] = (b, e) => b.append(e)
+
+      override val combiner: BinaryOperator[ListBuffer[A]] = (a, b) => {
+        a.appendAll(b)
+        a
+      }
+
+      override val finisher: function.Function[ListBuffer[A], List[A]] = _.result()
+    }
+
+  private def toDeferredLogs(jl: java.util.List[TestLogMessage]): List[DeferredLogMessage] =
+    jl.stream()
+      .map[DeferredLogMessage] { tl =>
+        val context =
+          tl.context
+            .entrySet()
+            .stream()
+            .map[(String, String)](e => e.getKey -> e.getValue)
+            .collect(toScalaList)
+            .toMap
+        DeferredLogMessage(tl.logLevel, context, tl.throwableOpt, () => tl.message.get())
+      }
+      .collect(toScalaList[DeferredLogMessage])
+
   testLoggerFixture().test("Slf4jLoggerInternal correctly sets the MDC") { testLogger =>
     Slf4jLogger
       .getLoggerFromSlf4j[IO](testLogger)
       .info(Map("foo" -> "bar"))("A log went here") >>
       IO(testLogger.logs())
-        .map(_.asScala.toList)
+        .map(toDeferredLogs)
         .assertEquals(
           List(
             DeferredLogMessage.info(Map("foo" -> "bar"), none, () => "A log went here")
@@ -260,51 +300,59 @@ class Slf4jLoggerInternalSuite extends CatsEffectSuite {
       slf4jLogger.info("info(msg)").assert >>
       slf4jLogger.warn("warn(msg)").assert >>
       slf4jLogger.error("error(msg)").assert >>
-      IO(testLogger.logs().asScala.toList).assertEquals(
-        List(
-          DeferredLogMessage.trace(Map.empty, none, () => "trace(msg)"),
-          DeferredLogMessage.debug(Map.empty, none, () => "debug(msg)"),
-          DeferredLogMessage.info(Map.empty, none, () => "info(msg)"),
-          DeferredLogMessage.warn(Map.empty, none, () => "warn(msg)"),
-          DeferredLogMessage.error(Map.empty, none, () => "error(msg)")
-        )
-      ) >>
+      IO(testLogger.logs())
+        .map(toDeferredLogs)
+        .assertEquals(
+          List(
+            DeferredLogMessage.trace(Map.empty, none, () => "trace(msg)"),
+            DeferredLogMessage.debug(Map.empty, none, () => "debug(msg)"),
+            DeferredLogMessage.info(Map.empty, none, () => "info(msg)"),
+            DeferredLogMessage.warn(Map.empty, none, () => "warn(msg)"),
+            DeferredLogMessage.error(Map.empty, none, () => "error(msg)")
+          )
+        ) >>
       IO(testLogger.reset()) >>
       slf4jLogger.trace(throwable("trace(t)(msg)"))("trace(t)(msg)").assert >>
       slf4jLogger.debug(throwable("debug(t)(msg)"))("debug(t)(msg)").assert >>
       slf4jLogger.info(throwable("info(t)(msg)"))("info(t)(msg)").assert >>
       slf4jLogger.warn(throwable("warn(t)(msg)"))("warn(t)(msg)").assert >>
       slf4jLogger.error(throwable("error(t)(msg)"))("error(t)(msg)").assert >>
-      IO(testLogger.logs().asScala.toList).assertEquals(
-        List(
-          DeferredLogMessage
-            .trace(Map.empty, throwable("trace(t)(msg)").some, () => "trace(t)(msg)"),
-          DeferredLogMessage
-            .debug(Map.empty, throwable("debug(t)(msg)").some, () => "debug(t)(msg)"),
-          DeferredLogMessage.info(Map.empty, throwable("info(t)(msg)").some, () => "info(t)(msg)"),
-          DeferredLogMessage.warn(Map.empty, throwable("warn(t)(msg)").some, () => "warn(t)(msg)"),
-          DeferredLogMessage.error(
-            Map.empty,
-            throwable("error(t)(msg)").some,
-            () => "error(t)(msg)"
+      IO(testLogger.logs())
+        .map(toDeferredLogs)
+        .assertEquals(
+          List(
+            DeferredLogMessage
+              .trace(Map.empty, throwable("trace(t)(msg)").some, () => "trace(t)(msg)"),
+            DeferredLogMessage
+              .debug(Map.empty, throwable("debug(t)(msg)").some, () => "debug(t)(msg)"),
+            DeferredLogMessage
+              .info(Map.empty, throwable("info(t)(msg)").some, () => "info(t)(msg)"),
+            DeferredLogMessage
+              .warn(Map.empty, throwable("warn(t)(msg)").some, () => "warn(t)(msg)"),
+            DeferredLogMessage.error(
+              Map.empty,
+              throwable("error(t)(msg)").some,
+              () => "error(t)(msg)"
+            )
           )
-        )
-      ) >>
+        ) >>
       IO(testLogger.reset()) >>
       slf4jLogger.trace(ctx("trace(ctx)(msg)"))("trace(ctx)(msg)").assert >>
       slf4jLogger.debug(ctx("debug(ctx)(msg)"))("debug(ctx)(msg)").assert >>
       slf4jLogger.info(ctx("info(ctx)(msg)"))("info(ctx)(msg)").assert >>
       slf4jLogger.warn(ctx("warn(ctx)(msg)"))("warn(ctx)(msg)").assert >>
       slf4jLogger.error(ctx("error(ctx)(msg)"))("error(ctx)(msg)").assert >>
-      IO(testLogger.logs().asScala.toList).assertEquals(
-        List(
-          DeferredLogMessage.trace(ctx("trace(ctx)(msg)"), none, () => "trace(ctx)(msg)"),
-          DeferredLogMessage.debug(ctx("debug(ctx)(msg)"), none, () => "debug(ctx)(msg)"),
-          DeferredLogMessage.info(ctx("info(ctx)(msg)"), none, () => "info(ctx)(msg)"),
-          DeferredLogMessage.warn(ctx("warn(ctx)(msg)"), none, () => "warn(ctx)(msg)"),
-          DeferredLogMessage.error(ctx("error(ctx)(msg)"), none, () => "error(ctx)(msg)")
-        )
-      ) >>
+      IO(testLogger.logs())
+        .map(toDeferredLogs)
+        .assertEquals(
+          List(
+            DeferredLogMessage.trace(ctx("trace(ctx)(msg)"), none, () => "trace(ctx)(msg)"),
+            DeferredLogMessage.debug(ctx("debug(ctx)(msg)"), none, () => "debug(ctx)(msg)"),
+            DeferredLogMessage.info(ctx("info(ctx)(msg)"), none, () => "info(ctx)(msg)"),
+            DeferredLogMessage.warn(ctx("warn(ctx)(msg)"), none, () => "warn(ctx)(msg)"),
+            DeferredLogMessage.error(ctx("error(ctx)(msg)"), none, () => "error(ctx)(msg)")
+          )
+        ) >>
       IO(testLogger.reset()) >>
       slf4jLogger
         .trace(ctx("trace(ctx, t)(msg)"), throwable("trace(ctx, t)(msg)"))("trace(ctx, t)(msg)")
@@ -321,34 +369,36 @@ class Slf4jLoggerInternalSuite extends CatsEffectSuite {
       slf4jLogger
         .error(ctx("error(ctx, t)(msg)"), throwable("error(ctx, t)(msg)"))("error(ctx, t)(msg)")
         .assert >>
-      IO(testLogger.logs().asScala.toList).assertEquals(
-        List(
-          DeferredLogMessage.trace(
-            ctx("trace(ctx, t)(msg)"),
-            throwable("trace(ctx, t)(msg)").some,
-            () => "trace(ctx, t)(msg)"
-          ),
-          DeferredLogMessage.debug(
-            ctx("debug(ctx, t)(msg)"),
-            throwable("debug(ctx, t)(msg)").some,
-            () => "debug(ctx, t)(msg)"
-          ),
-          DeferredLogMessage.info(
-            ctx("info(ctx, t)(msg)"),
-            throwable("info(ctx, t)(msg)").some,
-            () => "info(ctx, t)(msg)"
-          ),
-          DeferredLogMessage.warn(
-            ctx("warn(ctx, t)(msg)"),
-            throwable("warn(ctx, t)(msg)").some,
-            () => "warn(ctx, t)(msg)"
-          ),
-          DeferredLogMessage.error(
-            ctx("error(ctx, t)(msg)"),
-            throwable("error(ctx, t)(msg)").some,
-            () => "error(ctx, t)(msg)"
+      IO(testLogger.logs())
+        .map(toDeferredLogs)
+        .assertEquals(
+          List(
+            DeferredLogMessage.trace(
+              ctx("trace(ctx, t)(msg)"),
+              throwable("trace(ctx, t)(msg)").some,
+              () => "trace(ctx, t)(msg)"
+            ),
+            DeferredLogMessage.debug(
+              ctx("debug(ctx, t)(msg)"),
+              throwable("debug(ctx, t)(msg)").some,
+              () => "debug(ctx, t)(msg)"
+            ),
+            DeferredLogMessage.info(
+              ctx("info(ctx, t)(msg)"),
+              throwable("info(ctx, t)(msg)").some,
+              () => "info(ctx, t)(msg)"
+            ),
+            DeferredLogMessage.warn(
+              ctx("warn(ctx, t)(msg)"),
+              throwable("warn(ctx, t)(msg)").some,
+              () => "warn(ctx, t)(msg)"
+            ),
+            DeferredLogMessage.error(
+              ctx("error(ctx, t)(msg)"),
+              throwable("error(ctx, t)(msg)").some,
+              () => "error(ctx, t)(msg)"
+            )
           )
         )
-      )
   }
 }
