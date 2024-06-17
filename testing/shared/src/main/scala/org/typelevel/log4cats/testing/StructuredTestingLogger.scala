@@ -16,11 +16,12 @@
 
 package org.typelevel.log4cats.testing
 
+import cats.data.Chain
 import org.typelevel.log4cats.SelfAwareStructuredLogger
-import cats.effect.Sync
-import cats.implicits._
-import java.util.concurrent.atomic.AtomicReference
+import cats.effect.{Ref, Sync}
+import cats.syntax.all._
 
+import java.util.concurrent.atomic.AtomicReference
 import scala.annotation.tailrec
 
 trait StructuredTestingLogger[F[_]] extends SelfAwareStructuredLogger[F] {
@@ -68,6 +69,40 @@ object StructuredTestingLogger {
       infoEnabled: Boolean = true,
       warnEnabled: Boolean = true,
       errorEnabled: Boolean = true
+  ): StructuredTestingLogger[F] =
+    atomic[F](
+      traceEnabled = traceEnabled,
+      debugEnabled = debugEnabled,
+      infoEnabled = infoEnabled,
+      warnEnabled = warnEnabled,
+      errorEnabled = errorEnabled
+    )
+
+  def ref[F[_]: Sync](
+      traceEnabled: Boolean = true,
+      debugEnabled: Boolean = true,
+      infoEnabled: Boolean = true,
+      warnEnabled: Boolean = true,
+      errorEnabled: Boolean = true
+  ): F[StructuredTestingLogger[F]] =
+    Ref[F].empty[Chain[LogMessage]].map { ref =>
+      make[F](
+        traceEnabled = traceEnabled,
+        debugEnabled = debugEnabled,
+        infoEnabled = infoEnabled,
+        warnEnabled = warnEnabled,
+        errorEnabled = errorEnabled,
+        appendLogMessage = lm => ref.update(_.append(lm)),
+        read = () => ref.get.map(_.toVector)
+      )
+    }
+
+  def atomic[F[_]: Sync](
+      traceEnabled: Boolean = true,
+      debugEnabled: Boolean = true,
+      infoEnabled: Boolean = true,
+      warnEnabled: Boolean = true,
+      errorEnabled: Boolean = true
   ): StructuredTestingLogger[F] = {
     val ar = new AtomicReference(Vector.empty[LogMessage])
     def appendLogMessage(m: LogMessage): F[Unit] = Sync[F].delay {
@@ -81,8 +116,28 @@ object StructuredTestingLogger {
       mod()
     }
 
+    make[F](
+      traceEnabled = traceEnabled,
+      debugEnabled = debugEnabled,
+      infoEnabled = infoEnabled,
+      warnEnabled = warnEnabled,
+      errorEnabled = errorEnabled,
+      appendLogMessage = appendLogMessage,
+      read = () => Sync[F].delay(ar.get())
+    )
+  }
+
+  def make[F[_]: Sync](
+      traceEnabled: Boolean = true,
+      debugEnabled: Boolean = true,
+      infoEnabled: Boolean = true,
+      warnEnabled: Boolean = true,
+      errorEnabled: Boolean = true,
+      appendLogMessage: LogMessage => F[Unit],
+      read: () => F[Vector[LogMessage]]
+  ): StructuredTestingLogger[F] =
     new StructuredTestingLogger[F] {
-      def logged: F[Vector[LogMessage]] = Sync[F].delay(ar.get)
+      def logged: F[Vector[LogMessage]] = read()
 
       def isTraceEnabled: F[Boolean] = Sync[F].pure(traceEnabled)
       def isDebugEnabled: F[Boolean] = Sync[F].pure(debugEnabled)
@@ -90,7 +145,7 @@ object StructuredTestingLogger {
       def isWarnEnabled: F[Boolean] = Sync[F].pure(warnEnabled)
       def isErrorEnabled: F[Boolean] = Sync[F].pure(errorEnabled)
 
-      private val noop = Sync[F].pure(())
+      private val noop = Sync[F].unit
 
       def error(message: => String): F[Unit] =
         if (errorEnabled) appendLogMessage(ERROR(message, None)) else noop
@@ -137,6 +192,4 @@ object StructuredTestingLogger {
       def trace(ctx: Map[String, String], t: Throwable)(message: => String): F[Unit] =
         if (traceEnabled) appendLogMessage(TRACE(message, t.some, ctx)) else noop
     }
-  }
-
 }
