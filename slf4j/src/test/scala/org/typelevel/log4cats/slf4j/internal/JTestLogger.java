@@ -19,23 +19,89 @@ package org.typelevel.log4cats.slf4j.internal;
 import org.slf4j.Logger;
 import org.slf4j.MDC;
 import org.slf4j.Marker;
-import org.typelevel.log4cats.extras.DeferredLogMessage;
-import org.typelevel.log4cats.extras.DeferredLogMessage$;
-import scala.collection.immutable.Map;
+import org.typelevel.log4cats.extras.LogLevel;
+import scala.Option;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
+import java.util.function.Supplier;
 
 public class JTestLogger implements Logger {
+    // Java -> Scala compat helpers
+
+    private static final scala.Option<Throwable> none = scala.Option$.MODULE$.empty();
+    private static scala.Option<Throwable> some(Throwable t) { return scala.Option$.MODULE$.apply(t); }
+    private static final LogLevel.Trace$ Trace = LogLevel.Trace$.MODULE$;
+    private static final LogLevel.Debug$ Debug = LogLevel.Debug$.MODULE$;
+    private static final LogLevel.Info$ Info = LogLevel.Info$.MODULE$;
+    private static final LogLevel.Warn$ Warn = LogLevel.Warn$.MODULE$;
+    private static final LogLevel.Error$ Error = LogLevel.Error$.MODULE$;
+
+    private Map<String, String> captureContext () {
+        java.util.Map<String, String> mdc = MDC.getCopyOfContextMap();
+        if (mdc == null) {
+            return new HashMap<>();
+        }
+        return MDC.getCopyOfContextMap();
+    }
+
+    public static class TestLogMessage {
+        public final LogLevel logLevel;
+        public final java.util.Map<String, String> context;
+        public final Option<Throwable> throwableOpt;
+        public final Supplier<String> message;
+
+        public TestLogMessage(LogLevel logLevel,
+                              java.util.Map<String, String> context,
+                              Option<Throwable> throwableOpt,
+                              Supplier<String> message) {
+            this.logLevel = logLevel;
+            this.context = context;
+            this.throwableOpt = throwableOpt;
+            this.message = message;
+        }
+
+        @Override
+        public String toString() {
+            return new StringBuilder()
+                    .append("TestLogMessage(")
+                    .append("logLevel=").append(logLevel)
+                    .append(", ")
+                    .append("context=").append(context)
+                    .append(", ")
+                    .append("throwableOpt=").append(throwableOpt)
+                    .append(", ")
+                    .append("message=").append(message.get())
+                    .append(')')
+                    .toString();
+        }
+
+        static TestLogMessage of(LogLevel logLevel,
+                                 java.util.Map<String, String> context,
+                                 Throwable throwable,
+                                 Supplier<String> message) {
+            return new TestLogMessage(logLevel, context, some(throwable), message);
+        }
+
+        static TestLogMessage of(LogLevel logLevel,
+                                 java.util.Map<String, String> context,
+                                 Supplier<String> message) {
+            return new TestLogMessage(logLevel, context, none, message);
+        }
+    }
+
     private final String loggerName;
     private final boolean traceEnabled;
     private final boolean debugEnabled;
     private final boolean infoEnabled;
     private final boolean warnEnabled;
     private final boolean errorEnabled;
-    private final AtomicReference<List<DeferredLogMessage>> loggedMessages;
+    private final AtomicReference<List<TestLogMessage>> loggedMessages;
+
 
     public JTestLogger(String loggerName,
                        boolean traceEnabled,
@@ -49,35 +115,17 @@ public class JTestLogger implements Logger {
         this.infoEnabled = infoEnabled;
         this.warnEnabled = warnEnabled;
         this.errorEnabled = errorEnabled;
-        loggedMessages = new AtomicReference<>(new ArrayList<DeferredLogMessage>());
+        loggedMessages = new AtomicReference<>(new ArrayList<TestLogMessage>());
     }
 
-    // Java -> Scala compat helpers
-
-    private final scala.Option<Throwable> none = scala.Option$.MODULE$.empty();
-    private scala.Option<Throwable> some(Throwable t) { return scala.Option$.MODULE$.apply(t); }
-
-    private Map<String, String> captureContext () {
-        java.util.Map<String, String> mdc = MDC.getCopyOfContextMap();
-        if (mdc == null) {
-            return scala.collection.immutable.Map$.MODULE$.empty();
-        }
-        return scala.collection.immutable.Map$.MODULE$.from(
-                scala.jdk.javaapi.CollectionConverters.asScala(MDC.getCopyOfContextMap())
-        );
-    }
-
-    // Way to long to type the full DeferredLogMessage$.MODULE$ all the time
-    private DeferredLogMessage$ DLM = DeferredLogMessage$.MODULE$;
-
-    private void save(Function<Map<String, String>, DeferredLogMessage> mkLogMessage) {
+    private void save(Function<Map<String, String>, TestLogMessage> mkLogMessage) {
         loggedMessages.updateAndGet(ll -> {
             ll.add(mkLogMessage.apply(captureContext()));
             return ll;
         });
     }
 
-    public List<DeferredLogMessage> logs() { return loggedMessages.get(); }
+    public List<TestLogMessage> logs() { return loggedMessages.get(); }
     public void reset() { loggedMessages.set(new ArrayList<>()); }
 
     @Override public String getName() { return loggerName;}
@@ -95,20 +143,20 @@ public class JTestLogger implements Logger {
     @Override public boolean isWarnEnabled(Marker marker) { return warnEnabled; }
     @Override public boolean isErrorEnabled(Marker marker) { return errorEnabled; }
 
-    @Override public void trace(String msg) { save(ctx -> DLM.trace(ctx, none, () -> msg)); }
-    @Override public void trace(String msg, Throwable t) { save(ctx -> DLM.trace(ctx, some(t), () -> msg)); }
+    @Override public void trace(String msg) { save(ctx -> TestLogMessage.of(Trace, ctx, () -> msg)); }
+    @Override public void trace(String msg, Throwable t) { save(ctx -> TestLogMessage.of(Trace, ctx, t, () -> msg)); }
 
-    @Override public void debug(String msg) { save(ctx -> DLM.debug(ctx, none, () -> msg)); }
-    @Override public void debug(String msg, Throwable t) { save(ctx -> DLM.debug(ctx, some(t), () -> msg)); }
+    @Override public void debug(String msg) { save(ctx -> TestLogMessage.of(Debug, ctx, () -> msg)); }
+    @Override public void debug(String msg, Throwable t) { save(ctx -> TestLogMessage.of(Debug, ctx, t, () -> msg)); }
 
-    @Override public void info(String msg) { save(ctx -> DLM.info(ctx, none, () -> msg)); }
-    @Override public void info(String msg, Throwable t) { save(ctx -> DLM.info(ctx, some(t), () -> msg)); }
+    @Override public void info(String msg) { save(ctx -> TestLogMessage.of(Info, ctx, () -> msg)); }
+    @Override public void info(String msg, Throwable t) { save(ctx -> TestLogMessage.of(Info, ctx, t, () -> msg)); }
 
-    @Override public void warn(String msg) { save(ctx -> DLM.warn(ctx, none, () -> msg)); }
-    @Override public void warn(String msg, Throwable t) { save(ctx -> DLM.warn(ctx, some(t), () -> msg)); }
+    @Override public void warn(String msg) { save(ctx -> TestLogMessage.of(Warn, ctx, () -> msg)); }
+    @Override public void warn(String msg, Throwable t) { save(ctx -> TestLogMessage.of(Warn, ctx, t, () -> msg)); }
 
-    @Override public void error(String msg) { save(ctx -> DLM.error(ctx, none, () -> msg)); }
-    @Override public void error(String msg, Throwable t) { save(ctx -> DLM.error(ctx, some(t), () -> msg)); }
+    @Override public void error(String msg) { save(ctx -> TestLogMessage.of(Error, ctx, () -> msg)); }
+    @Override public void error(String msg, Throwable t) { save(ctx -> TestLogMessage.of(Error, ctx, t, () -> msg)); }
 
     // We shouldn't need these for our tests, so we're treating these variants as if they were the standard method
 
