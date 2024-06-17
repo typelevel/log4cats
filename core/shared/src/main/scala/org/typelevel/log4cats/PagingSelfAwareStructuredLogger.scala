@@ -90,7 +90,7 @@ object PagingSelfAwareStructuredLogger {
         logOpWithCtx: Map[String, String] => (=> String) => F[Unit],
         ctx: Map[String, String],
         logSplitId: String,
-        msg: => String
+        msg: String
     ): F[Unit] = {
       val numOfPagesRaw = (msg.length - 1) / pageSize + 1
       val numOfPages = Math.min(numOfPagesRaw, maxPageNeeded)
@@ -118,33 +118,33 @@ object PagingSelfAwareStructuredLogger {
     }
 
     private def addMsgCtx(
-        msg: => String,
+        msg: String,
         ctx: Map[String, String]
     ): F[(String, Map[String, String])] =
       randomUUID.map { uuid =>
         val logSplitId = uuid.show
-        val msgLength = msg.length.show
+        val msgLength = msg.length
         (
           logSplitId,
           ctx
             .updated(logSplitIdN, logSplitId)
-            .updated("page_size", s"${pageSizeK.show} Kib")
-            .updated("whole_message_size_bytes", msgLength)
+            .updated("page_size", s"$pageSizeK Kib")
+            .updated("whole_message_size_bytes", s"$msgLength")
             // The following is deprecated
-            .updated("log_size", s"${msgLength} Byte")
+            .updated("log_size", s"$msgLength Byte")
         )
       }
 
     private def addPageCtx(
-        page: => String,
-        pageNum: => Int,
-        totalPages: => Int,
+        page: String,
+        pageNum: Int,
+        totalPages: Int,
         ctx: Map[String, String]
     ): Map[String, String] =
       ctx
-        .updated("total_pages", totalPages.show)
-        .updated("page_num", pageNum.show)
-        .updated("log_size_bytes", page.length.show)
+        .updated("total_pages", s"$totalPages")
+        .updated("page_num", s"$pageNum")
+        .updated("log_size_bytes", s"${page.length}")
 
     private def doLogging(
         loggingLevelChk: => F[Boolean],
@@ -153,8 +153,14 @@ object PagingSelfAwareStructuredLogger {
         ctx: Map[String, String] = Map()
     ): F[Unit] = {
       loggingLevelChk.ifM(
-        addMsgCtx(msg, ctx).flatMap { case (logSplitId, newCtx) =>
-          pagedLogging(logOpWithCtx, newCtx, logSplitId, msg)
+        {
+          // At this point we know we're going to log and/or interact
+          // with msg, so we materialize the message here so we don't
+          // materialize it multiple times
+          val materializedMsg = msg
+          addMsgCtx(materializedMsg, ctx).flatMap { case (logSplitId, newCtx) =>
+            pagedLogging(logOpWithCtx, newCtx, logSplitId, materializedMsg)
+          }
         },
         Applicative[F].unit
       )
