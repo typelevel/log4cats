@@ -41,11 +41,13 @@ private[slf4j] object Slf4jLoggerInternal {
   )(implicit F: Sync[F]): F[Unit] = {
 
     val ifEnabled = F.delay {
-      val backup = MDC.getCopyOfContextMap()
-
-      for {
-        (k, v) <- ctx
-      } MDC.put(k, v)
+      val backup =
+        try MDC.getCopyOfContextMap()
+        catch {
+          case _: IllegalStateException =>
+            // Assuming this happens, better to just roll with it and try to get a log out
+            new util.HashMap[String, String]()
+        }
 
       try logging()
       finally
