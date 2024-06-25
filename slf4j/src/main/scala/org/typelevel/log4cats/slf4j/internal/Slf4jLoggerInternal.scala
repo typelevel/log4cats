@@ -22,6 +22,8 @@ import cats.effect._
 import org.slf4j.{Logger => JLogger}
 import org.slf4j.MDC
 
+import java.util
+
 private[slf4j] object Slf4jLoggerInternal {
 
   final val singletonsByName = true
@@ -49,8 +51,12 @@ private[slf4j] object Slf4jLoggerInternal {
             new util.HashMap[String, String]()
         }
 
-      try logging()
-      finally
+      try {
+        // Once 2.12 is no longer supported, change this to MDC.setContextMap(ctx.asJava)
+        MDC.clear()
+        ctx.foreach { case (k, v) => MDC.put(k, v) }
+        logging()
+      } finally
         if (backup eq null) MDC.clear()
         else MDC.setContextMap(backup)
     }
