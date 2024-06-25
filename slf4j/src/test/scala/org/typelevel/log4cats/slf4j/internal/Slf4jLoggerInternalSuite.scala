@@ -141,7 +141,9 @@ class Slf4jLoggerInternalSuite extends CatsEffectSuite {
         )
   }
 
-  testLoggerFixture().test("Slf4jLoggerInternal ignores(?) values already in the MDC") { testLogger =>
+  testLoggerFixture().test(
+    "Slf4jLoggerInternal does not include values previously in the MDC in the log's context"
+  ) { testLogger =>
     IO.delay(MDC.put("baz", "bar")) >>
       Slf4jLogger.getLoggerFromSlf4j[IO](testLogger).info(Map("foo" -> "bar"))("A log went here") >>
       IO(testLogger.logs())
