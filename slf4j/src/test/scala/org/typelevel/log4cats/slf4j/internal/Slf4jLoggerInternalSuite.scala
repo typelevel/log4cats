@@ -60,12 +60,12 @@ class Slf4jLoggerInternalSuite extends CatsEffectSuite {
   }
 
   private def testLoggerFixture(
-                                 traceEnabled: Boolean = true,
-                                 debugEnabled: Boolean = true,
-                                 infoEnabled: Boolean = true,
-                                 warnEnabled: Boolean = true,
-                                 errorEnabled: Boolean = true
-                               ): SyncIO[FunFixture[JTestLogger]] =
+      traceEnabled: Boolean = true,
+      debugEnabled: Boolean = true,
+      infoEnabled: Boolean = true,
+      warnEnabled: Boolean = true,
+      errorEnabled: Boolean = true
+  ): SyncIO[FunFixture[JTestLogger]] =
     ResourceFunFixture(
       Resource.eval(
         IO(
@@ -128,7 +128,8 @@ class Slf4jLoggerInternalSuite extends CatsEffectSuite {
 
   test("Slf4jLoggerInternal resets after exceptions") {
     prepareMDC >>
-      Slf4jLogger.getLogger[IO]
+      Slf4jLogger
+        .getLogger[IO]
         .info(Map("foo" -> "bar"))(die())
         .interceptMessage[IllegalStateException]("dead") >>
       validateMDC
@@ -151,9 +152,13 @@ class Slf4jLoggerInternalSuite extends CatsEffectSuite {
   testLoggerFixture().test("Slf4jLoggerInternal correctly sets the MDC") { testLogger =>
     prepareMDC >>
       Slf4jLogger.getLoggerFromSlf4j[IO](testLogger).info(Map("foo" -> "bar"))("A log went here") >>
-      IO(testLogger.logs()).map(toDeferredLogs).assertEquals(List(
-        DeferredLogMessage.info(Map("foo" -> "bar"), none, () => "A log went here")
-      )) >>
+      IO(testLogger.logs())
+        .map(toDeferredLogs)
+        .assertEquals(
+          List(
+            DeferredLogMessage.info(Map("foo" -> "bar"), none, () => "A log went here")
+          )
+        ) >>
       validateMDC
   }
 
@@ -162,10 +167,12 @@ class Slf4jLoggerInternalSuite extends CatsEffectSuite {
   ) { testLogger =>
     prepareMDC >>
       Slf4jLogger.getLoggerFromSlf4j[IO](testLogger).info(Map("bar" -> "baz"))("A log went here") >>
-      IO(testLogger.logs()).map(toDeferredLogs).assertEquals(
-        List(DeferredLogMessage.info(Map("bar" -> "baz"), none, () => "A log went here")),
-        clue("Context should not include foo->yellow")
-      ) >>
+      IO(testLogger.logs())
+        .map(toDeferredLogs)
+        .assertEquals(
+          List(DeferredLogMessage.info(Map("bar" -> "baz"), none, () => "A log went here")),
+          clue("Context should not include foo->yellow")
+        ) >>
       validateMDC
   }
 
@@ -246,7 +253,8 @@ class Slf4jLoggerInternalSuite extends CatsEffectSuite {
     warnEnabled = false,
     errorEnabled = false
   ).test("Slf4jLoggerInternal.withModifiedString is still lazy") { testLogger =>
-    val slf4jLogger = Slf4jLogger.getLoggerFromSlf4j[IO](testLogger).withModifiedString(_.toUpperCase)
+    val slf4jLogger =
+      Slf4jLogger.getLoggerFromSlf4j[IO](testLogger).withModifiedString(_.toUpperCase)
     val ctx = tag("lazy")
     // If these are lazy the way they need to be, the message won't be evaluated until
     // after the log level has been checked
@@ -331,51 +339,55 @@ class Slf4jLoggerInternalSuite extends CatsEffectSuite {
       validateMDC
   }
 
-  testLoggerFixture().test("Slf4jLoggerInternal gets the dispatching right (msg + error)") { testLogger =>
-    val slf4jLogger = Slf4jLogger.getLoggerFromSlf4j[IO](testLogger)
-    prepareMDC >>
-      slf4jLogger.trace(throwable)("trace").assert >>
-      slf4jLogger.debug(throwable)("debug").assert >>
-      slf4jLogger.info(throwable)("info").assert >>
-      slf4jLogger.warn(throwable)("warn").assert >>
-      slf4jLogger.error(throwable)("error").assert >>
-      IO(testLogger.logs())
-        .map(toDeferredLogs)
-        .assertEquals(
-          List(
-            DeferredLogMessage.trace(Map.empty, throwable.some, () => "trace"),
-            DeferredLogMessage.debug(Map.empty, throwable.some, () => "debug"),
-            DeferredLogMessage.info(Map.empty, throwable.some, () => "info"),
-            DeferredLogMessage.warn(Map.empty, throwable.some, () => "warn"),
-            DeferredLogMessage.error(Map.empty, throwable.some, () => "error")
-          )
-        ) >>
-      validateMDC
+  testLoggerFixture().test("Slf4jLoggerInternal gets the dispatching right (msg + error)") {
+    testLogger =>
+      val slf4jLogger = Slf4jLogger.getLoggerFromSlf4j[IO](testLogger)
+      prepareMDC >>
+        slf4jLogger.trace(throwable)("trace").assert >>
+        slf4jLogger.debug(throwable)("debug").assert >>
+        slf4jLogger.info(throwable)("info").assert >>
+        slf4jLogger.warn(throwable)("warn").assert >>
+        slf4jLogger.error(throwable)("error").assert >>
+        IO(testLogger.logs())
+          .map(toDeferredLogs)
+          .assertEquals(
+            List(
+              DeferredLogMessage.trace(Map.empty, throwable.some, () => "trace"),
+              DeferredLogMessage.debug(Map.empty, throwable.some, () => "debug"),
+              DeferredLogMessage.info(Map.empty, throwable.some, () => "info"),
+              DeferredLogMessage.warn(Map.empty, throwable.some, () => "warn"),
+              DeferredLogMessage.error(Map.empty, throwable.some, () => "error")
+            )
+          ) >>
+        validateMDC
   }
 
-  testLoggerFixture().test("Slf4jLoggerInternal gets the dispatching right (msg + context)") { testLogger =>
-    val slf4jLogger = Slf4jLogger.getLoggerFromSlf4j[IO](testLogger)
-    prepareMDC >>
-      slf4jLogger.trace(tag("trace"))("trace").assert >>
-      slf4jLogger.debug(tag("debug"))("debug").assert >>
-      slf4jLogger.info(tag("info"))("info").assert >>
-      slf4jLogger.warn(tag("warn"))("warn").assert >>
-      slf4jLogger.error(tag("error"))("error").assert >>
-      IO(testLogger.logs())
-        .map(toDeferredLogs)
-        .assertEquals(
-          List(
-            DeferredLogMessage.trace(tag("trace"), none, () => "trace"),
-            DeferredLogMessage.debug(tag("debug"), none, () => "debug"),
-            DeferredLogMessage.info(tag("info"), none, () => "info"),
-            DeferredLogMessage.warn(tag("warn"), none, () => "warn"),
-            DeferredLogMessage.error(tag("error"), none, () => "error")
-          )
-        ) >>
-      validateMDC
+  testLoggerFixture().test("Slf4jLoggerInternal gets the dispatching right (msg + context)") {
+    testLogger =>
+      val slf4jLogger = Slf4jLogger.getLoggerFromSlf4j[IO](testLogger)
+      prepareMDC >>
+        slf4jLogger.trace(tag("trace"))("trace").assert >>
+        slf4jLogger.debug(tag("debug"))("debug").assert >>
+        slf4jLogger.info(tag("info"))("info").assert >>
+        slf4jLogger.warn(tag("warn"))("warn").assert >>
+        slf4jLogger.error(tag("error"))("error").assert >>
+        IO(testLogger.logs())
+          .map(toDeferredLogs)
+          .assertEquals(
+            List(
+              DeferredLogMessage.trace(tag("trace"), none, () => "trace"),
+              DeferredLogMessage.debug(tag("debug"), none, () => "debug"),
+              DeferredLogMessage.info(tag("info"), none, () => "info"),
+              DeferredLogMessage.warn(tag("warn"), none, () => "warn"),
+              DeferredLogMessage.error(tag("error"), none, () => "error")
+            )
+          ) >>
+        validateMDC
   }
 
-  testLoggerFixture().test("Slf4jLoggerInternal gets the dispatching right (msg + context + error") { testLogger =>
+  testLoggerFixture().test(
+    "Slf4jLoggerInternal gets the dispatching right (msg + context + error"
+  ) { testLogger =>
     val slf4jLogger = Slf4jLogger.getLoggerFromSlf4j[IO](testLogger)
     prepareMDC >>
       slf4jLogger.trace(tag("trace"), throwable)("trace").assert >>

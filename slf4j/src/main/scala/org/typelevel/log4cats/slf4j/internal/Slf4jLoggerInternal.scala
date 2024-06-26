@@ -34,6 +34,12 @@ private[slf4j] object Slf4jLoggerInternal {
     def apply(t: Throwable)(msg: => String): F[Unit]
   }
 
+  // Need this to make sure MDC is correctly cleared before logging
+  private[this] def noContextLog[F[_]](isEnabled: F[Boolean], logging: () => Unit)(implicit
+      F: Sync[F]
+  ): F[Unit] =
+    contextLog[F](isEnabled, Map.empty, logging)
+
   private[this] def contextLog[F[_]](
       isEnabled: F[Boolean],
       ctx: Map[String, String],
@@ -85,55 +91,45 @@ private[slf4j] object Slf4jLoggerInternal {
     override def isErrorEnabled: F[Boolean] = F.delay(logger.isErrorEnabled)
 
     override def trace(t: Throwable)(msg: => String): F[Unit] =
-      isTraceEnabled
-        .ifM(F.suspend(sync)(logger.trace(msg, t)), F.unit)
+      noContextLog(isTraceEnabled, () => logger.trace(msg, t))
     override def trace(msg: => String): F[Unit] =
-      isTraceEnabled
-        .ifM(F.suspend(sync)(logger.trace(msg)), F.unit)
+      noContextLog(isTraceEnabled, () => logger.trace(msg))
     override def trace(ctx: Map[String, String])(msg: => String): F[Unit] =
       contextLog(isTraceEnabled, ctx, () => logger.trace(msg))
     override def trace(ctx: Map[String, String], t: Throwable)(msg: => String): F[Unit] =
       contextLog(isTraceEnabled, ctx, () => logger.trace(msg, t))
 
     override def debug(t: Throwable)(msg: => String): F[Unit] =
-      isDebugEnabled
-        .ifM(F.suspend(sync)(logger.debug(msg, t)), F.unit)
+      noContextLog(isDebugEnabled, () => logger.debug(msg, t))
     override def debug(msg: => String): F[Unit] =
-      isDebugEnabled
-        .ifM(F.suspend(sync)(logger.debug(msg)), F.unit)
+      noContextLog(isDebugEnabled, () => logger.debug(msg))
     override def debug(ctx: Map[String, String])(msg: => String): F[Unit] =
       contextLog(isDebugEnabled, ctx, () => logger.debug(msg))
     override def debug(ctx: Map[String, String], t: Throwable)(msg: => String): F[Unit] =
       contextLog(isDebugEnabled, ctx, () => logger.debug(msg, t))
 
     override def info(t: Throwable)(msg: => String): F[Unit] =
-      isInfoEnabled
-        .ifM(F.suspend(sync)(logger.info(msg, t)), F.unit)
+      noContextLog(isInfoEnabled, () => logger.info(msg, t))
     override def info(msg: => String): F[Unit] =
-      isInfoEnabled
-        .ifM(F.suspend(sync)(logger.info(msg)), F.unit)
+      noContextLog(isInfoEnabled, () => logger.info(msg))
     override def info(ctx: Map[String, String])(msg: => String): F[Unit] =
       contextLog(isInfoEnabled, ctx, () => logger.info(msg))
     override def info(ctx: Map[String, String], t: Throwable)(msg: => String): F[Unit] =
       contextLog(isInfoEnabled, ctx, () => logger.info(msg, t))
 
     override def warn(t: Throwable)(msg: => String): F[Unit] =
-      isWarnEnabled
-        .ifM(F.suspend(sync)(logger.warn(msg, t)), F.unit)
+      noContextLog(isWarnEnabled, () => logger.warn(msg, t))
     override def warn(msg: => String): F[Unit] =
-      isWarnEnabled
-        .ifM(F.suspend(sync)(logger.warn(msg)), F.unit)
+      noContextLog(isWarnEnabled, () => logger.warn(msg))
     override def warn(ctx: Map[String, String])(msg: => String): F[Unit] =
       contextLog(isWarnEnabled, ctx, () => logger.warn(msg))
     override def warn(ctx: Map[String, String], t: Throwable)(msg: => String): F[Unit] =
       contextLog(isWarnEnabled, ctx, () => logger.warn(msg, t))
 
     override def error(t: Throwable)(msg: => String): F[Unit] =
-      isErrorEnabled
-        .ifM(F.suspend(sync)(logger.error(msg, t)), F.unit)
+      noContextLog(isErrorEnabled, () => logger.error(msg, t))
     override def error(msg: => String): F[Unit] =
-      isErrorEnabled
-        .ifM(F.suspend(sync)(logger.error(msg)), F.unit)
+      noContextLog(isErrorEnabled, () => logger.error(msg))
     override def error(ctx: Map[String, String])(msg: => String): F[Unit] =
       contextLog(isErrorEnabled, ctx, () => logger.error(msg))
     override def error(ctx: Map[String, String], t: Throwable)(msg: => String): F[Unit] =
