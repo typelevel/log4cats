@@ -76,7 +76,7 @@ private[slf4j] object Slf4jLoggerInternal {
     )
   }
 
-  @nowarn("msg=never used")
+  @nowarn("msg=used")
   final class Slf4jLogger[F[_]](val logger: JLogger, sync: Sync.Type = Sync.Type.Delay)(implicit
       F: Sync[F]
   ) extends SelfAwareStructuredLogger[F] {
