@@ -22,8 +22,6 @@ import cats.effect._
 import org.slf4j.{Logger => JLogger}
 import org.slf4j.MDC
 
-import java.util
-
 private[slf4j] object Slf4jLoggerInternal {
 
   final val singletonsByName = true
@@ -46,9 +44,12 @@ private[slf4j] object Slf4jLoggerInternal {
       val backup =
         try MDC.getCopyOfContextMap()
         catch {
-          case _: IllegalStateException =>
-            // Assuming this happens, better to just roll with it and try to get a log out
-            new util.HashMap[String, String]()
+          case e: IllegalStateException =>
+            // MDCAdapter is missing, no point in doing anything with
+            // the MDC, so just hope the logging backend can salvage
+            // something.
+            logging()
+            throw e
         }
 
       try {
