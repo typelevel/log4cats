@@ -18,11 +18,11 @@ package org.typelevel.log4cats.slf4j
 package internal
 
 import cats.arrow.FunctionK
+import cats.effect.unsafe.IORuntime
 import cats.effect.{IO, Resource, SyncIO}
 import cats.syntax.all.*
 
-import java.util.concurrent.Executors
-import java.util.concurrent.ThreadFactory
+import java.util.concurrent.{ExecutorService, Executors, ThreadFactory}
 import org.slf4j.MDC
 import munit.{CatsEffectSuite, Location}
 import org.typelevel.log4cats.extras.DeferredLogMessage
@@ -38,6 +38,21 @@ import scala.concurrent.ExecutionContextExecutorService
 import scala.util.control.NoStackTrace
 
 class Slf4jLoggerInternalSuite extends CatsEffectSuite {
+
+  private val computeEC = ExecutionContext.fromExecutorService(
+    Executors.newSingleThreadExecutor(),
+    t => fail("Uncaught exception on compute thread", t)
+  )
+  private val blockingEC = ExecutionContext.fromExecutorService(
+    Executors.newSingleThreadExecutor(),
+    t => fail("Uncaught exception on blocking thread", t)
+  )
+  override implicit def munitIORuntime: IORuntime =
+    IORuntime
+      .builder()
+      .setCompute(computeEC, () => computeEC.shutdown())
+      .setBlocking(blockingEC, () => blockingEC.shutdown())
+      .build()
 
   object dirtyStuff {
 
