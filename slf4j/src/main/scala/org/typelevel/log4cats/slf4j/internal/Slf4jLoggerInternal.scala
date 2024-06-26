@@ -16,11 +16,13 @@
 
 package org.typelevel.log4cats.slf4j.internal
 
-import org.typelevel.log4cats._
-import cats.syntax.all._
-import cats.effect._
-import org.slf4j.{Logger => JLogger}
+import org.typelevel.log4cats.*
+import cats.syntax.all.*
+import cats.effect.*
+import org.slf4j.Logger as JLogger
 import org.slf4j.MDC
+
+import scala.annotation.nowarn
 
 private[slf4j] object Slf4jLoggerInternal {
 
@@ -74,6 +76,7 @@ private[slf4j] object Slf4jLoggerInternal {
     )
   }
 
+  @nowarn("msg=never used")
   final class Slf4jLogger[F[_]](val logger: JLogger, sync: Sync.Type = Sync.Type.Delay)(implicit
       F: Sync[F]
   ) extends SelfAwareStructuredLogger[F] {
