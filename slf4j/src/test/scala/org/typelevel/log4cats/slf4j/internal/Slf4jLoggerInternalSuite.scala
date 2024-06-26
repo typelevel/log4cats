@@ -22,7 +22,7 @@ import cats.effect.unsafe.IORuntime
 import cats.effect.{IO, Resource, SyncIO}
 import cats.syntax.all.*
 
-import java.util.concurrent.{ExecutorService, Executors, ThreadFactory}
+import java.util.concurrent.{Executors, ThreadFactory}
 import org.slf4j.MDC
 import munit.{CatsEffectSuite, Location}
 import org.typelevel.log4cats.extras.DeferredLogMessage
