@@ -25,25 +25,41 @@ import org.typelevel.log4cats.extras.LogLevel._
 class ConsoleLogger[F[_]: Sync](logLevel: Option[LogLevel] = Option(Trace))
     extends SelfAwareStructuredLogger[F] {
   private val ConsoleF: ConsoleF[F] = implicitly
+
+  override def isEnabled(ll: LogLevel): F[Boolean] = logLevel.exists(_ <= ll).pure[F]
+
+  override def log(ll: LogLevel, t: Throwable, msg: => String): F[Unit] =
+    ll match {
+      case LogLevel.Error => error(t)(msg)
+      case LogLevel.Warn => warn(t)(msg)
+      case LogLevel.Info => info(t)(msg)
+      case LogLevel.Debug => debug(t)(msg)
+      case LogLevel.Trace => trace(t)(msg)
+    }
+
+  override def log(ll: LogLevel, msg: => String): F[Unit] =
+    ll match {
+      case LogLevel.Error => error(msg)
+      case LogLevel.Warn => warn(msg)
+      case LogLevel.Info => info(msg)
+      case LogLevel.Debug => debug(msg)
+      case LogLevel.Trace => trace(msg)
+    }
+
   override def trace(t: Throwable)(message: => String): F[Unit] = ConsoleF.debug(message, t)
   override def trace(message: => String): F[Unit] = ConsoleF.debug(message)
-  override def isTraceEnabled: F[Boolean] = logLevel.exists(_ <= Trace).pure[F]
 
   override def debug(t: Throwable)(message: => String): F[Unit] = ConsoleF.debug(message, t)
   override def debug(message: => String): F[Unit] = ConsoleF.debug(message)
-  override def isDebugEnabled: F[Boolean] = logLevel.exists(_ <= Debug).pure[F]
 
   override def info(t: Throwable)(message: => String): F[Unit] = ConsoleF.info(message, t)
   override def info(message: => String): F[Unit] = ConsoleF.info(message)
-  override def isInfoEnabled: F[Boolean] = logLevel.exists(_ <= Info).pure[F]
 
   override def warn(t: Throwable)(message: => String): F[Unit] = ConsoleF.warn(message, t)
   override def warn(message: => String): F[Unit] = ConsoleF.warn(message)
-  override def isWarnEnabled: F[Boolean] = logLevel.exists(_ <= Warn).pure[F]
 
   override def error(t: Throwable)(message: => String): F[Unit] = ConsoleF.error(message, t)
   override def error(message: => String): F[Unit] = ConsoleF.error(message)
-  override def isErrorEnabled: F[Boolean] = logLevel.exists(_ <= Error).pure[F]
 
   /*
    * ConsoleLogger should probably not extend from StructuredLogger, because there's not
@@ -66,4 +82,7 @@ class ConsoleLogger[F[_]: Sync](logLevel: Option[LogLevel] = Option(Trace))
   override def error(ctx: Map[String, String])(msg: => String): F[Unit] = error(msg)
   override def error(ctx: Map[String, String], t: Throwable)(msg: => String): F[Unit] =
     error(t)(msg)
+  override def log(ll: LogLevel, ctx: Map[String, String], t: Throwable, msg: => String): F[Unit] =
+    log(ll, t, msg)
+  override def log(ll: LogLevel, ctx: Map[String, String], msg: => String): F[Unit] = log(ll, msg)
 }

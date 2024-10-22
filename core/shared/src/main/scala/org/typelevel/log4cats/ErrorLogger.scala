@@ -16,13 +16,17 @@
 
 package org.typelevel.log4cats
 
-import cats._
+import cats.*
+import org.typelevel.log4cats.extras.LogLevel
 trait ErrorLogger[F[_]] {
-  def error(t: Throwable)(message: => String): F[Unit]
-  def warn(t: Throwable)(message: => String): F[Unit]
-  def info(t: Throwable)(message: => String): F[Unit]
-  def debug(t: Throwable)(message: => String): F[Unit]
-  def trace(t: Throwable)(message: => String): F[Unit]
+  def error(t: Throwable)(message: => String): F[Unit] = log(LogLevel.Error, t, message)
+  def warn(t: Throwable)(message: => String): F[Unit] = log(LogLevel.Warn, t, message)
+  def info(t: Throwable)(message: => String): F[Unit] = log(LogLevel.Info, t, message)
+  def debug(t: Throwable)(message: => String): F[Unit] = log(LogLevel.Debug, t, message)
+  def trace(t: Throwable)(message: => String): F[Unit] = log(LogLevel.Trace, t, message)
+
+  def log(ll: LogLevel, t: Throwable, msg: => String): F[Unit]
+
   def mapK[G[_]](fk: F ~> G): ErrorLogger[G] =
     ErrorLogger.mapK(fk)(this)
 }
@@ -32,16 +36,9 @@ object ErrorLogger {
 
   private def mapK[G[_], F[_]](f: G ~> F)(logger: ErrorLogger[G]): ErrorLogger[F] =
     new ErrorLogger[F] {
-      def error(t: Throwable)(message: => String): F[Unit] =
-        f(logger.error(t)(message))
-      def warn(t: Throwable)(message: => String): F[Unit] =
-        f(logger.warn(t)(message))
-      def info(t: Throwable)(message: => String): F[Unit] =
-        f(logger.info(t)(message))
-      def debug(t: Throwable)(message: => String): F[Unit] =
-        f(logger.debug(t)(message))
-      def trace(t: Throwable)(message: => String): F[Unit] =
-        f(logger.trace(t)(message))
+      override def log(ll: LogLevel, t: Throwable, msg: => String): F[Unit] = f(
+        logger.log(ll, t, msg)
+      )
     }
 
 }
