@@ -19,7 +19,7 @@ package org.typelevel.log4cats.testing
 import cats.Show
 import cats.data.Chain
 import cats.effect.{Ref, Sync}
-import cats.syntax.all._
+import cats.syntax.all.*
 import org.typelevel.log4cats.extras.LogLevel
 import org.typelevel.log4cats.testing.TestingLoggerFactory.LogMessage
 import org.typelevel.log4cats.{LoggerFactory, SelfAwareStructuredLogger}
@@ -173,57 +173,46 @@ object TestingLoggerFactory {
         Sync[F].delay(getLoggerFromName(name))
       override def getLoggerFromName(name: String): SelfAwareStructuredLogger[F] =
         new SelfAwareStructuredLogger[F] {
-          override val isTraceEnabled: F[Boolean] = traceEnabled.pure[F]
-          override val isDebugEnabled: F[Boolean] = debugEnabled.pure[F]
-          override val isInfoEnabled: F[Boolean] = infoEnabled.pure[F]
-          override val isWarnEnabled: F[Boolean] = warnEnabled.pure[F]
-          override val isErrorEnabled: F[Boolean] = errorEnabled.pure[F]
 
-          private val noop = Sync[F].unit
+          private def shouldLog(ll: LogLevel): Boolean = ll match {
+            case LogLevel.Error => errorEnabled
+            case LogLevel.Warn => warnEnabled
+            case LogLevel.Info => infoEnabled
+            case LogLevel.Debug => debugEnabled
+            case LogLevel.Trace => traceEnabled
+          }
 
-          override def trace(ctx: Map[String, String])(msg: => String): F[Unit] =
-            if (traceEnabled) save(Trace(name, msg, none, ctx)) else noop
-          override def debug(ctx: Map[String, String])(msg: => String): F[Unit] =
-            if (debugEnabled) save(Debug(name, msg, none, ctx)) else noop
-          override def info(ctx: Map[String, String])(msg: => String): F[Unit] =
-            if (infoEnabled) save(Info(name, msg, none, ctx)) else noop
-          override def warn(ctx: Map[String, String])(msg: => String): F[Unit] =
-            if (warnEnabled) save(Warn(name, msg, none, ctx)) else noop
-          override def error(ctx: Map[String, String])(msg: => String): F[Unit] =
-            if (errorEnabled) save(Error(name, msg, none, ctx)) else noop
+          private def write(
+              ll: LogLevel,
+              ctx: Map[String, String],
+              t: Option[Throwable],
+              msg: => String
+          ): F[Unit] =
+            Sync[F].whenA(shouldLog(ll))(save(ll match {
+              case LogLevel.Error => Error(name, msg, t, ctx)
+              case LogLevel.Warn => Warn(name, msg, t, ctx)
+              case LogLevel.Info => Info(name, msg, t, ctx)
+              case LogLevel.Debug => Debug(name, msg, t, ctx)
+              case LogLevel.Trace => Trace(name, msg, t, ctx)
+            }))
 
-          override def trace(ctx: Map[String, String], t: Throwable)(msg: => String): F[Unit] =
-            if (traceEnabled) save(Trace(name, msg, t.some, ctx)) else noop
-          override def debug(ctx: Map[String, String], t: Throwable)(msg: => String): F[Unit] =
-            if (debugEnabled) save(Debug(name, msg, t.some, ctx)) else noop
-          override def info(ctx: Map[String, String], t: Throwable)(msg: => String): F[Unit] =
-            if (infoEnabled) save(Info(name, msg, t.some, ctx)) else noop
-          override def warn(ctx: Map[String, String], t: Throwable)(msg: => String): F[Unit] =
-            if (warnEnabled) save(Warn(name, msg, t.some, ctx)) else noop
-          override def error(ctx: Map[String, String], t: Throwable)(msg: => String): F[Unit] =
-            if (errorEnabled) save(Error(name, msg, t.some, ctx)) else noop
+          override def isEnabled(ll: LogLevel): F[Boolean] = Sync[F].pure(shouldLog(ll))
 
-          override def trace(t: Throwable)(msg: => String): F[Unit] =
-            if (traceEnabled) save(Trace(name, msg, t.some, Map.empty)) else noop
-          override def debug(t: Throwable)(msg: => String): F[Unit] =
-            if (debugEnabled) save(Debug(name, msg, t.some, Map.empty)) else noop
-          override def info(t: Throwable)(msg: => String): F[Unit] =
-            if (infoEnabled) save(Info(name, msg, t.some, Map.empty)) else noop
-          override def warn(t: Throwable)(msg: => String): F[Unit] =
-            if (warnEnabled) save(Warn(name, msg, t.some, Map.empty)) else noop
-          override def error(t: Throwable)(msg: => String): F[Unit] =
-            if (errorEnabled) save(Error(name, msg, t.some, Map.empty)) else noop
+          override def log(
+              ll: LogLevel,
+              ctx: Map[String, String],
+              t: Throwable,
+              msg: => String
+          ): F[Unit] =
+            write(ll, ctx, t.some, msg)
 
-          override def trace(msg: => String): F[Unit] =
-            if (traceEnabled) save(Trace(name, msg, none, Map.empty)) else noop
-          override def debug(msg: => String): F[Unit] =
-            if (debugEnabled) save(Debug(name, msg, none, Map.empty)) else noop
-          override def info(msg: => String): F[Unit] =
-            if (infoEnabled) save(Info(name, msg, none, Map.empty)) else noop
-          override def warn(msg: => String): F[Unit] =
-            if (warnEnabled) save(Warn(name, msg, none, Map.empty)) else noop
-          override def error(msg: => String): F[Unit] =
-            if (errorEnabled) save(Error(name, msg, none, Map.empty)) else noop
+          override def log(ll: LogLevel, ctx: Map[String, String], msg: => String): F[Unit] =
+            write(ll, ctx, none, msg)
+
+          override def log(ll: LogLevel, t: Throwable, msg: => String): F[Unit] =
+            write(ll, Map.empty, t.some, msg)
+
+          override def log(ll: LogLevel, msg: => String): F[Unit] = write(ll, Map.empty, none, msg)
         }
 
     }
