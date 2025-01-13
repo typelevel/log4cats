@@ -27,7 +27,7 @@ import org.typelevel.log4cats.extras.DeferredLogMessage.{
 
 /**
  * `StructuredLogMessage` has a bug that can't be fixed without breaking bincompat (because it's a
- * `case class`), but it's only used in the `Writer*Logger`s, so it's not a huge deal.
+ * `case class`), but it's only used in the `Writer*Logger` s, so it's not a huge deal.
  *
  * The issue is that the API of the `*Logger` classes has a by-name parameter for the message, and
  * `StructuredLogMessage` (and by extension, the `Writer*Logger`) don't lazily compute the message.
