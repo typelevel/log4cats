@@ -18,34 +18,10 @@ package org.typelevel.log4cats.slf4j
 package internal
 
 import cats.effect.IO
-import java.util.concurrent.Executors
-import java.util.concurrent.ThreadFactory
 import org.slf4j.MDC
 import munit.CatsEffectSuite
-import scala.concurrent.ExecutionContext
-import scala.concurrent.ExecutionContextExecutorService
 
 class Slf4jLoggerInternalSuite extends CatsEffectSuite {
-
-  object dirtyStuff {
-
-    def namedSingleThreadExecutionContext(name: String): ExecutionContextExecutorService =
-      ExecutionContext.fromExecutorService(
-        Executors.newSingleThreadExecutor(new ThreadFactory() {
-          def newThread(r: Runnable): Thread = new Thread(r, name)
-        })
-      )
-
-    def killThreads(threads: List[ExecutionContextExecutorService]) = threads.foreach { thread =>
-      try thread.shutdownNow()
-      catch {
-        case e: Throwable =>
-          Console.err.println("Couldn't shutdown thread")
-          e.printStackTrace()
-      }
-    }
-  }
-
   test("Slf4jLoggerInternal resets after logging") {
     val variable = "foo"
     val initial = "yellow"
