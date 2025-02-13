@@ -19,7 +19,7 @@ package slf4j
 
 import cats.effect.Sync
 import org.typelevel.log4cats.slf4j.internal.Slf4jLoggerInternal
-import org.slf4j.{Logger => JLogger}
+import org.slf4j.Logger as JLogger
 
 object Slf4jLogger extends Slf4jLoggerCompat {
 
@@ -29,11 +29,11 @@ object Slf4jLogger extends Slf4jLoggerCompat {
   def getLoggerFromName[F[_]: Sync](name: String): SelfAwareStructuredLogger[F] =
     getLoggerFromSlf4j(org.slf4j.LoggerFactory.getLogger(name))
 
-  def getLoggerFromClass[F[_]: Sync](clazz: Class[_]): SelfAwareStructuredLogger[F] =
+  def getLoggerFromClass[F[_]: Sync](clazz: Class[?]): SelfAwareStructuredLogger[F] =
     getLoggerFromSlf4j[F](org.slf4j.LoggerFactory.getLogger(clazz))
 
   def getLoggerFromSlf4j[F[_]: Sync](logger: JLogger): SelfAwareStructuredLogger[F] =
-    new Slf4jLoggerInternal.Slf4jLogger(logger)
+    new Slf4jLoggerInternal.Slf4jLogger(logger, Sync.Type.Delay)
 
   def getLoggerFromBlockingSlf4j[F[_]: Sync](logger: JLogger): SelfAwareStructuredLogger[F] =
     new Slf4jLoggerInternal.Slf4jLogger(logger, Sync.Type.Blocking)
@@ -44,7 +44,7 @@ object Slf4jLogger extends Slf4jLoggerCompat {
   def fromName[F[_]: Sync](name: String): F[SelfAwareStructuredLogger[F]] =
     Sync[F].delay(getLoggerFromName(name))
 
-  def fromClass[F[_]: Sync](clazz: Class[_]): F[SelfAwareStructuredLogger[F]] =
+  def fromClass[F[_]: Sync](clazz: Class[?]): F[SelfAwareStructuredLogger[F]] =
     Sync[F].delay(getLoggerFromClass(clazz))
 
   def fromSlf4j[F[_]: Sync](logger: JLogger): F[SelfAwareStructuredLogger[F]] =

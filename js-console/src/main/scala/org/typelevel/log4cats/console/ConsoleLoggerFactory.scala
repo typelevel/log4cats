@@ -17,8 +17,8 @@
 package org.typelevel.log4cats
 package console
 
-import cats.effect.kernel._
-import cats.syntax.all._
+import cats.effect.kernel.*
+import cats.syntax.all.*
 
 trait ConsoleLoggerFactory[F[_]] extends LoggerFactory[F]
 
