@@ -16,7 +16,7 @@
 
 package org.typelevel.log4cats
 
-import cats._
+import cats.*
 import cats.data.{EitherT, Kleisli, OptionT}
 
 trait Logger[F[_]] extends MessageLogger[F] with ErrorLogger[F] {

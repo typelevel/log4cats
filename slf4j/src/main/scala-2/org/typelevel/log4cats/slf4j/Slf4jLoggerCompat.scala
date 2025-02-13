@@ -18,13 +18,13 @@ package org.typelevel.log4cats.slf4j
 
 import cats.effect.Sync
 import org.typelevel.log4cats.SelfAwareStructuredLogger
-import org.typelevel.log4cats.slf4j.internal._
+import org.typelevel.log4cats.slf4j.internal.*
 
 trait Slf4jLoggerCompat {
 
   private[slf4j] def getLogger[F[_]](implicit f: Sync[F]): SelfAwareStructuredLogger[F] =
-    macro GetLoggerMacros.unsafeCreateImpl[F[_]]
+    macro GetLoggerMacros.unsafeCreateImpl[F[?]]
 
   private[slf4j] def create[F[_]](implicit f: Sync[F]): F[SelfAwareStructuredLogger[F]] =
-    macro GetLoggerMacros.safeCreateImpl[F[_]]
+    macro GetLoggerMacros.safeCreateImpl[F[?]]
 }

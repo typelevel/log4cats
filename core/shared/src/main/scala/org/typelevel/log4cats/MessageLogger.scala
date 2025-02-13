@@ -16,7 +16,7 @@
 
 package org.typelevel.log4cats
 
-import cats._
+import cats.*
 
 trait MessageLogger[F[_]] {
   def error(message: => String): F[Unit]

@@ -19,7 +19,7 @@ package org.typelevel.log4cats.testing
 import cats.data.Chain
 import org.typelevel.log4cats.SelfAwareStructuredLogger
 import cats.effect.{Ref, Sync}
-import cats.syntax.all._
+import cats.syntax.all.*
 
 import java.util.concurrent.atomic.AtomicReference
 import scala.annotation.tailrec
