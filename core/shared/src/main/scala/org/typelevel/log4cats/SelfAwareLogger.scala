@@ -16,7 +16,7 @@
 
 package org.typelevel.log4cats
 
-import cats._
+import cats.*
 
 trait SelfAwareLogger[F[_]] extends Logger[F] {
   def isTraceEnabled: F[Boolean]

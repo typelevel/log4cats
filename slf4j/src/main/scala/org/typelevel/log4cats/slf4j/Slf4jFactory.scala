@@ -18,7 +18,7 @@ package org.typelevel.log4cats
 package slf4j
 
 import cats.effect.kernel.Sync
-import org.slf4j.{Logger => JLogger}
+import org.slf4j.Logger as JLogger
 
 trait Slf4jFactory[F[_]] extends LoggerFactory[F] {
   def getLoggerFromSlf4j(logger: JLogger): SelfAwareStructuredLogger[F]

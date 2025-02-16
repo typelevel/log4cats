@@ -35,7 +35,7 @@ private[slf4j] class GetLoggerMacros(val c: blackbox.Context) {
 
   private def getLoggerImpl[F](f: c.Expr[F], delayed: Boolean) = {
     val loggerName = SharedLoggerNameMacro.getLoggerNameImpl(c)
-    import c.universe._
+    import c.universe.*
 
     def loggerByParam(param: c.Tree) = {
       val unsafeCreate =

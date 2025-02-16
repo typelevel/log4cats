@@ -23,7 +23,7 @@
 
 package org.typelevel.log4cats.console
 
-import org.typelevel.scalaccompat.annotation._
+import org.typelevel.scalaccompat.annotation.*
 
 import scala.scalajs.js
 import scala.scalajs.js.annotation.JSGlobal

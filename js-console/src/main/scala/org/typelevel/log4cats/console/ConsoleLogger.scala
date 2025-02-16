@@ -18,9 +18,9 @@ package org.typelevel.log4cats
 package console
 
 import cats.effect.kernel.Sync
-import cats.syntax.all._
+import cats.syntax.all.*
 import org.typelevel.log4cats.extras.LogLevel
-import org.typelevel.log4cats.extras.LogLevel._
+import org.typelevel.log4cats.extras.LogLevel.*
 
 class ConsoleLogger[F[_]: Sync](logLevel: Option[LogLevel] = Option(Trace))
     extends SelfAwareStructuredLogger[F] {

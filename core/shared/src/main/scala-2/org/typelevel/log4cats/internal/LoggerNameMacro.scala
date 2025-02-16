@@ -27,7 +27,7 @@ private[log4cats] object SharedLoggerNameMacro {
 
   /** Get a logger by reflecting the enclosing class name. */
   private[log4cats] def getLoggerNameImpl(c: blackbox.Context) = {
-    import c.universe._
+    import c.universe.*
 
     @tailrec def findEnclosingClass(sym: c.universe.Symbol): c.universe.Symbol = {
       sym match {

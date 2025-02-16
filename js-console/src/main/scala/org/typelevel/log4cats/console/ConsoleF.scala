@@ -21,13 +21,13 @@ import cats.effect.kernel.Sync
 
 private[console] class ConsoleF[F[_]: Sync] {
   def info(message: Any, optionalParams: Any*): F[Unit] =
-    Sync[F].delay(Console.info(message, optionalParams: _*))
+    Sync[F].delay(Console.info(message, optionalParams*))
   def warn(message: Any, optionalParams: Any*): F[Unit] =
-    Sync[F].delay(Console.warn(message, optionalParams: _*))
+    Sync[F].delay(Console.warn(message, optionalParams*))
   def error(message: Any, optionalParams: Any*): F[Unit] =
-    Sync[F].delay(Console.error(message, optionalParams: _*))
+    Sync[F].delay(Console.error(message, optionalParams*))
   def debug(message: Any, optionalParams: Any*): F[Unit] =
-    Sync[F].delay(Console.debug(message, optionalParams: _*))
+    Sync[F].delay(Console.debug(message, optionalParams*))
 }
 
 private[console] object ConsoleF {
