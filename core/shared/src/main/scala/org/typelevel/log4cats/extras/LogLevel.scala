@@ -16,7 +16,7 @@
 
 package org.typelevel.log4cats.extras
 
-import cats._
+import cats.*
 
 sealed trait LogLevel
 object LogLevel {

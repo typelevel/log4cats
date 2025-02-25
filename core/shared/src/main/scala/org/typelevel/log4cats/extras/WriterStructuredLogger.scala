@@ -17,7 +17,7 @@
 package org.typelevel.log4cats.extras
 
 import cats.data.Writer
-import cats.syntax.all._
+import cats.syntax.all.*
 import cats.{~>, Alternative, Applicative, Foldable, Id}
 import org.typelevel.log4cats.{SelfAwareStructuredLogger, StructuredLogger}
 

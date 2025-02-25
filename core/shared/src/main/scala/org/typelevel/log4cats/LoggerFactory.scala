@@ -19,7 +19,7 @@ package org.typelevel.log4cats
 import cats.Functor
 import cats.Show.Shown
 import cats.data.Kleisli
-import cats.syntax.functor._
+import cats.syntax.functor.*
 import cats.~>
 import cats.data.OptionT
 import cats.data.EitherT

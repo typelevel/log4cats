@@ -16,10 +16,10 @@
 
 package org.typelevel.log4cats.extras
 
-import cats._
-import cats.data._
-import cats.syntax.all._
-import org.typelevel.log4cats._
+import cats.*
+import cats.data.*
+import cats.syntax.all.*
+import org.typelevel.log4cats.*
 
 /**
  * A `SelfAwareLogger` implemented using `cats.data.WriterT`.

@@ -16,9 +16,9 @@
 
 package org.typelevel.log4cats.extras.syntax
 
-import cats._
+import cats.*
 import cats.data.{EitherT, Kleisli, OptionT}
-import org.typelevel.log4cats._
+import org.typelevel.log4cats.*
 
 object LoggerSyntaxCompilation {
 
