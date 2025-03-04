@@ -16,7 +16,7 @@
 
 package org.typelevel.log4cats
 
-import cats._
+import cats.*
 import cats.Show.Shown
 
 trait SelfAwareStructuredLogger[F[_]] extends SelfAwareLogger[F] with StructuredLogger[F] {

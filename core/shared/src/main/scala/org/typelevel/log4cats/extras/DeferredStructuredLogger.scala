@@ -20,7 +20,7 @@ import cats.Show.Shown
 import cats.data.Chain
 import cats.effect.kernel.Resource.ExitCase
 import cats.effect.kernel.{Concurrent, Ref, Resource}
-import cats.syntax.all._
+import cats.syntax.all.*
 import cats.~>
 import org.typelevel.log4cats.StructuredLogger
 

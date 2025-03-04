@@ -17,7 +17,7 @@
 package org.typelevel.log4cats.extras
 
 import cats.Show
-import cats.syntax.all._
+import cats.syntax.all.*
 import org.typelevel.log4cats.StructuredLogger
 
 final case class StructuredLogMessage(

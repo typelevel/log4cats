@@ -21,7 +21,7 @@ package org.log4cats.example
 import cats.MonadThrow
 import cats.effect.unsafe.IORuntime
 import cats.effect.{IO, Resource}
-import cats.syntax.all._
+import cats.syntax.all.*
 import munit.internal.console.Printers
 import munit.{CatsEffectSuite, Printer, TestOptions}
 import org.typelevel.log4cats.{LoggerFactory, SelfAwareStructuredLogger}
@@ -52,8 +52,8 @@ class ExampleTest extends CatsEffectSuite {
               .appendAll(log match {
                 case _: TRACE => "TRACE "
                 case _: DEBUG => "DEBUG "
-                case _: INFO  => "INFO  "
-                case _: WARN  => "WARN  "
+                case _: INFO => "INFO  "
+                case _: WARN => "WARN  "
                 case _: ERROR => "ERROR "
               })
               .appendAll(log.message)
@@ -101,15 +101,16 @@ final case class LoggingHelper(underlyingLogger: StructuredTestingLogger[IO],
                                loggerWithContext: SelfAwareStructuredLogger[IO]) {
   implicit val loggerFactory: LoggerFactory[IO] = new LoggerFactory[IO] {
     override def getLoggerFromName(name: String): SelfAwareStructuredLogger[IO] = loggerWithContext
+
     override def fromName(name: String): IO[SelfAwareStructuredLogger[IO]] = loggerWithContext.pure[IO]
   }
 
-  def logged(implicit runtime:IORuntime): Vector[StructuredTestingLogger.LogMessage] =
+  def logged(implicit runtime: IORuntime): Vector[StructuredTestingLogger.LogMessage] =
     underlyingLogger.logged.unsafeRunSync()
 }
 
 object CodeUnderTest {
-  def logAndDouble[F[_]: LoggerFactory: MonadThrow](input: String): F[Int] = {
+  def logAndDouble[F[_]: LoggerFactory : MonadThrow](input: String): F[Int] = {
     val logger = LoggerFactory[F].getLogger
     for {
       _ <- logger.info(s"Input $input")

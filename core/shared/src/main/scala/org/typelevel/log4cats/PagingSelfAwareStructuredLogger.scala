@@ -16,9 +16,9 @@
 
 package org.typelevel.log4cats
 
-import cats._
+import cats.*
 import cats.effect.std.UUIDGen
-import cats.syntax.all._
+import cats.syntax.all.*
 
 import java.io.{PrintWriter, StringWriter}
 import java.util.UUID
