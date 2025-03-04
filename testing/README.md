@@ -110,7 +110,7 @@ final case class LoggingHelper(underlyingLogger: StructuredTestingLogger[IO],
 }
 
 object CodeUnderTest {
-  def logAndDouble[F[_] : LoggerFactory : MonadThrow](input: String): F[Int] = {
+  def logAndDouble[F[_]: LoggerFactory : MonadThrow](input: String): F[Int] = {
     val logger = LoggerFactory[F].getLogger
     for {
       _ <- logger.info(s"Input $input")

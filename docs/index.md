@@ -30,10 +30,10 @@ import cats.syntax.all.*
 
 object MyThing {
   // Impure But What 90% of Folks I know do with log4s
-  implicit def logger[F[_] : Sync]: Logger[F] = Slf4jLogger.getLogger[F]
+  implicit def logger[F[_]: Sync]: Logger[F] = Slf4jLogger.getLogger[F]
 
   // Arbitrary Local Function Declaration
-  def doSomething[F[_] : Sync]: F[Unit] =
+  def doSomething[F[_]: Sync]: F[Unit] =
     Logger[F].info("Logging Start Something") *>
             Sync[F].delay(println("I could be doing anything"))
                     .attempt.flatMap {
@@ -42,7 +42,7 @@ object MyThing {
                     }
 }
 
-def safelyDoThings[F[_] : Sync]: F[Unit] = for {
+def safelyDoThings[F[_]: Sync]: F[Unit] = for {
   logger <- Slf4jLogger.create[F]
   _ <- logger.info("Logging at start of safelyDoThings")
   something <- Sync[F].delay(println("I could do anything"))
@@ -50,7 +50,7 @@ def safelyDoThings[F[_] : Sync]: F[Unit] = for {
   _ <- logger.info("Logging at end of safelyDoThings")
 } yield something
 
-def passForEasierUse[F[_] : Sync : Logger] = for {
+def passForEasierUse[F[_]: Sync : Logger] = for {
   _ <- Logger[F].info("Logging at start of passForEasierUse")
   something <- Sync[F].delay(println("I could do anything"))
           .onError { case e => Logger[F].error(e)("Something Went Wrong in passForEasierUse") }
@@ -70,10 +70,10 @@ import cats.effect.*
 import org.typelevel.log4cats.Logger
 import org.typelevel.log4cats.syntax.*
 
-def successComputation[F[_] : Applicative]: F[Int] = Applicative[F].pure(1)
-def errorComputation[F[_] : Sync]: F[Unit] = Sync[F].raiseError[Unit](new Throwable("Sorry!"))
+def successComputation[F[_]: Applicative]: F[Int] = Applicative[F].pure(1)
+def errorComputation[F[_]: Sync]: F[Unit] = Sync[F].raiseError[Unit](new Throwable("Sorry!"))
 
-def log[F[_] : Sync : Logger] =
+def log[F[_]: Sync : Logger] =
   for {
     result1 <- successComputation[F]
     _ <- info"First result is $result1"
@@ -118,7 +118,7 @@ val logger: SelfAwareStructuredLogger[IO] = LoggerFactory[IO].getLogger
 logger.info("logging in IO!"): IO[Unit]
 
 // basic example of a service using LoggerFactory
-class LoggerUsingService[F[_] : LoggerFactory : Monad] {
+class LoggerUsingService[F[_]: LoggerFactory : Monad] {
   val logger = LoggerFactory[F].getLogger
 
   def use(args: String): F[Unit] =
