@@ -41,7 +41,7 @@ Good news, you don't have to!  Enter log4cats!  Read on!
 import org.typelevel.log4cats.Logger
 import org.typelevel.log4cats.slf4j.Slf4jLogger
 import cats.effect.Sync
-import cats.implicits.*
+import cats.syntax.all.*
 
 object MyThing {
   // Impure But What 90% of Folks I know do with log4s

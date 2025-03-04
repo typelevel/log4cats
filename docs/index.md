@@ -26,7 +26,7 @@ libraryDependencies ++= Seq(
 import org.typelevel.log4cats.Logger
 import org.typelevel.log4cats.slf4j.Slf4jLogger
 import cats.effect.*
-import cats.implicits.*
+import cats.syntax.all.*  
 
 object MyThing {
   // Impure But What 90% of Folks I know do with log4s
