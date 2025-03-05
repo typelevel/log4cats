@@ -16,7 +16,7 @@
 
 package org.typelevel.log4cats.extras.syntax
 
-import cats._
+import cats.*
 import cats.data.EitherT
 import cats.data.Kleisli
 import cats.data.OptionT

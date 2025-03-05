@@ -19,7 +19,7 @@ package org.typelevel.log4cats.extras
 import cats.Show.Shown
 import cats.data.Chain
 import cats.effect.kernel.{Concurrent, Resource}
-import cats.syntax.all._
+import cats.syntax.all.*
 import cats.{~>, Functor}
 import org.typelevel.log4cats.{LoggerFactory, SelfAwareStructuredLogger}
 

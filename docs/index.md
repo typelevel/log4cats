@@ -25,8 +25,8 @@ libraryDependencies ++= Seq(
 ```scala mdoc
 import org.typelevel.log4cats.Logger
 import org.typelevel.log4cats.slf4j.Slf4jLogger
-import cats.effect._
-import cats.implicits._
+import cats.effect.*
+import cats.syntax.all.*  
 
 object MyThing {
   // Impure But What 90% of Folks I know do with log4s
@@ -35,27 +35,27 @@ object MyThing {
   // Arbitrary Local Function Declaration
   def doSomething[F[_]: Sync]: F[Unit] =
     Logger[F].info("Logging Start Something") *>
-    Sync[F].delay(println("I could be doing anything"))
-      .attempt.flatMap{
-        case Left(e) => Logger[F].error(e)("Something Went Wrong")
-        case Right(_) => Sync[F].pure(())
-      }
+            Sync[F].delay(println("I could be doing anything"))
+                    .attempt.flatMap {
+                      case Left(e) => Logger[F].error(e)("Something Went Wrong")
+                      case Right(_) => Sync[F].pure(())
+                    }
 }
 
 def safelyDoThings[F[_]: Sync]: F[Unit] = for {
-    logger <- Slf4jLogger.create[F]
-    _ <- logger.info("Logging at start of safelyDoThings")
-    something <- Sync[F].delay(println("I could do anything"))
-      .onError{case e => logger.error(e)("Something Went Wrong in safelyDoThings")}
-    _ <- logger.info("Logging at end of safelyDoThings")
-  } yield something
+  logger <- Slf4jLogger.create[F]
+  _ <- logger.info("Logging at start of safelyDoThings")
+  something <- Sync[F].delay(println("I could do anything"))
+          .onError { case e => logger.error(e)("Something Went Wrong in safelyDoThings") }
+  _ <- logger.info("Logging at end of safelyDoThings")
+} yield something
 
-def passForEasierUse[F[_]: Sync: Logger] = for {
-    _ <- Logger[F].info("Logging at start of passForEasierUse")
-    something <- Sync[F].delay(println("I could do anything"))
-      .onError{case e => Logger[F].error(e)("Something Went Wrong in passForEasierUse")}
-    _ <- Logger[F].info("Logging at end of passForEasierUse")
-  } yield something
+def passForEasierUse[F[_]: Sync : Logger] = for {
+  _ <- Logger[F].info("Logging at start of passForEasierUse")
+  something <- Sync[F].delay(println("I could do anything"))
+          .onError { case e => Logger[F].error(e)("Something Went Wrong in passForEasierUse") }
+  _ <- Logger[F].info("Logging at end of passForEasierUse")
+} yield something
 ```
 
 ### Laconic syntax
@@ -66,14 +66,14 @@ You can use it for your custom `Logger` as well as for Slf4j `Logger`.
 
 ```scala mdoc
 import cats.Applicative
-import cats.effect._
+import cats.effect.*
 import org.typelevel.log4cats.Logger
-import org.typelevel.log4cats.syntax._
+import org.typelevel.log4cats.syntax.*
 
 def successComputation[F[_]: Applicative]: F[Int] = Applicative[F].pure(1)
 def errorComputation[F[_]: Sync]: F[Unit] = Sync[F].raiseError[Unit](new Throwable("Sorry!"))
 
-def log[F[_]: Sync: Logger] = 
+def log[F[_]: Sync : Logger] =
   for {
     result1 <- successComputation[F]
     _ <- info"First result is $result1"
@@ -101,11 +101,12 @@ If you are unsure how to create a new `LoggerFactory[F]` instance, then you can 
 or `log4cats-noop` modules for concrete implementations.
 
 The quickest fix might be to create an instance of a `Slf4jFactory` and pass it around implicitly:
+
 ```scala mdoc:reset:silent
 import cats.effect.IO
 import cats.Monad
-import cats.syntax.all._
-import org.typelevel.log4cats._
+import cats.syntax.all.*
+import org.typelevel.log4cats.*
 // assumes dependency on log4cats-slf4j module
 import org.typelevel.log4cats.slf4j.Slf4jFactory
 
@@ -117,14 +118,16 @@ val logger: SelfAwareStructuredLogger[IO] = LoggerFactory[IO].getLogger
 logger.info("logging in IO!"): IO[Unit]
 
 // basic example of a service using LoggerFactory
-class LoggerUsingService[F[_]: LoggerFactory: Monad] {
+class LoggerUsingService[F[_]: LoggerFactory : Monad] {
   val logger = LoggerFactory[F].getLogger
-  def use(args: String): F[Unit] = 
+
+  def use(args: String): F[Unit] =
     for {
       _ <- logger.info("yay! effect polymorphic code")
       _ <- logger.debug(s"and $args")
     } yield ()
 }
+
 new LoggerUsingService[IO].use("foo")
 ```
 

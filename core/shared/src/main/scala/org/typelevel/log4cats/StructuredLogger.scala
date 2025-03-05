@@ -16,7 +16,7 @@
 
 package org.typelevel.log4cats
 
-import cats._
+import cats.*
 import cats.Show.Shown
 
 trait StructuredLogger[F[_]] extends Logger[F] {
