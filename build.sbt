@@ -28,6 +28,7 @@ ThisBuild / tlVersionIntroduced := Map("3" -> "2.1.1")
 
 val catsV = "2.11.0"
 val catsEffectV = "3.5.7"
+val catsMtlV = "1.4.0"
 val slf4jV = "1.7.36"
 val munitCatsEffectV = "2.0.0"
 val logbackClassicV = "1.2.13"
@@ -47,7 +48,8 @@ lazy val core = crossProject(JSPlatform, JVMPlatform, NativePlatform)
     name := "log4cats-core",
     libraryDependencies ++= Seq(
       "org.typelevel" %%% "cats-core"       % catsV,
-      "org.typelevel" %%% "cats-effect-std" % catsEffectV
+      "org.typelevel" %%% "cats-effect-std" % catsEffectV,
+      "org.typelevel" %%% "cats-mtl"        % catsMtlV
     ),
     libraryDependencies ++= {
       if (tlIsScala3.value) Seq.empty
