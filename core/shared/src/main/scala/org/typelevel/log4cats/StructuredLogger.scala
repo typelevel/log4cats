@@ -18,7 +18,6 @@ package org.typelevel.log4cats
 
 import cats.*
 import cats.Show.Shown
-import cats.mtl.Ask
 
 trait StructuredLogger[F[_]] extends Logger[F] {
   def trace(ctx: Map[String, String])(msg: => String): F[Unit]
@@ -58,11 +57,6 @@ object StructuredLogger {
       sl: StructuredLogger[F]
   )(modifyCtx: Map[String, String] => Map[String, String]): StructuredLogger[F] =
     new ModifiedContextStructuredLogger[F](sl)(modifyCtx)
-
-  def withAskContext[F[_]](
-      sl: StructuredLogger[F]
-  )(implicit F: Monad[F], ask: Ask[F, Map[String, String]]) =
-    new AskStructuredLogger[F](sl)
 
   private class ModifiedContextStructuredLogger[F[_]](sl: StructuredLogger[F])(
       modify: Map[String, String] => Map[String, String]
