@@ -63,7 +63,7 @@ private[slf4j] object Slf4jLoggerInternal {
       try {
         // Once 2.12 is no longer supported, change this to MDC.setContextMap(ctx.asJava)
         MDC.clear()
-        ctx.foreach { case (k, v) => MDC.put(k, v) }
+        ctx.foreachEntry((k, v) => MDC.put(k, v))
         logging()
       } finally
         if (backup eq null) MDC.clear()
