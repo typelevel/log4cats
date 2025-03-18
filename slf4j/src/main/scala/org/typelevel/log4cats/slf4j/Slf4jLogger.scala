@@ -17,6 +17,7 @@
 package org.typelevel.log4cats
 package slf4j
 
+import cats.Applicative
 import cats.effect.Sync
 import org.typelevel.log4cats.slf4j.internal.Slf4jLoggerInternal
 import org.slf4j.Logger as JLogger
@@ -33,10 +34,10 @@ object Slf4jLogger extends Slf4jLoggerCompat {
     getLoggerFromSlf4j[F](org.slf4j.LoggerFactory.getLogger(clazz))
 
   def getLoggerFromSlf4j[F[_]: Sync](logger: JLogger): SelfAwareStructuredLogger[F] =
-    new Slf4jLoggerInternal.Slf4jLogger(logger, Sync.Type.Delay)
+    new Slf4jLoggerInternal.Slf4jLogger(logger, Sync.Type.Delay, Applicative[F].pure(Map.empty))
 
   def getLoggerFromBlockingSlf4j[F[_]: Sync](logger: JLogger): SelfAwareStructuredLogger[F] =
-    new Slf4jLoggerInternal.Slf4jLogger(logger, Sync.Type.Blocking)
+    new Slf4jLoggerInternal.Slf4jLogger(logger, Sync.Type.Blocking, Applicative[F].pure(Map.empty))
 
   def create[F[_]: Sync](implicit name: LoggerName): F[SelfAwareStructuredLogger[F]] =
     Sync[F].delay(getLoggerFromName(name.value))

@@ -36,39 +36,35 @@ private[slf4j] object Slf4jLoggerInternal {
     def apply(t: Throwable)(msg: => String): F[Unit]
   }
 
-  // Need this to make sure MDC is correctly cleared before logging
-  private[this] def noContextLog[F[_]](isEnabled: F[Boolean], logging: () => Unit)(implicit
-      F: Sync[F]
-  ): F[Unit] =
-    contextLog[F](isEnabled, Map.empty, logging)
-
   private[this] def contextLog[F[_]](
       isEnabled: F[Boolean],
-      ctx: Map[String, String],
+      ctxF: F[Map[String, String]],
       logging: () => Unit
   )(implicit F: Sync[F]): F[Unit] = {
 
-    val ifEnabled = F.delay {
-      val backup =
-        try MDC.getCopyOfContextMap()
-        catch {
-          case e: IllegalStateException =>
-            // MDCAdapter is missing, no point in doing anything with
-            // the MDC, so just hope the logging backend can salvage
-            // something.
-            logging()
-            throw e
-        }
+    val ifEnabled = ctxF.flatMap(ctx =>
+      F.delay {
+        val backup =
+          try MDC.getCopyOfContextMap()
+          catch {
+            case e: IllegalStateException =>
+              // MDCAdapter is missing, no point in doing anything with
+              // the MDC, so just hope the logging backend can salvage
+              // something.
+              logging()
+              throw e
+          }
 
-      try {
-        // Once 2.12 is no longer supported, change this to MDC.setContextMap(ctx.asJava)
-        MDC.clear()
-        ctx.foreach { case (k, v) => MDC.put(k, v) }
-        logging()
-      } finally
-        if (backup eq null) MDC.clear()
-        else MDC.setContextMap(backup)
-    }
+        try {
+          // Once 2.12 is no longer supported, change this to MDC.setContextMap(ctx.asJava)
+          MDC.clear()
+          ctx.foreach { case (k, v) => MDC.put(k, v) }
+          logging()
+        } finally
+          if (backup eq null) MDC.clear()
+          else MDC.setContextMap(backup)
+      }
+    )
 
     isEnabled.ifM(
       ifEnabled,
@@ -77,14 +73,19 @@ private[slf4j] object Slf4jLoggerInternal {
   }
 
   @nowarn("msg=used")
-  final class Slf4jLogger[F[_]](val logger: JLogger, sync: Sync.Type = Sync.Type.Delay)(implicit
-      F: Sync[F]
-  ) extends SelfAwareStructuredLogger[F] {
+  final class Slf4jLogger[F[_]](
+      val logger: JLogger,
+      sync: Sync.Type = Sync.Type.Delay,
+      defaultCtx: F[Map[String, String]]
+  )(implicit F: Sync[F])
+      extends SelfAwareStructuredLogger[F] {
 
     @deprecated("Use constructor with sync", "2.6.0")
-    def this(logger: JLogger)(
-        F: Sync[F]
-    ) =
+    def this(logger: JLogger, sync: Sync.Type)(F: Sync[F]) =
+      this(logger, Sync.Type.Delay, F.pure(Map.empty))(F)
+
+    @deprecated("Use constructor with sync", "2.6.0")
+    def this(logger: JLogger)(F: Sync[F]) =
       this(logger, Sync.Type.Delay)(F)
 
     override def isTraceEnabled: F[Boolean] = F.delay(logger.isTraceEnabled)
@@ -94,48 +95,48 @@ private[slf4j] object Slf4jLoggerInternal {
     override def isErrorEnabled: F[Boolean] = F.delay(logger.isErrorEnabled)
 
     override def trace(t: Throwable)(msg: => String): F[Unit] =
-      noContextLog(isTraceEnabled, () => logger.trace(msg, t))
+      contextLog(isTraceEnabled, defaultCtx, () => logger.trace(msg, t))
     override def trace(msg: => String): F[Unit] =
-      noContextLog(isTraceEnabled, () => logger.trace(msg))
+      contextLog(isTraceEnabled, defaultCtx, () => logger.trace(msg))
     override def trace(ctx: Map[String, String])(msg: => String): F[Unit] =
-      contextLog(isTraceEnabled, ctx, () => logger.trace(msg))
+      contextLog(isTraceEnabled, defaultCtx.map(_ ++ ctx), () => logger.trace(msg))
     override def trace(ctx: Map[String, String], t: Throwable)(msg: => String): F[Unit] =
-      contextLog(isTraceEnabled, ctx, () => logger.trace(msg, t))
+      contextLog(isTraceEnabled, defaultCtx.map(_ ++ ctx), () => logger.trace(msg, t))
 
     override def debug(t: Throwable)(msg: => String): F[Unit] =
-      noContextLog(isDebugEnabled, () => logger.debug(msg, t))
+      contextLog(isDebugEnabled, defaultCtx, () => logger.debug(msg, t))
     override def debug(msg: => String): F[Unit] =
-      noContextLog(isDebugEnabled, () => logger.debug(msg))
+      contextLog(isDebugEnabled, defaultCtx, () => logger.debug(msg))
     override def debug(ctx: Map[String, String])(msg: => String): F[Unit] =
-      contextLog(isDebugEnabled, ctx, () => logger.debug(msg))
+      contextLog(isDebugEnabled, defaultCtx.map(_ ++ ctx), () => logger.debug(msg))
     override def debug(ctx: Map[String, String], t: Throwable)(msg: => String): F[Unit] =
-      contextLog(isDebugEnabled, ctx, () => logger.debug(msg, t))
+      contextLog(isDebugEnabled, defaultCtx.map(_ ++ ctx), () => logger.debug(msg, t))
 
     override def info(t: Throwable)(msg: => String): F[Unit] =
-      noContextLog(isInfoEnabled, () => logger.info(msg, t))
+      contextLog(isInfoEnabled, defaultCtx, () => logger.info(msg, t))
     override def info(msg: => String): F[Unit] =
-      noContextLog(isInfoEnabled, () => logger.info(msg))
+      contextLog(isInfoEnabled, defaultCtx, () => logger.info(msg))
     override def info(ctx: Map[String, String])(msg: => String): F[Unit] =
-      contextLog(isInfoEnabled, ctx, () => logger.info(msg))
+      contextLog(isInfoEnabled, defaultCtx.map(_ ++ ctx), () => logger.info(msg))
     override def info(ctx: Map[String, String], t: Throwable)(msg: => String): F[Unit] =
-      contextLog(isInfoEnabled, ctx, () => logger.info(msg, t))
+      contextLog(isInfoEnabled, defaultCtx.map(_ ++ ctx), () => logger.info(msg, t))
 
     override def warn(t: Throwable)(msg: => String): F[Unit] =
-      noContextLog(isWarnEnabled, () => logger.warn(msg, t))
+      contextLog(isWarnEnabled, defaultCtx, () => logger.warn(msg, t))
     override def warn(msg: => String): F[Unit] =
-      noContextLog(isWarnEnabled, () => logger.warn(msg))
+      contextLog(isWarnEnabled, defaultCtx, () => logger.warn(msg))
     override def warn(ctx: Map[String, String])(msg: => String): F[Unit] =
-      contextLog(isWarnEnabled, ctx, () => logger.warn(msg))
+      contextLog(isWarnEnabled, defaultCtx.map(_ ++ ctx), () => logger.warn(msg))
     override def warn(ctx: Map[String, String], t: Throwable)(msg: => String): F[Unit] =
-      contextLog(isWarnEnabled, ctx, () => logger.warn(msg, t))
+      contextLog(isWarnEnabled, defaultCtx.map(_ ++ ctx), () => logger.warn(msg, t))
 
     override def error(t: Throwable)(msg: => String): F[Unit] =
-      noContextLog(isErrorEnabled, () => logger.error(msg, t))
+      contextLog(isErrorEnabled, defaultCtx, () => logger.error(msg, t))
     override def error(msg: => String): F[Unit] =
-      noContextLog(isErrorEnabled, () => logger.error(msg))
+      contextLog(isErrorEnabled, defaultCtx, () => logger.error(msg))
     override def error(ctx: Map[String, String])(msg: => String): F[Unit] =
-      contextLog(isErrorEnabled, ctx, () => logger.error(msg))
+      contextLog(isErrorEnabled, defaultCtx.map(_ ++ ctx), () => logger.error(msg))
     override def error(ctx: Map[String, String], t: Throwable)(msg: => String): F[Unit] =
-      contextLog(isErrorEnabled, ctx, () => logger.error(msg, t))
+      contextLog(isErrorEnabled, defaultCtx.map(_ ++ ctx), () => logger.error(msg, t))
   }
 }
