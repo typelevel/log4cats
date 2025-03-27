@@ -80,7 +80,7 @@ lazy val ce3 = crossProject(JSPlatform, JVMPlatform)
   .settings(commonSettings)
   .dependsOn(core)
   .settings(
-    name := "log4cats-ce3",
+    name := "log4cats-cats-effect",
     libraryDependencies ++= Seq(
       "org.typelevel" %%% "cats-effect" % catsEffectV
     )
