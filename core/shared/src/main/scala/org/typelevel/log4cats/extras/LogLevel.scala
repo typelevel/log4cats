@@ -16,7 +16,7 @@
 
 package org.typelevel.log4cats.extras
 
-import cats._
+import cats.*
 
 sealed trait LogLevel
 object LogLevel {
@@ -48,12 +48,15 @@ object LogLevel {
     case Trace => "LogLevel.Trace"
   }
 
-  implicit final val logLevelOrder: Order[LogLevel] =
-    Order.by[LogLevel, Int] {
-      case Error => 5
-      case Warn => 4
-      case Info => 3
-      case Debug => 2
-      case Trace => 1
-    }
+  private def toIndex(l: LogLevel): Int = l match {
+    case Error => 5
+    case Warn => 4
+    case Info => 3
+    case Debug => 2
+    case Trace => 1
+  }
+
+  implicit final val logLevelOrder: Order[LogLevel] = Order.by[LogLevel, Int](toIndex)
+
+  implicit final val logLevelHash: Hash[LogLevel] = Hash.by(toIndex)
 }

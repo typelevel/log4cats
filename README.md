@@ -1,4 +1,4 @@
-# log4cats [![Maven Central](https://maven-badges.herokuapp.com/maven-central/org.typelevel/log4cats-core_2.12/badge.svg)](https://maven-badges.herokuapp.com/maven-central/org.typelevel/log4cats-core_2.12)
+# log4cats [![Build Status](https://github.com/typelevel/log4cats/workflows/Continuous%20Integration/badge.svg?branch=main)](https://github.com/typelevel/log4cats/actions?query=branch%3Amain+workflow%3A%22Continuous+Integration%22) [![Maven Central](https://maven-badges.herokuapp.com/maven-central/org.typelevel/log4cats-core_2.12/badge.svg)](https://maven-badges.herokuapp.com/maven-central/org.typelevel/log4cats-core_2.12)
 
 ## Project Goals
 
@@ -41,7 +41,7 @@ Good news, you don't have to!  Enter log4cats!  Read on!
 import org.typelevel.log4cats.Logger
 import org.typelevel.log4cats.slf4j.Slf4jLogger
 import cats.effect.Sync
-import cats.implicits._
+import cats.syntax.all.*
 
 object MyThing {
   // Impure But What 90% of Folks I know do with log4s
@@ -50,24 +50,24 @@ object MyThing {
   // Arbitrary Local Function Declaration
   def doSomething[F[_]: Sync]: F[Unit] =
     Logger[F].info("Logging Start Something") *>
-    Sync[F].delay(println("I could be doing anything"))
-      .attempt.flatMap{
-        case Left(e) => Logger[F].error(e)("Something Went Wrong")
-        case Right(_) => Sync[F].pure(())
-      }
+            Sync[F].delay(println("I could be doing anything"))
+                    .attempt.flatMap {
+                      case Left(e) => Logger[F].error(e)("Something Went Wrong")
+                      case Right(_) => Sync[F].pure(())
+                    }
 
   def safelyDoThings[F[_]: Sync]: F[Unit] = for {
     logger <- Slf4jLogger.create[F]
     _ <- logger.info("Logging at start of safelyDoThings")
     something <- Sync[F].delay(println("I could do anything"))
-      .onError{case e => logger.error(e)("Something Went Wrong in safelyDoThings")}
+            .onError { case e => logger.error(e)("Something Went Wrong in safelyDoThings") }
     _ <- logger.info("Logging at end of safelyDoThings")
   } yield something
 
-  def passForEasierUse[F[_]: Sync: Logger] = for {
+  def passForEasierUse[F[_]: Sync : Logger] = for {
     _ <- Logger[F].info("Logging at start of passForEasierUse")
     something <- Sync[F].delay(println("I could do anything"))
-      .onError{case e => Logger[F].error(e)("Something Went Wrong in passForEasierUse")}
+            .onError { case e => Logger[F].error(e)("Something Went Wrong in passForEasierUse") }
     _ <- Logger[F].info("Logging at end of passForEasierUse")
   } yield something
 }
@@ -97,12 +97,12 @@ You can use it for your custom `Logger` as well as for Slf4j `Logger`.
 import cats.Applicative
 import cats.effect.Sync
 import org.typelevel.log4cats.Logger
-import org.typelevel.log4cats.syntax._
+import org.typelevel.log4cats.syntax.*
 
 def successComputation[F[_]: Applicative]: F[Int] = Applicative[F].pure(1)
 def errorComputation[F[_]: Sync]: F[Unit] = Sync[F].raiseError[Unit](new Throwable("Sorry!"))
 
-def log[F[_]: Sync: Logger] = 
+def log[F[_]: Sync : Logger] =
   for {
     result1 <- successComputation[F]
     _ <- info"First result is $result1"
@@ -128,10 +128,12 @@ If you are unsure how to create a new `LoggerFactory[F]` instance, then you can 
 or `log4cats-noop` modules for concrete implementations.
 
 The quickest fix might be to import needed implicits:
+
 ```scala
 // assumes dependency on log4cats-slf4j module
-import org.typelevel.log4cats._
-import org.typelevel.log4cats.slf4j._
+
+import org.typelevel.log4cats.*
+import org.typelevel.log4cats.slf4j.*
 
 val logger: SelfAwareStructuredLogger[IO] = LoggerFactory[IO].getLogger
 
@@ -141,11 +143,12 @@ def anyFSyncLogger[F[_]: Sync]: SelfAwareStructuredLogger[F] = Slf4jFactory[F].g
 
 Alternatively, a mutually exclusive solution is to explicitly create your
 `LoggerFactory[F]` instance and pass them around implicitly:
+
 ```scala
 import cats.effect.IO
 import cats.Monad
-import cats.syntax.all._
-import org.typelevel.log4cats._
+import cats.syntax.all.*
+import org.typelevel.log4cats.*
 import org.typelevel.log4cats.slf4j.Slf4jFactory
 
 // create our LoggerFactory
@@ -156,16 +159,22 @@ val logger: SelfAwareStructuredLogger[IO] = LoggerFactory[IO].getLogger
 logger.info("logging in IO!"): IO[Unit]
 
 // basic example of a service using LoggerFactory
-class LoggerUsingService[F[_]: LoggerFactory: Monad] {
+class LoggerUsingService[F[_]: LoggerFactory : Monad] {
   val logger = LoggerFactory[F].getLogger
+
   def use(args: String): F[Unit] =
     for {
       _ <- logger.info("yay! effect polymorphic code")
       _ <- logger.debug(s"and $args")
     } yield ()
 }
+
 new LoggerUsingService[IO].use("foo")
 ```
+
+## Using log4cats in tests
+
+See [here](testing/README.md) for details
 
 ## CVE-2021-44228 ("log4shell")
 

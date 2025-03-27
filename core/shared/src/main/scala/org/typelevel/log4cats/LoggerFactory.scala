@@ -22,7 +22,9 @@ import cats.Monad
 import cats.data.EitherT
 import cats.data.Kleisli
 import cats.data.OptionT
-import cats.syntax.functor._
+import cats.Show.Shown
+import cats.data.Kleisli
+import cats.syntax.functor.*
 import cats.~>
 
 import scala.annotation.implicitNotFound
@@ -36,6 +38,15 @@ trait LoggerFactory[F[_]] extends LoggerFactoryGen[F] {
 
   def mapK[G[_]](fk: F ~> G)(implicit F: Functor[F]): LoggerFactory[G] =
     LoggerFactory.mapK[F, G](fk)(this)
+
+  def addContext(ctx: Map[String, String])(implicit F: Functor[F]): LoggerFactory[F] =
+    LoggerFactory.addContext(this, ctx)
+
+  def addContext(pairs: (String, Shown)*)(implicit F: Functor[F]): LoggerFactory[F] =
+    addContext(pairs.map { case (k, v) => (k, v.toString) }.toMap)
+
+  def withModifiedString(f: String => String)(implicit F: Functor[F]): LoggerFactory[F] =
+    LoggerFactory.withModifiedString(this, f)
 }
 
 object LoggerFactory extends LoggerFactoryGenCompanion {
@@ -78,4 +89,30 @@ object LoggerFactory extends LoggerFactoryGenCompanion {
   def withContextFromKleisli[F[_]: Monad](
       lf: LoggerFactory[Kleisli[F, Map[String, String], *]]
   ): LoggerFactory[Kleisli[F, Map[String, String], *]] = withContextF(lf)(Kleisli.ask)
+
+  private def addContext[F[_]: Functor](
+      lf: LoggerFactory[F],
+      ctx: Map[String, String]
+  ): LoggerFactory[F] =
+    new LoggerFactory[F] {
+      override def getLoggerFromName(name: String): SelfAwareStructuredLogger[F] =
+        lf.getLoggerFromName(name).addContext(ctx)
+
+      override def fromName(name: String): F[SelfAwareStructuredLogger[F]] =
+        lf.fromName(name).map(_.addContext(ctx))
+    }
+
+  private def withModifiedString[F[_]: Functor](
+      lf: LoggerFactory[F],
+      f: String => String
+  ): LoggerFactory[F] =
+    new LoggerFactory[F] {
+      override def getLoggerFromName(name: String): SelfAwareStructuredLogger[F] =
+        lf.getLoggerFromName(name).withModifiedString(f)
+
+      override def fromName(name: String): F[SelfAwareStructuredLogger[F]] =
+        lf.fromName(name).map(_.withModifiedString(f))
+    }
+
+
 }

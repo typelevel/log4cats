@@ -16,37 +16,44 @@
 
 package org.typelevel.log4cats.extras
 
-import cats.*
-import cats.data.*
+import cats.data.Writer
 import cats.syntax.all.*
-import org.typelevel.log4cats.*
+import cats.{~>, Alternative, Applicative, Foldable, Id}
+import org.typelevel.log4cats.{SelfAwareStructuredLogger, StructuredLogger}
 
 /**
- * A `SelfAwareLogger` implemented using `cats.data.Writer`.
+ * A `SelfAwareStructuredLogger` implemented using `cats.data.Writer`.
  *
  * >>> WARNING: READ BEFORE USAGE! <<<
  * https://github.com/typelevel/log4cats/blob/main/core/shared/src/main/scala/org/typelevel/log4cats/extras/README.md
  * >>> WARNING: READ BEFORE USAGE! <<<
  *
- * If a `SelfAwareLogger` is needed for test code, the `testing` module provides a better option:
- * `org.typelevel.log4cats.testing.TestingLogger`
+ * If a `SelfAwareStructuredLogger` is needed for test code, the `testing` module provides a better
+ * option: `org.typelevel.log4cats.testing.StructuredTestingLogger`
  */
-object WriterLogger {
-
+object WriterStructuredLogger {
   def apply[G[_]: Alternative](
       traceEnabled: Boolean = true,
       debugEnabled: Boolean = true,
       infoEnabled: Boolean = true,
       warnEnabled: Boolean = true,
       errorEnabled: Boolean = true
-  ): SelfAwareLogger[Writer[G[LogMessage], *]] =
-    WriterTLogger[cats.Id, G](traceEnabled, debugEnabled, infoEnabled, warnEnabled, errorEnabled)
+  ): SelfAwareStructuredLogger[Writer[G[StructuredLogMessage], *]] =
+    WriterTStructuredLogger[Id, G](
+      traceEnabled,
+      debugEnabled,
+      infoEnabled,
+      warnEnabled,
+      errorEnabled
+    )
 
-  def run[F[_]: Applicative, G[_]: Foldable](l: Logger[F]): Writer[G[LogMessage], *] ~> F =
-    new (Writer[G[LogMessage], *] ~> F) {
-      def apply[A](fa: Writer[G[LogMessage], A]): F[A] = {
+  def run[F[_]: Applicative, G[_]: Foldable](
+      l: StructuredLogger[F]
+  ): Writer[G[StructuredLogMessage], *] ~> F =
+    new (Writer[G[StructuredLogMessage], *] ~> F) {
+      def apply[A](fa: Writer[G[StructuredLogMessage], A]): F[A] = {
         val (toLog, out) = fa.run
-        toLog.traverse_(LogMessage.log(_, l)).as(out)
+        toLog.traverse_(StructuredLogMessage.log(_, l)).as(out)
       }
     }
 }

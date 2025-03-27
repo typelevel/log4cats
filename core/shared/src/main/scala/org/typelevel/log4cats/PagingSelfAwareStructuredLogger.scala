@@ -16,9 +16,9 @@
 
 package org.typelevel.log4cats
 
-import cats._
+import cats.*
 import cats.effect.std.UUIDGen
-import cats.syntax.all._
+import cats.syntax.all.*
 
 import java.io.{PrintWriter, StringWriter}
 import java.util.UUID
@@ -87,14 +87,15 @@ object PagingSelfAwareStructuredLogger {
     private val pageSize = pageSizeK * 1024
 
     private def pagedLogging(
-        loggingOp: (=> String) => F[Unit],
+        logOpWithCtx: Map[String, String] => (=> String) => F[Unit],
+        ctx: Map[String, String],
         logSplitId: String,
-        msg: => String
+        msg: String
     ): F[Unit] = {
       val numOfPagesRaw = (msg.length - 1) / pageSize + 1
       val numOfPages = Math.min(numOfPagesRaw, maxPageNeeded)
       if (numOfPages <= 1)
-        loggingOp(msg)
+        logOpWithCtx(addPageCtx(msg, 1, 1, ctx))(msg)
       else {
         val logSplitIdPart1 = logSplitId.split('-').head
         val pageHeaderTail = s"$numOfPages $logSplitIdPart1"
@@ -105,29 +106,45 @@ object PagingSelfAwareStructuredLogger {
             val beginIndex = (pi - 1) * pageSize
             val pageContent = msg.slice(beginIndex, beginIndex + pageSize)
 
-            loggingOp(show"""Page $pi/$pageHeaderTail
+            val page = show"""Page $pi/$pageHeaderTail
                             |
                             |$pageContent
                             |
-                            |Page $pi/$pageFooterTail""".stripMargin)
+                            |Page $pi/$pageFooterTail""".stripMargin
+
+            logOpWithCtx(addPageCtx(page, pi, numOfPages, ctx))(page)
           }
       }
     }
 
-    private def addCtx(
-        msg: => String,
+    private def addMsgCtx(
+        msg: String,
         ctx: Map[String, String]
     ): F[(String, Map[String, String])] =
       randomUUID.map { uuid =>
         val logSplitId = uuid.show
+        val msgLength = msg.length
         (
           logSplitId,
           ctx
             .updated(logSplitIdN, logSplitId)
-            .updated("page_size", s"${pageSizeK.show} Kib")
-            .updated("log_size", s"${msg.length.show} Byte")
+            .updated("page_size", s"$pageSizeK Kib")
+            .updated("whole_message_size_bytes", s"$msgLength")
+            // The following is deprecated
+            .updated("log_size", s"$msgLength Byte")
         )
       }
+
+    private def addPageCtx(
+        page: String,
+        pageNum: Int,
+        totalPages: Int,
+        ctx: Map[String, String]
+    ): Map[String, String] =
+      ctx
+        .updated("total_pages", s"$totalPages")
+        .updated("page_num", s"$pageNum")
+        .updated("log_size_bytes", s"${page.length}")
 
     private def doLogging(
         loggingLevelChk: => F[Boolean],
@@ -136,8 +153,14 @@ object PagingSelfAwareStructuredLogger {
         ctx: Map[String, String] = Map()
     ): F[Unit] = {
       loggingLevelChk.ifM(
-        addCtx(msg, ctx).flatMap { case (logSplitId, newCtx) =>
-          pagedLogging(logOpWithCtx(newCtx), logSplitId, msg)
+        {
+          // At this point we know we're going to log and/or interact
+          // with msg, so we materialize the message here so we don't
+          // materialize it multiple times
+          val materializedMsg = msg
+          addMsgCtx(materializedMsg, ctx).flatMap { case (logSplitId, newCtx) =>
+            pagedLogging(logOpWithCtx, newCtx, logSplitId, materializedMsg)
+          }
         },
         Applicative[F].unit
       )

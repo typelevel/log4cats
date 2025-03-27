@@ -16,7 +16,7 @@
 
 package org.typelevel.log4cats
 
-import cats._
+import cats.*
 import cats.Show.Shown
 import cats.data.Kleisli
 import cats.implicits.{toFlatMapOps, toFunctorOps}

@@ -16,16 +16,20 @@
 
 package org.typelevel.log4cats.extras
 
-import cats._
-import cats.data._
-import cats.syntax.all._
-import org.typelevel.log4cats._
+import cats.*
+import cats.data.*
+import cats.syntax.all.*
+import org.typelevel.log4cats.*
 
 /**
- * >>> WARNING READ BEFORE USAGE! <<< This logger will NOT log anything if `F` fails!
+ * A `SelfAwareLogger` implemented using `cats.data.WriterT`.
  *
- * Running the `WriterT` instance will yield a value of type `F[(G[LogMessage], A)]`. As a result,
- * the logged messages can be materialized if and only `F` succeeds.
+ * >>> WARNING: READ BEFORE USAGE! <<<
+ * https://github.com/typelevel/log4cats/blob/main/core/shared/src/main/scala/org/typelevel/log4cats/extras/README.md
+ * >>> WARNING: READ BEFORE USAGE! <<<
+ *
+ * If a `SelfAwareLogger` is needed for test code, the `testing` module provides a better option:
+ * `org.typelevel.log4cats.testing.TestingLogger`
  */
 object WriterTLogger {
   def apply[F[_]: Applicative, G[_]: Alternative](
@@ -85,28 +89,10 @@ object WriterTLogger {
     }
 
   def run[F[_]: Monad, G[_]: Foldable](l: Logger[F]): WriterT[F, G[LogMessage], *] ~> F =
-    new ~>[WriterT[F, G[LogMessage], *], F] {
-      override def apply[A](fa: WriterT[F, G[LogMessage], A]): F[A] = {
-        def logMessage(logMessage: LogMessage): F[Unit] = logMessage match {
-          case LogMessage(LogLevel.Trace, Some(t), m) => l.trace(t)(m)
-          case LogMessage(LogLevel.Trace, None, m) => l.trace(m)
-
-          case LogMessage(LogLevel.Debug, Some(t), m) => l.debug(t)(m)
-          case LogMessage(LogLevel.Debug, None, m) => l.debug(m)
-
-          case LogMessage(LogLevel.Info, Some(t), m) => l.info(t)(m)
-          case LogMessage(LogLevel.Info, None, m) => l.info(m)
-
-          case LogMessage(LogLevel.Warn, Some(t), m) => l.warn(t)(m)
-          case LogMessage(LogLevel.Warn, None, m) => l.warn(m)
-
-          case LogMessage(LogLevel.Error, Some(t), m) => l.error(t)(m)
-          case LogMessage(LogLevel.Error, None, m) => l.error(m)
-        }
-
+    new (WriterT[F, G[LogMessage], *] ~> F) {
+      override def apply[A](fa: WriterT[F, G[LogMessage], A]): F[A] =
         fa.run.flatMap { case (toLog, out) =>
-          toLog.traverse_(logMessage).as(out)
+          toLog.traverse_(LogMessage.log(_, l)).as(out)
         }
-      }
     }
 }

@@ -22,7 +22,6 @@ import org.typelevel.log4cats.slf4j.Slf4jLogger
 import org.typelevel.log4cats.SelfAwareStructuredLogger
 import org.typelevel.log4cats.internal.LoggerNameMacro
 
-import scala.annotation.tailrec
 import scala.quoted.*
 
 private[slf4j] object GetLoggerMacros {

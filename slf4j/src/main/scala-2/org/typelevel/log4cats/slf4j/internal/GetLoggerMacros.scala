@@ -29,13 +29,13 @@ import scala.reflect.macros.blackbox
  *   Sarah Gerweck <sarah@atscale.com>
  */
 private[slf4j] class GetLoggerMacros(val c: blackbox.Context) {
-  final def safeCreateImpl[F](f: c.Expr[F]) = getLoggerImpl[F](f, true)
+  final def safeCreateImpl[F](f: c.Expr[F]) = getLoggerImpl[F](f, delayed = true)
 
-  final def unsafeCreateImpl[F](f: c.Expr[F]) = getLoggerImpl[F](f, false)
+  final def unsafeCreateImpl[F](f: c.Expr[F]) = getLoggerImpl[F](f, delayed = false)
 
   private def getLoggerImpl[F](f: c.Expr[F], delayed: Boolean) = {
     val loggerName = SharedLoggerNameMacro.getLoggerNameImpl(c)
-    import c.universe._
+    import c.universe.*
 
     def loggerByParam(param: c.Tree) = {
       val unsafeCreate =

@@ -1,10 +1,10 @@
 import com.typesafe.tools.mima.core._
 
-val Scala213 = "2.13.10"
-val Scala212 = "2.12.17"
-val Scala3 = "3.2.2"
+val Scala213 = "2.13.16"
+val Scala212 = "2.12.20"
+val Scala3 = "3.3.5"
 
-ThisBuild / tlBaseVersion := "2.5"
+ThisBuild / tlBaseVersion := "2.7"
 ThisBuild / crossScalaVersions := Seq(Scala213, Scala212, Scala3)
 ThisBuild / scalaVersion := Scala213
 ThisBuild / startYear := Some(2018)
@@ -26,11 +26,11 @@ ThisBuild / githubWorkflowJavaVersions := Seq(JavaSpec.temurin("8"), JavaSpec.te
 
 ThisBuild / tlVersionIntroduced := Map("3" -> "2.1.1")
 
-val catsV = "2.9.0"
+val catsV = "2.11.0"
 val catsEffectV = "3.6.0"
 val slf4jV = "1.7.36"
-val munitCatsEffectV = "2.0.0-M3"
-val logbackClassicV = "1.2.11"
+val munitCatsEffectV = "2.0.0"
+val logbackClassicV = "1.2.13"
 
 Global / onChangedBuildSource := ReloadOnSourceChanges
 
@@ -73,6 +73,15 @@ lazy val noop = crossProject(JSPlatform, JVMPlatform, NativePlatform)
   .dependsOn(core)
   .settings(
     name := "log4cats-noop"
+  ) // migrated to core, so we check that core is compatible with old noop artifacts
+  .jvmSettings(
+    mimaCurrentClassfiles := (core.jvm / Compile / classDirectory).value
+  )
+  .jsSettings(
+    mimaCurrentClassfiles := (core.js / Compile / classDirectory).value
+  )
+  .nativeSettings(
+    mimaCurrentClassfiles := (core.native / Compile / classDirectory).value
   )
   .nativeSettings(commonNativeSettings)
 
