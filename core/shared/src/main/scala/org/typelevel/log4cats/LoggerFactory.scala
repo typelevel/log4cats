@@ -112,6 +112,4 @@ object LoggerFactory extends LoggerFactoryGenCompanion {
       override def fromName(name: String): F[SelfAwareStructuredLogger[F]] =
         lf.fromName(name).map(_.withModifiedString(f))
     }
-
-
 }
