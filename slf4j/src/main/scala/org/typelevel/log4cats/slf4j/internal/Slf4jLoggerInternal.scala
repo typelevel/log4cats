@@ -16,12 +16,13 @@
 
 package org.typelevel.log4cats.slf4j.internal
 
-import org.typelevel.log4cats.*
-import cats.syntax.all.*
 import cats.effect.*
-import org.slf4j.Logger as JLogger
-import org.slf4j.MDC
+import cats.effect.syntax.all.*
+import cats.syntax.all.*
+import org.slf4j.{Logger as JLogger, MDC}
+import org.typelevel.log4cats.*
 
+import java.util
 import scala.annotation.nowarn
 
 private[slf4j] object Slf4jLoggerInternal {
@@ -47,33 +48,23 @@ private[slf4j] object Slf4jLoggerInternal {
       ctx: Map[String, String],
       logging: () => Unit
   )(implicit F: Sync[F]): F[Unit] = {
+    val logIfEnabled = isEnabled.ifM(F.delay(logging()), F.unit)
 
-    val ifEnabled = F.delay {
-      val backup =
-        try MDC.getCopyOfContextMap()
-        catch {
-          case e: IllegalStateException =>
-            // MDCAdapter is missing, no point in doing anything with
-            // the MDC, so just hope the logging backend can salvage
-            // something.
-            logging()
-            throw e
-        }
-
-      try {
-        // Once 2.12 is no longer supported, change this to MDC.setContextMap(ctx.asJava)
-        MDC.clear()
-        ctx.foreach { case (k, v) => MDC.put(k, v) }
-        logging()
-      } finally
-        if (backup eq null) MDC.clear()
-        else MDC.setContextMap(backup)
+    val setMDC = F.delay {
+      MDC.clear()
+      // Once 2.12 is no longer supported, change this to MDC.setContextMap(ctx.asJava)
+      ctx.foreach { case (k, v) => MDC.put(k, v) }
     }
 
-    isEnabled.ifM(
-      ifEnabled,
-      F.unit
-    )
+    def backupMDC(backup: util.Map[String, String]) =
+      F.delay(if (backup eq null) MDC.clear() else MDC.setContextMap(backup))
+
+    F.delay(MDC.getCopyOfContextMap)
+      // MDCAdapter is missing, no point in doing anything with
+      // the MDC, so just hope the logging backend can salvage
+      // something.
+      .onError { case _: IllegalArgumentException => logIfEnabled }
+      .flatMap(backup => (setMDC >> logIfEnabled).guarantee(backupMDC(backup)))
   }
 
   @nowarn("msg=used")
