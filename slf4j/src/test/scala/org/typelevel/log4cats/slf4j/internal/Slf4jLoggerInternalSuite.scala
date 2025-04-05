@@ -32,6 +32,7 @@ import java.util
 import java.util.function
 import java.util.function.{BiConsumer, BinaryOperator, Supplier}
 import java.util.stream.Collector
+import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
 import scala.concurrent.ExecutionContext
 import scala.concurrent.ExecutionContextExecutorService
@@ -189,6 +190,40 @@ class Slf4jLoggerInternalSuite extends CatsEffectSuite {
           clue("Context should not include foo->yellow")
         ) >>
       validateMDC
+  }
+
+  test(
+    "Slf4jLoggerInternal does not call isEnabled until the MDC has been populated"
+  ) {
+    val state = mutable.Map.empty[String, String]
+    def updateState(): Unit = MDC.getCopyOfContextMap.forEach(state.update)
+
+    class LoggerThatChecksMDCOnLog
+        extends JTestLogger("Test Logger", false, false, false, false, false) {
+      override def isTraceEnabled: Boolean = { updateState(); super.isTraceEnabled }
+      override def isDebugEnabled: Boolean = { updateState(); super.isDebugEnabled }
+      override def isInfoEnabled: Boolean = { updateState(); super.isInfoEnabled }
+      override def isWarnEnabled: Boolean = { updateState(); super.isWarnEnabled }
+      override def isErrorEnabled: Boolean = { updateState(); super.isErrorEnabled }
+    }
+
+    val logger = Slf4jLogger.getLoggerFromSlf4j[IO](new LoggerThatChecksMDCOnLog)
+
+    logger.trace(Map("trace" -> "trace"))("trace") >>
+      logger.debug(Map("debug" -> "debug"))("debug") >>
+      logger.info(Map("info" -> "info"))("info") >>
+      logger.warn(Map("warn" -> "warn"))("warn") >>
+      logger.error(Map("error" -> "error"))("error") >>
+      IO(state).assertEquals(
+        mutable.Map(
+          "trace" -> "trace",
+          "debug" -> "debug",
+          "info" -> "info",
+          "warn" -> "warn",
+          "error" -> "error"
+        )
+      )
+
   }
 
   testLoggerFixture(
@@ -401,7 +436,7 @@ class Slf4jLoggerInternalSuite extends CatsEffectSuite {
   }
 
   testLoggerFixture().test(
-    "Slf4jLoggerInternal gets the dispatching right (msg + context + error"
+    "Slf4jLoggerInternal gets the dispatching right (msg + context + error)"
   ) { testLogger =>
     val slf4jLogger = Slf4jLogger.getLoggerFromSlf4j[IO](testLogger)
     prepareMDC >>
