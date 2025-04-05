@@ -193,11 +193,10 @@ class Slf4jLoggerInternalSuite extends CatsEffectSuite {
   test(
     "Slf4jLoggerInternal does not call isEnabled until the MDC has been populated"
   ) {
-    val state = mutable.Map.empty[String, String]
-    def updateState(): Unit = MDC.getCopyOfContextMap.forEach(state.update)
-
-    class LoggerThatChecksMDCOnLog
+    class JTestLoggerThatSavesMDCWhenIsEnabledCalled(state: mutable.Map[String, String])
         extends JTestLogger("Test Logger", false, false, false, false, false) {
+      private def updateState(): Unit = MDC.getCopyOfContextMap.forEach(state.update)
+
       override def isTraceEnabled: Boolean = { updateState(); super.isTraceEnabled }
       override def isDebugEnabled: Boolean = { updateState(); super.isDebugEnabled }
       override def isInfoEnabled: Boolean = { updateState(); super.isInfoEnabled }
@@ -205,7 +204,9 @@ class Slf4jLoggerInternalSuite extends CatsEffectSuite {
       override def isErrorEnabled: Boolean = { updateState(); super.isErrorEnabled }
     }
 
-    val logger = Slf4jLogger.getLoggerFromSlf4j[IO](new LoggerThatChecksMDCOnLog)
+    val state = mutable.Map.empty[String, String]
+    val testLogger = new JTestLoggerThatSavesMDCWhenIsEnabledCalled(state)
+    val logger = Slf4jLogger.getLoggerFromSlf4j[IO](testLogger)
 
     logger.trace(Map("trace" -> "trace"))("trace") >>
       logger.debug(Map("debug" -> "debug"))("debug") >>
