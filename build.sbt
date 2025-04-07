@@ -49,7 +49,7 @@ lazy val core = crossProject(JSPlatform, JVMPlatform, NativePlatform)
     libraryDependencies ++= Seq(
       "org.typelevel" %%% "cats-core"       % catsV,
       "org.typelevel" %%% "cats-effect-std" % catsEffectV,
-      "org.typelevel" %%% "cats-mtl" % catsMtlV
+      "org.typelevel" %%% "cats-mtl"        % catsMtlV
     ),
     libraryDependencies ++= {
       if (tlIsScala3.value) Seq.empty
