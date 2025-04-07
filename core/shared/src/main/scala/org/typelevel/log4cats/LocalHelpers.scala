@@ -16,11 +16,6 @@
 
 package org.typelevel.log4cats
 
-import cats.mtl.Local
-import org.typelevel.log4cats.{LoggerFactory, SelfAwareStructuredLogger}
-
-package org.typelevel.log4cats
-
 import cats.FlatMap
 import cats.mtl.Local
 import org.typelevel.log4cats.{LoggerFactory, SelfAwareStructuredLogger}
