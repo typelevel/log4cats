@@ -21,25 +21,18 @@ import cats.arrow.FunctionK
 import cats.effect.unsafe.IORuntime
 import cats.effect.{IO, Resource, SyncIO}
 import cats.syntax.all.*
-
-import java.util.concurrent.{Executors, ThreadFactory}
-import org.slf4j.MDC
 import munit.{CatsEffectSuite, Location}
+import org.slf4j.MDC
 import org.typelevel.log4cats.extras.DeferredLogMessage
-import org.typelevel.log4cats.slf4j.internal.JTestLogger.{
-  dynamicUsingMDC,
-  Disabled,
-  Enabled,
-  TestLogMessage
-}
+import org.typelevel.log4cats.slf4j.internal.JTestLogger.{Disabled, Enabled, TestLogMessage, dynamicUsingMDC}
 
 import java.util
+import java.util.concurrent.Executors
 import java.util.function
 import java.util.function.{BiConsumer, BinaryOperator, BooleanSupplier, Supplier}
 import java.util.stream.Collector
 import scala.collection.mutable.ListBuffer
 import scala.concurrent.ExecutionContext
-import scala.concurrent.ExecutionContextExecutorService
 import scala.util.control.NoStackTrace
 
 class Slf4jLoggerInternalSuite extends CatsEffectSuite {
@@ -58,27 +51,7 @@ class Slf4jLoggerInternalSuite extends CatsEffectSuite {
       .setCompute(computeEC, () => computeEC.shutdown())
       .setBlocking(blockingEC, () => blockingEC.shutdown())
       .build()
-
-  object dirtyStuff {
-
-    def namedSingleThreadExecutionContext(name: String): ExecutionContextExecutorService =
-      ExecutionContext.fromExecutorService(
-        Executors.newSingleThreadExecutor(new ThreadFactory() {
-          def newThread(r: Runnable): Thread = new Thread(r, name)
-        })
-      )
-
-    def killThreads(threads: List[ExecutionContextExecutorService]): Unit = threads.foreach {
-      thread =>
-        try thread.shutdownNow()
-        catch {
-          case e: Throwable =>
-            Console.err.println("Couldn't shutdown thread")
-            e.printStackTrace()
-        }
-    }
-  }
-
+  
   private def testLoggerFixture(
       traceEnabled: BooleanSupplier = Enabled,
       debugEnabled: BooleanSupplier = Enabled,
