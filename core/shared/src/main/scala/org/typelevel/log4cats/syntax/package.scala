@@ -19,18 +19,18 @@ package org.typelevel.log4cats
 package object syntax {
   implicit final class LoggerInterpolator(private val sc: StringContext) extends AnyVal {
     def error[F[_]](message: Any*)(implicit logger: Logger[F]): F[Unit] =
-      logger.error(sc.s(message: _*))
+      logger.error(sc.s(message*))
 
     def warn[F[_]](message: Any*)(implicit logger: Logger[F]): F[Unit] =
-      logger.warn(sc.s(message: _*))
+      logger.warn(sc.s(message*))
 
     def info[F[_]](message: Any*)(implicit logger: Logger[F]): F[Unit] =
-      logger.info(sc.s(message: _*))
+      logger.info(sc.s(message*))
 
     def debug[F[_]](message: Any*)(implicit logger: Logger[F]): F[Unit] =
-      logger.debug(sc.s(message: _*))
+      logger.debug(sc.s(message*))
 
     def trace[F[_]](message: Any*)(implicit logger: Logger[F]): F[Unit] =
-      logger.trace(sc.s(message: _*))
+      logger.trace(sc.s(message*))
   }
 }

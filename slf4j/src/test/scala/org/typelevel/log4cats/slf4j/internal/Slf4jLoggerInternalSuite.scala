@@ -51,7 +51,7 @@ class Slf4jLoggerInternalSuite extends CatsEffectSuite {
       .setCompute(computeEC, () => computeEC.shutdown())
       .setBlocking(blockingEC, () => blockingEC.shutdown())
       .build()
-  
+
   private def testLoggerFixture(
       traceEnabled: BooleanSupplier = Enabled,
       debugEnabled: BooleanSupplier = Enabled,

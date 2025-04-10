@@ -20,7 +20,7 @@ import cats.Order
 import cats.arrow.FunctionK
 import cats.data.NonEmptyList
 import cats.effect.IO
-import cats.syntax.all._
+import cats.syntax.all.*
 import org.typelevel.log4cats.SelfAwareStructuredLogger
 import org.typelevel.log4cats.testing.TestingLoggerFactory
 import org.typelevel.log4cats.testing.TestingLoggerFactory.{
