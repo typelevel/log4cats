@@ -24,7 +24,12 @@ import cats.syntax.all.*
 import munit.{CatsEffectSuite, Location}
 import org.slf4j.MDC
 import org.typelevel.log4cats.extras.DeferredLogMessage
-import org.typelevel.log4cats.slf4j.internal.JTestLogger.{Disabled, Enabled, TestLogMessage, dynamicUsingMDC}
+import org.typelevel.log4cats.slf4j.internal.JTestLogger.{
+  dynamicUsingMDC,
+  Disabled,
+  Enabled,
+  TestLogMessage
+}
 
 import java.util
 import java.util.concurrent.Executors

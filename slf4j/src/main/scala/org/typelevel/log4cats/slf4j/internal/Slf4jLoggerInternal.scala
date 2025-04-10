@@ -20,8 +20,6 @@ import cats.effect.*
 import org.slf4j.{Logger as JLogger, MDC}
 import org.typelevel.log4cats.*
 
-import scala.annotation.nowarn
-
 private[slf4j] object Slf4jLoggerInternal {
 
   final val singletonsByName = true
@@ -34,7 +32,6 @@ private[slf4j] object Slf4jLoggerInternal {
     def apply(t: Throwable)(msg: => String): F[Unit]
   }
 
-  @nowarn("msg=used")
   final class Slf4jLogger[F[_]](
       val logger: JLogger,
       sync: Sync.Type,
