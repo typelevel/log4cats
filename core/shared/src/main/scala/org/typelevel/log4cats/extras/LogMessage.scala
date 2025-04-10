@@ -16,8 +16,8 @@
 
 package org.typelevel.log4cats.extras
 
-import cats._
-import cats.syntax.all._
+import cats.*
+import cats.syntax.all.*
 import org.typelevel.log4cats.Logger
 
 final case class LogMessage(level: LogLevel, t: Option[Throwable], message: String)

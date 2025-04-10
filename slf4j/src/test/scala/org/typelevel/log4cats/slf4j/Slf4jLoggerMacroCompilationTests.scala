@@ -16,7 +16,7 @@
 
 package org.typelevel.log4cats.slf4j
 
-import cats.effect._
+import cats.effect.*
 import org.typelevel.log4cats.SelfAwareStructuredLogger
 
 class Slf4jLoggerSimpleClassMacroTest {

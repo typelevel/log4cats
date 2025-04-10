@@ -19,9 +19,9 @@ package org.typelevel.log4cats
 trait LoggerFactoryGen[F[_]] {
   type LoggerType <: Logger[F]
   def getLogger(implicit name: LoggerName): LoggerType = getLoggerFromName(name.value)
-  def getLoggerFromClass(clazz: Class[_]): LoggerType = getLoggerFromName(clazz.getName)
+  def getLoggerFromClass(clazz: Class[?]): LoggerType = getLoggerFromName(clazz.getName)
   def create(implicit name: LoggerName): F[LoggerType] = fromName(name.value)
-  def fromClass(clazz: Class[_]): F[LoggerType] = fromName(clazz.getName)
+  def fromClass(clazz: Class[?]): F[LoggerType] = fromName(clazz.getName)
   def getLoggerFromName(name: String): LoggerType
   def fromName(name: String): F[LoggerType]
 }
@@ -31,12 +31,12 @@ private[log4cats] trait LoggerFactoryGenCompanion {
     lf.getLogger
   def getLoggerFromName[F[_]](name: String)(implicit lf: LoggerFactoryGen[F]): lf.LoggerType =
     lf.getLoggerFromName(name)
-  def getLoggerFromClass[F[_]](clazz: Class[_])(implicit lf: LoggerFactoryGen[F]): lf.LoggerType =
+  def getLoggerFromClass[F[_]](clazz: Class[?])(implicit lf: LoggerFactoryGen[F]): lf.LoggerType =
     lf.getLoggerFromClass(clazz)
   def create[F[_]](implicit lf: LoggerFactoryGen[F], name: LoggerName): F[lf.LoggerType] =
     lf.create
   def fromName[F[_]](name: String)(implicit lf: LoggerFactoryGen[F]): F[lf.LoggerType] =
     lf.fromName(name)
-  def fromClass[F[_]](clazz: Class[_])(implicit lf: LoggerFactoryGen[F]): F[lf.LoggerType] =
+  def fromClass[F[_]](clazz: Class[?])(implicit lf: LoggerFactoryGen[F]): F[lf.LoggerType] =
     lf.fromClass(clazz)
 }
