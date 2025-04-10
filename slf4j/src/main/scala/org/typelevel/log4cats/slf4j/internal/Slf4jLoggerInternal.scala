@@ -16,11 +16,9 @@
 
 package org.typelevel.log4cats.slf4j.internal
 
-import org.typelevel.log4cats.*
-import cats.syntax.all.*
 import cats.effect.*
-import org.slf4j.Logger as JLogger
-import org.slf4j.MDC
+import org.slf4j.{Logger as JLogger, MDC}
+import org.typelevel.log4cats.*
 
 import scala.annotation.nowarn
 
@@ -36,50 +34,17 @@ private[slf4j] object Slf4jLoggerInternal {
     def apply(t: Throwable)(msg: => String): F[Unit]
   }
 
-  // Need this to make sure MDC is correctly cleared before logging
-  private[this] def noContextLog[F[_]](isEnabled: F[Boolean], logging: () => Unit)(implicit
-      F: Sync[F]
-  ): F[Unit] =
-    contextLog[F](isEnabled, Map.empty, logging)
-
-  private[this] def contextLog[F[_]](
-      isEnabled: F[Boolean],
-      ctx: Map[String, String],
-      logging: () => Unit
-  )(implicit F: Sync[F]): F[Unit] = {
-
-    val ifEnabled = F.delay {
-      val backup =
-        try MDC.getCopyOfContextMap()
-        catch {
-          case e: IllegalStateException =>
-            // MDCAdapter is missing, no point in doing anything with
-            // the MDC, so just hope the logging backend can salvage
-            // something.
-            logging()
-            throw e
-        }
-
-      try {
-        // Once 2.12 is no longer supported, change this to MDC.setContextMap(ctx.asJava)
-        MDC.clear()
-        ctx.foreach { case (k, v) => MDC.put(k, v) }
-        logging()
-      } finally
-        if (backup eq null) MDC.clear()
-        else MDC.setContextMap(backup)
-    }
-
-    isEnabled.ifM(
-      ifEnabled,
-      F.unit
-    )
-  }
-
   @nowarn("msg=used")
-  final class Slf4jLogger[F[_]](val logger: JLogger, sync: Sync.Type = Sync.Type.Delay)(implicit
+  final class Slf4jLogger[F[_]](
+      val logger: JLogger,
+      sync: Sync.Type,
+      defaultCtx: Map[String, String]
+  )(implicit
       F: Sync[F]
   ) extends SelfAwareStructuredLogger[F] {
+
+    def this(logger: JLogger, sync: Sync.Type = Sync.Type.Delay)(F: Sync[F]) =
+      this(logger, sync, Map.empty)(F)
 
     @deprecated("Use constructor with sync", "2.6.0")
     def this(logger: JLogger)(
@@ -87,55 +52,110 @@ private[slf4j] object Slf4jLoggerInternal {
     ) =
       this(logger, Sync.Type.Delay)(F)
 
-    override def isTraceEnabled: F[Boolean] = F.delay(logger.isTraceEnabled)
-    override def isDebugEnabled: F[Boolean] = F.delay(logger.isDebugEnabled)
-    override def isInfoEnabled: F[Boolean] = F.delay(logger.isInfoEnabled)
-    override def isWarnEnabled: F[Boolean] = F.delay(logger.isWarnEnabled)
-    override def isErrorEnabled: F[Boolean] = F.delay(logger.isErrorEnabled)
+    private val isTraceEnabledUnsafe = () => logger.isTraceEnabled
+    private val isDebugEnabledUnsafe = () => logger.isDebugEnabled
+    private val isInfoEnabledUnsafe = () => logger.isInfoEnabled
+    private val isWarnEnabledUnsafe = () => logger.isWarnEnabled
+    private val isErrorEnabledUnsafe = () => logger.isErrorEnabled
+
+    override def addContext(ctx: Map[String, String]): SelfAwareStructuredLogger[F] =
+      new Slf4jLogger[F](logger, sync, defaultCtx ++ ctx)
+
+    override def isTraceEnabled: F[Boolean] =
+      F.delay(withPreparedMDCUnsafe(Map.empty, isTraceEnabledUnsafe))
+    override def isDebugEnabled: F[Boolean] =
+      F.delay(withPreparedMDCUnsafe(Map.empty, isDebugEnabledUnsafe))
+    override def isInfoEnabled: F[Boolean] =
+      F.delay(withPreparedMDCUnsafe(Map.empty, isInfoEnabledUnsafe))
+    override def isWarnEnabled: F[Boolean] =
+      F.delay(withPreparedMDCUnsafe(Map.empty, isWarnEnabledUnsafe))
+    override def isErrorEnabled: F[Boolean] =
+      F.delay(withPreparedMDCUnsafe(Map.empty, isErrorEnabledUnsafe))
 
     override def trace(t: Throwable)(msg: => String): F[Unit] =
-      noContextLog(isTraceEnabled, () => logger.trace(msg, t))
+      noContextLog(isTraceEnabledUnsafe, () => logger.trace(msg, t))
     override def trace(msg: => String): F[Unit] =
-      noContextLog(isTraceEnabled, () => logger.trace(msg))
+      noContextLog(isTraceEnabledUnsafe, () => logger.trace(msg))
     override def trace(ctx: Map[String, String])(msg: => String): F[Unit] =
-      contextLog(isTraceEnabled, ctx, () => logger.trace(msg))
+      contextLog(isTraceEnabledUnsafe, ctx, () => logger.trace(msg))
     override def trace(ctx: Map[String, String], t: Throwable)(msg: => String): F[Unit] =
-      contextLog(isTraceEnabled, ctx, () => logger.trace(msg, t))
+      contextLog(isTraceEnabledUnsafe, ctx, () => logger.trace(msg, t))
 
     override def debug(t: Throwable)(msg: => String): F[Unit] =
-      noContextLog(isDebugEnabled, () => logger.debug(msg, t))
+      noContextLog(isDebugEnabledUnsafe, () => logger.debug(msg, t))
     override def debug(msg: => String): F[Unit] =
-      noContextLog(isDebugEnabled, () => logger.debug(msg))
+      noContextLog(isDebugEnabledUnsafe, () => logger.debug(msg))
     override def debug(ctx: Map[String, String])(msg: => String): F[Unit] =
-      contextLog(isDebugEnabled, ctx, () => logger.debug(msg))
+      contextLog(isDebugEnabledUnsafe, ctx, () => logger.debug(msg))
     override def debug(ctx: Map[String, String], t: Throwable)(msg: => String): F[Unit] =
-      contextLog(isDebugEnabled, ctx, () => logger.debug(msg, t))
+      contextLog(isDebugEnabledUnsafe, ctx, () => logger.debug(msg, t))
 
     override def info(t: Throwable)(msg: => String): F[Unit] =
-      noContextLog(isInfoEnabled, () => logger.info(msg, t))
+      noContextLog(isInfoEnabledUnsafe, () => logger.info(msg, t))
     override def info(msg: => String): F[Unit] =
-      noContextLog(isInfoEnabled, () => logger.info(msg))
+      noContextLog(isInfoEnabledUnsafe, () => logger.info(msg))
     override def info(ctx: Map[String, String])(msg: => String): F[Unit] =
-      contextLog(isInfoEnabled, ctx, () => logger.info(msg))
+      contextLog(isInfoEnabledUnsafe, ctx, () => logger.info(msg))
     override def info(ctx: Map[String, String], t: Throwable)(msg: => String): F[Unit] =
-      contextLog(isInfoEnabled, ctx, () => logger.info(msg, t))
+      contextLog(isInfoEnabledUnsafe, ctx, () => logger.info(msg, t))
 
     override def warn(t: Throwable)(msg: => String): F[Unit] =
-      noContextLog(isWarnEnabled, () => logger.warn(msg, t))
+      noContextLog(isWarnEnabledUnsafe, () => logger.warn(msg, t))
     override def warn(msg: => String): F[Unit] =
-      noContextLog(isWarnEnabled, () => logger.warn(msg))
+      noContextLog(isWarnEnabledUnsafe, () => logger.warn(msg))
     override def warn(ctx: Map[String, String])(msg: => String): F[Unit] =
-      contextLog(isWarnEnabled, ctx, () => logger.warn(msg))
+      contextLog(isWarnEnabledUnsafe, ctx, () => logger.warn(msg))
     override def warn(ctx: Map[String, String], t: Throwable)(msg: => String): F[Unit] =
-      contextLog(isWarnEnabled, ctx, () => logger.warn(msg, t))
+      contextLog(isWarnEnabledUnsafe, ctx, () => logger.warn(msg, t))
 
     override def error(t: Throwable)(msg: => String): F[Unit] =
-      noContextLog(isErrorEnabled, () => logger.error(msg, t))
+      noContextLog(isErrorEnabledUnsafe, () => logger.error(msg, t))
     override def error(msg: => String): F[Unit] =
-      noContextLog(isErrorEnabled, () => logger.error(msg))
+      noContextLog(isErrorEnabledUnsafe, () => logger.error(msg))
     override def error(ctx: Map[String, String])(msg: => String): F[Unit] =
-      contextLog(isErrorEnabled, ctx, () => logger.error(msg))
+      contextLog(isErrorEnabledUnsafe, ctx, () => logger.error(msg))
     override def error(ctx: Map[String, String], t: Throwable)(msg: => String): F[Unit] =
-      contextLog(isErrorEnabled, ctx, () => logger.error(msg, t))
+      contextLog(isErrorEnabledUnsafe, ctx, () => logger.error(msg, t))
+
+    private def withPreparedMDCUnsafe[A](extraCtx: Map[String, String], body: () => A): A = {
+      val ctx = defaultCtx ++ extraCtx
+      val backup =
+        try MDC.getCopyOfContextMap()
+        catch {
+          case e: IllegalStateException =>
+            // MDCAdapter is missing, no point in doing anything with
+            // the MDC, so just hope the logging backend can salvage
+            // something.
+            body()
+            throw e
+        }
+
+      try {
+        // Once 2.12 is no longer supported, change this to MDC.setContextMap(ctx.asJava)
+        MDC.clear()
+        ctx.foreach { case (k, v) => MDC.put(k, v) }
+        body()
+      } finally
+        if (backup eq null) MDC.clear()
+        else MDC.setContextMap(backup)
+    }
+
+    private def noContextLog(isEnabledUnsafe: () => Boolean, logging: () => Unit): F[Unit] =
+      contextLog(isEnabledUnsafe, Map.empty, logging)
+
+    private def contextLog(
+        isEnabledUnsafe: () => Boolean,
+        ctx: Map[String, String],
+        logging: () => Unit
+    ): F[Unit] =
+      F.delay(
+        withPreparedMDCUnsafe(
+          ctx,
+          () =>
+            if (isEnabledUnsafe()) {
+              logging()
+            }
+        )
+      )
   }
 }

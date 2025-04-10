@@ -33,10 +33,10 @@ object Slf4jLogger extends Slf4jLoggerCompat {
     getLoggerFromSlf4j[F](org.slf4j.LoggerFactory.getLogger(clazz))
 
   def getLoggerFromSlf4j[F[_]: Sync](logger: JLogger): SelfAwareStructuredLogger[F] =
-    new Slf4jLoggerInternal.Slf4jLogger(logger)
+    new Slf4jLoggerInternal.Slf4jLogger(logger)(Sync[F])
 
   def getLoggerFromBlockingSlf4j[F[_]: Sync](logger: JLogger): SelfAwareStructuredLogger[F] =
-    new Slf4jLoggerInternal.Slf4jLogger(logger, Sync.Type.Blocking)
+    new Slf4jLoggerInternal.Slf4jLogger(logger, Sync.Type.Blocking)(Sync[F])
 
   def create[F[_]: Sync](implicit name: LoggerName): F[SelfAwareStructuredLogger[F]] =
     Sync[F].delay(getLoggerFromName(name.value))
