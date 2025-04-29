@@ -24,6 +24,9 @@ import cats.syntax.all.*
 import cats.{~>, Functor}
 import org.typelevel.log4cats.{LoggerFactory, SelfAwareStructuredLogger}
 
+import scala.concurrent.Await
+import scala.concurrent.duration.Duration
+
 /**
  * Creates simple loggers that print logs to standard error output.
  *
@@ -117,8 +120,10 @@ object ConsoleLoggerFactory {
                 ConsoleLogger[F](name, logLevel)
             }.widen
 
-          override def getLoggerFromName(name: String): SelfAwareStructuredLogger[F] =
-            dispatcher.unsafeRunSync(fromName(name))
+          override def getLoggerFromName(name: String): SelfAwareStructuredLogger[F] = {
+            // Note: switch to dispatcher.unsafeRunSync when 2.12 support is dropped
+            Await.result(dispatcher.unsafeToFuture(fromName(name)), Duration.Inf)
+          }
         }
       }
     }
