@@ -94,16 +94,16 @@ object ConsoleLogger {
           }
 
         private def log(level: LogLevel, msg: => String): F[Unit] =
-          isLevelEnabled(level).ifF(console.errorln(s"$level $name - $msg"), F.unit)
+          isLevelEnabled(level).ifM(console.errorln(s"$level $name - $msg"), F.unit)
 
         private def log(level: LogLevel, msg: => String, throwable: Throwable): F[Unit] =
-          isLevelEnabled(level).ifF(
+          isLevelEnabled(level).ifM(
             renderThrowable(throwable).flatMap(t => console.errorln(s"$level $name - $msg\n$t")),
             F.unit
           )
 
         private def log(level: LogLevel, msg: => String, ctx: Map[String, String]): F[Unit] =
-          isLevelEnabled(level).ifF(
+          isLevelEnabled(level).ifM(
             console.errorln(s"$level $name - $msg${renderContext(ctx)}"),
             F.unit
           )
@@ -114,7 +114,7 @@ object ConsoleLogger {
             throwable: Throwable,
             ctx: Map[String, String]
         ): F[Unit] =
-          isLevelEnabled(level).ifF(
+          isLevelEnabled(level).ifM(
             renderThrowable(throwable)
               .flatMap(t => console.errorln(s"$level $name - $msg${renderContext(ctx)}\n$t")),
             F.unit
