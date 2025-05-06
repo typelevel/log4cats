@@ -121,26 +121,26 @@ object ConsoleLogger {
           )
 
         override def trace(ctx: Map[String, String])(msg: => String): F[Unit] =
-          log(LogLevel.Error, msg, ctx)
+          log(LogLevel.Trace, msg, ctx)
         override def debug(ctx: Map[String, String])(msg: => String): F[Unit] =
-          log(LogLevel.Warn, msg, ctx)
+          log(LogLevel.Debug, msg, ctx)
         override def info(ctx: Map[String, String])(msg: => String): F[Unit] =
           log(LogLevel.Info, msg, ctx)
         override def warn(ctx: Map[String, String])(msg: => String): F[Unit] =
-          log(LogLevel.Debug, msg, ctx)
+          log(LogLevel.Warn, msg, ctx)
         override def error(ctx: Map[String, String])(msg: => String): F[Unit] =
-          log(LogLevel.Trace, msg, ctx)
+          log(LogLevel.Error, msg, ctx)
 
         override def trace(ctx: Map[String, String], t: Throwable)(msg: => String): F[Unit] =
-          log(LogLevel.Error, msg, t, ctx)
+          log(LogLevel.Trace, msg, t, ctx)
         override def debug(ctx: Map[String, String], t: Throwable)(msg: => String): F[Unit] =
-          log(LogLevel.Warn, msg, t, ctx)
+          log(LogLevel.Debug, msg, t, ctx)
         override def info(ctx: Map[String, String], t: Throwable)(msg: => String): F[Unit] =
           log(LogLevel.Info, msg, t, ctx)
         override def warn(ctx: Map[String, String], t: Throwable)(msg: => String): F[Unit] =
-          log(LogLevel.Debug, msg, t, ctx)
+          log(LogLevel.Warn, msg, t, ctx)
         override def error(ctx: Map[String, String], t: Throwable)(msg: => String): F[Unit] =
-          log(LogLevel.Trace, msg, t, ctx)
+          log(LogLevel.Error, msg, t, ctx)
 
         override def error(t: Throwable)(message: => String): F[Unit] =
           log(LogLevel.Error, message, t)
