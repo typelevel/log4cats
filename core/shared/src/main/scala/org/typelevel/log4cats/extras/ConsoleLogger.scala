@@ -16,13 +16,11 @@
 
 package org.typelevel.log4cats.extras
 
-import cats.{~>, Show}
 import cats.effect.kernel.{Async, Ref}
 import cats.effect.std.Console
 import cats.syntax.all.*
+import cats.{~>, Show}
 import org.typelevel.log4cats.SelfAwareStructuredLogger
-
-import java.io.{ByteArrayOutputStream, PrintStream}
 
 /**
  * A simple logger that prints logs to standard error output.
@@ -59,7 +57,10 @@ trait ConsoleLogger[F[_]] extends SelfAwareStructuredLogger[F] {
     ConsoleLogger.withModifiedString(this, f)
 }
 object ConsoleLogger {
-  def apply[F[_]](name: String, initialLogLevel: LogLevel)(implicit
+  def apply[F[_]: Console: Async](name: String, initialLogLevel: LogLevel): F[ConsoleLogger[F]] =
+    apply[F](name, initialLogLevel, ConsoleLogFormat.Default)
+
+  def apply[F[_]](name: String, initialLogLevel: LogLevel, format: ConsoleLogFormat)(implicit
       console: Console[F],
       F: Async[F]
   ): F[ConsoleLogger[F]] =
@@ -75,36 +76,25 @@ object ConsoleLogger {
         override def isWarnEnabled: F[Boolean] = isLevelEnabled(LogLevel.Warn)
         override def isErrorEnabled: F[Boolean] = isLevelEnabled(LogLevel.Error)
 
-        private def renderThrowable(t: Throwable): F[String] =
-          F.delay {
-            val baos = new ByteArrayOutputStream()
-            val ps = new PrintStream(baos)
-            t.printStackTrace(ps)
-            baos.toString.linesIterator.map(s => s"  $s").mkString("\n")
-          }
-
-        private def renderContext(ctx: Map[String, String]): String =
-          if (ctx.isEmpty) ""
-          else {
-            val builder = new StringBuilder()
-            ctx.toVector.foreach { case (key, value) =>
-              builder.append("  ").append(key).append(" = ").append(value).append("\n")
-            }
-            builder.result()
-          }
-
         private def log(level: LogLevel, msg: => String): F[Unit] =
-          isLevelEnabled(level).ifM(console.errorln(s"$level $name - $msg"), F.unit)
+          isLevelEnabled(level).ifM(
+            F.realTimeInstant.map(format.format(name, level, _, msg)).flatMap(console.errorln(_)),
+            F.unit
+          )
 
         private def log(level: LogLevel, msg: => String, throwable: Throwable): F[Unit] =
           isLevelEnabled(level).ifM(
-            renderThrowable(throwable).flatMap(t => console.errorln(s"$level $name - $msg\n$t")),
+            F.realTimeInstant
+              .map(format.format(name, level, _, msg, throwable))
+              .flatMap(console.errorln(_)),
             F.unit
           )
 
         private def log(level: LogLevel, msg: => String, ctx: Map[String, String]): F[Unit] =
           isLevelEnabled(level).ifM(
-            console.errorln(s"$level $name - $msg${renderContext(ctx)}"),
+            F.realTimeInstant
+              .map(format.format(name, level, _, msg, ctx))
+              .flatMap(console.errorln(_)),
             F.unit
           )
 
@@ -115,8 +105,9 @@ object ConsoleLogger {
             ctx: Map[String, String]
         ): F[Unit] =
           isLevelEnabled(level).ifM(
-            renderThrowable(throwable)
-              .flatMap(t => console.errorln(s"$level $name - $msg${renderContext(ctx)}\n$t")),
+            F.realTimeInstant
+              .map(format.format(name, level, _, msg, ctx, throwable))
+              .flatMap(console.errorln(_)),
             F.unit
           )
 

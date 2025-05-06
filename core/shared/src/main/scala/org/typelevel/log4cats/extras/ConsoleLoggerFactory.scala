@@ -97,6 +97,13 @@ object ConsoleLoggerFactory {
       defaultLogLevel: LogLevel,
       logLevelOverrides: (String, LogLevel)*
   ): Resource[F, ConsoleLoggerFactory[F]] =
+    apply[F](defaultLogLevel, ConsoleLogFormat.Default, logLevelOverrides*)
+
+  def apply[F[_]: Async: Console](
+      defaultLogLevel: LogLevel,
+      format: ConsoleLogFormat,
+      logLevelOverrides: (String, LogLevel)*
+  ): Resource[F, ConsoleLoggerFactory[F]] =
     Dispatcher.sequential[F].evalMap { dispatcher =>
       (
         Ref[F].of(defaultLogLevel),
@@ -117,7 +124,7 @@ object ConsoleLoggerFactory {
               (globalLogLevel, logLevelOverrides) =>
                 val logLevel =
                   logLevelOverrides.find(_.matches(name)).fold(globalLogLevel)(_.logLevel)
-                ConsoleLogger[F](name, logLevel)
+                ConsoleLogger[F](name, logLevel, format)
             }.widen
 
           override def getLoggerFromName(name: String): SelfAwareStructuredLogger[F] =
