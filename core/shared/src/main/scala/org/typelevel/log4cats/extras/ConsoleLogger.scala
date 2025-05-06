@@ -22,6 +22,8 @@ import cats.syntax.all.*
 import cats.{~>, Show}
 import org.typelevel.log4cats.SelfAwareStructuredLogger
 
+import java.time.Instant
+
 /**
  * A simple logger that prints logs to standard error output.
  *
@@ -76,25 +78,22 @@ object ConsoleLogger {
         override def isWarnEnabled: F[Boolean] = isLevelEnabled(LogLevel.Warn)
         override def isErrorEnabled: F[Boolean] = isLevelEnabled(LogLevel.Error)
 
+        private def now: F[Instant] = F.realTime.map(d => Instant.EPOCH.plusNanos(d.toNanos))
         private def log(level: LogLevel, msg: => String): F[Unit] =
           isLevelEnabled(level).ifM(
-            F.realTimeInstant.map(format.format(name, level, _, msg)).flatMap(console.errorln(_)),
+            now.map(format.format(name, level, _, msg)).flatMap(console.errorln(_)),
             F.unit
           )
 
         private def log(level: LogLevel, msg: => String, throwable: Throwable): F[Unit] =
           isLevelEnabled(level).ifM(
-            F.realTimeInstant
-              .map(format.format(name, level, _, msg, throwable))
-              .flatMap(console.errorln(_)),
+            now.map(format.format(name, level, _, msg, throwable)).flatMap(console.errorln(_)),
             F.unit
           )
 
         private def log(level: LogLevel, msg: => String, ctx: Map[String, String]): F[Unit] =
           isLevelEnabled(level).ifM(
-            F.realTimeInstant
-              .map(format.format(name, level, _, msg, ctx))
-              .flatMap(console.errorln(_)),
+            now.map(format.format(name, level, _, msg, ctx)).flatMap(console.errorln(_)),
             F.unit
           )
 
@@ -105,9 +104,7 @@ object ConsoleLogger {
             ctx: Map[String, String]
         ): F[Unit] =
           isLevelEnabled(level).ifM(
-            F.realTimeInstant
-              .map(format.format(name, level, _, msg, ctx, throwable))
-              .flatMap(console.errorln(_)),
+            now.map(format.format(name, level, _, msg, ctx, throwable)).flatMap(console.errorln(_)),
             F.unit
           )
 
