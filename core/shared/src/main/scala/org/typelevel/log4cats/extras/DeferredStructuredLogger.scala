@@ -79,54 +79,27 @@ object DeferredStructuredLogger {
         new DeferredStructuredLogger[F] {
           private def save(lm: DeferredLogMessage): F[Unit] = ref.update(_.append(lm))
 
-          override def trace(ctx: Map[String, String])(msg: => String): F[Unit] =
-            save(DeferredLogMessage.trace(ctx, none, () => msg))
-          override def debug(ctx: Map[String, String])(msg: => String): F[Unit] =
-            save(DeferredLogMessage.debug(ctx, none, () => msg))
-          override def info(ctx: Map[String, String])(msg: => String): F[Unit] =
-            save(DeferredLogMessage.info(ctx, none, () => msg))
-          override def warn(ctx: Map[String, String])(msg: => String): F[Unit] =
-            save(DeferredLogMessage.warn(ctx, none, () => msg))
-          override def error(ctx: Map[String, String])(msg: => String): F[Unit] =
-            save(DeferredLogMessage.error(ctx, none, () => msg))
-
-          override def trace(ctx: Map[String, String], t: Throwable)(msg: => String): F[Unit] =
-            save(DeferredLogMessage.trace(ctx, t.some, () => msg))
-          override def debug(ctx: Map[String, String], t: Throwable)(msg: => String): F[Unit] =
-            save(DeferredLogMessage.debug(ctx, t.some, () => msg))
-          override def info(ctx: Map[String, String], t: Throwable)(msg: => String): F[Unit] =
-            save(DeferredLogMessage.info(ctx, t.some, () => msg))
-          override def warn(ctx: Map[String, String], t: Throwable)(msg: => String): F[Unit] =
-            save(DeferredLogMessage.warn(ctx, t.some, () => msg))
-          override def error(ctx: Map[String, String], t: Throwable)(msg: => String): F[Unit] =
-            save(DeferredLogMessage.error(ctx, t.some, () => msg))
-
-          override def trace(t: Throwable)(msg: => String): F[Unit] =
-            save(DeferredLogMessage.trace(Map.empty, t.some, () => msg))
-          override def debug(t: Throwable)(msg: => String): F[Unit] =
-            save(DeferredLogMessage.debug(Map.empty, t.some, () => msg))
-          override def info(t: Throwable)(msg: => String): F[Unit] =
-            save(DeferredLogMessage.info(Map.empty, t.some, () => msg))
-          override def warn(t: Throwable)(msg: => String): F[Unit] =
-            save(DeferredLogMessage.warn(Map.empty, t.some, () => msg))
-          override def error(t: Throwable)(msg: => String): F[Unit] =
-            save(DeferredLogMessage.error(Map.empty, t.some, () => msg))
-
-          override def trace(msg: => String): F[Unit] =
-            save(DeferredLogMessage.trace(Map.empty, none, () => msg))
-          override def debug(msg: => String): F[Unit] =
-            save(DeferredLogMessage.debug(Map.empty, none, () => msg))
-          override def info(msg: => String): F[Unit] =
-            save(DeferredLogMessage.info(Map.empty, none, () => msg))
-          override def warn(msg: => String): F[Unit] =
-            save(DeferredLogMessage.warn(Map.empty, none, () => msg))
-          override def error(msg: => String): F[Unit] =
-            save(DeferredLogMessage.error(Map.empty, none, () => msg))
-
           override def inspect: F[Chain[DeferredLogMessage]] = ref.get
 
           override def log: F[Unit] =
             ref.getAndSet(Chain.empty).flatMap(_.traverse_(_.logStructured(logger)))
+
+          override def log(
+              ll: LogLevel,
+              ctx: Map[String, String],
+              t: Throwable,
+              msg: => String
+          ): F[Unit] =
+            save(DeferredLogMessage(ll, ctx, t.some, () => msg))
+
+          override def log(ll: LogLevel, ctx: Map[String, String], msg: => String): F[Unit] =
+            save(DeferredLogMessage(ll, ctx, none, () => msg))
+
+          override def log(ll: LogLevel, t: Throwable, msg: => String): F[Unit] =
+            save(DeferredLogMessage(ll, Map.empty, t.some, () => msg))
+
+          override def log(ll: LogLevel, msg: => String): F[Unit] =
+            save(DeferredLogMessage(ll, Map.empty, none, () => msg))
         }
       }
 
@@ -138,39 +111,22 @@ object DeferredStructuredLogger {
       override def inspect: G[Chain[DeferredLogMessage]] = fk(logger.inspect)
       override def log: G[Unit] = fk(logger.log)
 
-      override def trace(ctx: Map[String, String], t: Throwable)(msg: => String): G[Unit] =
-        fk(logger.trace(ctx, t)(msg))
-      override def debug(ctx: Map[String, String], t: Throwable)(msg: => String): G[Unit] =
-        fk(logger.debug(ctx, t)(msg))
-      override def info(ctx: Map[String, String], t: Throwable)(msg: => String): G[Unit] =
-        fk(logger.info(ctx, t)(msg))
-      override def warn(ctx: Map[String, String], t: Throwable)(msg: => String): G[Unit] =
-        fk(logger.warn(ctx, t)(msg))
-      override def error(ctx: Map[String, String], t: Throwable)(msg: => String): G[Unit] =
-        fk(logger.error(ctx, t)(msg))
+      override def log(
+          ll: LogLevel,
+          ctx: Map[String, String],
+          t: Throwable,
+          msg: => String
+      ): G[Unit] =
+        fk(logger.log(ll, ctx, t, msg))
 
-      override def trace(ctx: Map[String, String])(msg: => String): G[Unit] =
-        fk(logger.trace(ctx)(msg))
-      override def debug(ctx: Map[String, String])(msg: => String): G[Unit] =
-        fk(logger.debug(ctx)(msg))
-      override def info(ctx: Map[String, String])(msg: => String): G[Unit] =
-        fk(logger.info(ctx)(msg))
-      override def warn(ctx: Map[String, String])(msg: => String): G[Unit] =
-        fk(logger.warn(ctx)(msg))
-      override def error(ctx: Map[String, String])(msg: => String): G[Unit] =
-        fk(logger.error(ctx)(msg))
+      override def log(ll: LogLevel, ctx: Map[String, String], msg: => String): G[Unit] =
+        fk(logger.log(ll, ctx, msg))
 
-      override def trace(t: Throwable)(message: => String): G[Unit] = fk(logger.trace(t)(message))
-      override def debug(t: Throwable)(message: => String): G[Unit] = fk(logger.debug(t)(message))
-      override def info(t: Throwable)(message: => String): G[Unit] = fk(logger.info(t)(message))
-      override def warn(t: Throwable)(message: => String): G[Unit] = fk(logger.warn(t)(message))
-      override def error(t: Throwable)(message: => String): G[Unit] = fk(logger.error(t)(message))
+      override def log(ll: LogLevel, t: Throwable, msg: => String): G[Unit] = fk(
+        logger.log(ll, t, msg)
+      )
 
-      override def trace(message: => String): G[Unit] = fk(logger.trace(message))
-      override def debug(message: => String): G[Unit] = fk(logger.debug(message))
-      override def info(message: => String): G[Unit] = fk(logger.info(message))
-      override def warn(message: => String): G[Unit] = fk(logger.warn(message))
-      override def error(message: => String): G[Unit] = fk(logger.error(message))
+      override def log(ll: LogLevel, msg: => String): G[Unit] = fk(logger.log(ll, msg))
     }
 
   def withContext[F[_]](
@@ -181,46 +137,25 @@ object DeferredStructuredLogger {
       private def addCtx(ctx: Map[String, String]): Map[String, String] = baseCtx ++ ctx
 
       override def inspect: F[Chain[DeferredLogMessage]] = logger.inspect
+
       override def log: F[Unit] = logger.log
 
-      override def trace(ctx: Map[String, String], t: Throwable)(msg: => String): F[Unit] =
-        logger.trace(addCtx(ctx), t)(msg)
-      override def debug(ctx: Map[String, String], t: Throwable)(msg: => String): F[Unit] =
-        logger.debug(addCtx(ctx), t)(msg)
-      override def info(ctx: Map[String, String], t: Throwable)(msg: => String): F[Unit] =
-        logger.info(addCtx(ctx), t)(msg)
-      override def warn(ctx: Map[String, String], t: Throwable)(msg: => String): F[Unit] =
-        logger.warn(addCtx(ctx), t)(msg)
-      override def error(ctx: Map[String, String], t: Throwable)(msg: => String): F[Unit] =
-        logger.error(addCtx(ctx), t)(msg)
+      override def log(
+          ll: LogLevel,
+          ctx: Map[String, String],
+          t: Throwable,
+          msg: => String
+      ): F[Unit] =
+        logger.log(ll, addCtx(ctx), t, msg)
 
-      override def trace(ctx: Map[String, String])(msg: => String): F[Unit] =
-        logger.trace(addCtx(ctx))(msg)
-      override def debug(ctx: Map[String, String])(msg: => String): F[Unit] =
-        logger.debug(addCtx(ctx))(msg)
-      override def info(ctx: Map[String, String])(msg: => String): F[Unit] =
-        logger.info(addCtx(ctx))(msg)
-      override def warn(ctx: Map[String, String])(msg: => String): F[Unit] =
-        logger.warn(addCtx(ctx))(msg)
-      override def error(ctx: Map[String, String])(msg: => String): F[Unit] =
-        logger.error(addCtx(ctx))(msg)
+      override def log(ll: LogLevel, ctx: Map[String, String], msg: => String): F[Unit] =
+        logger.log(ll, addCtx(ctx), msg)
 
-      override def trace(t: Throwable)(message: => String): F[Unit] =
-        logger.trace(baseCtx, t)(message)
-      override def debug(t: Throwable)(message: => String): F[Unit] =
-        logger.debug(baseCtx, t)(message)
-      override def info(t: Throwable)(message: => String): F[Unit] =
-        logger.info(baseCtx, t)(message)
-      override def warn(t: Throwable)(message: => String): F[Unit] =
-        logger.warn(baseCtx, t)(message)
-      override def error(t: Throwable)(message: => String): F[Unit] =
-        logger.error(baseCtx, t)(message)
+      override def log(ll: LogLevel, t: Throwable, msg: => String): F[Unit] =
+        logger.log(ll, baseCtx, t, msg)
 
-      override def trace(message: => String): F[Unit] = logger.trace(baseCtx)(message)
-      override def debug(message: => String): F[Unit] = logger.debug(baseCtx)(message)
-      override def info(message: => String): F[Unit] = logger.info(baseCtx)(message)
-      override def warn(message: => String): F[Unit] = logger.warn(baseCtx)(message)
-      override def error(message: => String): F[Unit] = logger.error(baseCtx)(message)
+      override def log(ll: LogLevel, msg: => String): F[Unit] =
+        logger.log(ll, baseCtx, msg)
     }
 
   def withModifiedString[F[_]](
@@ -229,40 +164,22 @@ object DeferredStructuredLogger {
   ): DeferredStructuredLogger[F] =
     new DeferredStructuredLogger[F] {
       override def inspect: F[Chain[DeferredLogMessage]] = logger.inspect
+
       override def log: F[Unit] = logger.log
 
-      override def trace(ctx: Map[String, String], t: Throwable)(msg: => String): F[Unit] =
-        logger.trace(ctx, t)(f(msg))
-      override def debug(ctx: Map[String, String], t: Throwable)(msg: => String): F[Unit] =
-        logger.debug(ctx, t)(f(msg))
-      override def info(ctx: Map[String, String], t: Throwable)(msg: => String): F[Unit] =
-        logger.info(ctx, t)(f(msg))
-      override def warn(ctx: Map[String, String], t: Throwable)(msg: => String): F[Unit] =
-        logger.warn(ctx, t)(f(msg))
-      override def error(ctx: Map[String, String], t: Throwable)(msg: => String): F[Unit] =
-        logger.error(ctx, t)(f(msg))
+      override def log(
+          ll: LogLevel,
+          ctx: Map[String, String],
+          t: Throwable,
+          msg: => String
+      ): F[Unit] = logger.log(ll, ctx, t, f(msg))
 
-      override def trace(ctx: Map[String, String])(msg: => String): F[Unit] =
-        logger.trace(ctx)(f(msg))
-      override def debug(ctx: Map[String, String])(msg: => String): F[Unit] =
-        logger.debug(ctx)(f(msg))
-      override def info(ctx: Map[String, String])(msg: => String): F[Unit] =
-        logger.info(ctx)(f(msg))
-      override def warn(ctx: Map[String, String])(msg: => String): F[Unit] =
-        logger.warn(ctx)(f(msg))
-      override def error(ctx: Map[String, String])(msg: => String): F[Unit] =
-        logger.error(ctx)(f(msg))
+      override def log(ll: LogLevel, ctx: Map[String, String], msg: => String): F[Unit] =
+        logger.log(ll, ctx, f(msg))
 
-      override def trace(t: Throwable)(message: => String): F[Unit] = logger.trace(t)(f(message))
-      override def debug(t: Throwable)(message: => String): F[Unit] = logger.debug(t)(f(message))
-      override def info(t: Throwable)(message: => String): F[Unit] = logger.info(t)(f(message))
-      override def warn(t: Throwable)(message: => String): F[Unit] = logger.warn(t)(f(message))
-      override def error(t: Throwable)(message: => String): F[Unit] = logger.error(t)(f(message))
+      override def log(ll: LogLevel, t: Throwable, msg: => String): F[Unit] =
+        logger.log(ll, t, f(msg))
 
-      override def trace(message: => String): F[Unit] = logger.trace(f(message))
-      override def debug(message: => String): F[Unit] = logger.debug(f(message))
-      override def info(message: => String): F[Unit] = logger.info(f(message))
-      override def warn(message: => String): F[Unit] = logger.warn(f(message))
-      override def error(message: => String): F[Unit] = logger.error(f(message))
+      override def log(ll: LogLevel, msg: => String): F[Unit] = logger.log(ll, f(msg))
     }
 }

@@ -22,7 +22,8 @@ import cats.effect.unsafe.IORuntime
 import cats.effect.{IO, Resource, SyncIO}
 import cats.syntax.all.*
 
-import java.util.concurrent.{Executors, ThreadFactory}
+import java.util.concurrent.Executors
+import java.util.concurrent.ThreadFactory
 import org.slf4j.MDC
 import munit.{CatsEffectSuite, Location}
 import org.typelevel.log4cats.extras.DeferredLogMessage
@@ -38,15 +39,16 @@ import scala.concurrent.ExecutionContextExecutorService
 import scala.util.control.NoStackTrace
 
 class Slf4jLoggerInternalSuite extends CatsEffectSuite {
-
   private val computeEC = ExecutionContext.fromExecutorService(
     Executors.newSingleThreadExecutor(),
     t => fail("Uncaught exception on compute thread", t)
   )
+
   private val blockingEC = ExecutionContext.fromExecutorService(
     Executors.newSingleThreadExecutor(),
     t => fail("Uncaught exception on blocking thread", t)
   )
+
   override implicit def munitIORuntime: IORuntime =
     IORuntime
       .builder()
@@ -74,7 +76,7 @@ class Slf4jLoggerInternalSuite extends CatsEffectSuite {
     }
   }
 
-  private def testLoggerFixture(
+  def testLoggerFixture(
       traceEnabled: Boolean = true,
       debugEnabled: Boolean = true,
       infoEnabled: Boolean = true,
@@ -117,6 +119,20 @@ class Slf4jLoggerInternalSuite extends CatsEffectSuite {
       override val finisher: function.Function[ListBuffer[A], List[A]] = _.result()
     }
 
+  private def toDeferredLogs(jl: java.util.List[TestLogMessage]): List[DeferredLogMessage] =
+    jl.stream()
+      .map[DeferredLogMessage] { tl =>
+        val context =
+          tl.context
+            .entrySet()
+            .stream()
+            .map[(String, String)](e => e.getKey -> e.getValue)
+            .collect(toScalaList)
+            .toMap
+        DeferredLogMessage(tl.logLevel, context, tl.throwableOpt, () => tl.message.get())
+      }
+      .collect(toScalaList[DeferredLogMessage])
+
   private val prepareMDC: IO[Unit] = IO.delay {
     MDC.clear()
     MDC.put("foo", "yellow")
@@ -149,20 +165,6 @@ class Slf4jLoggerInternalSuite extends CatsEffectSuite {
         .interceptMessage[IllegalStateException]("dead") >>
       validateMDC
   }
-
-  private def toDeferredLogs(jl: java.util.List[TestLogMessage]): List[DeferredLogMessage] =
-    jl.stream()
-      .map[DeferredLogMessage] { tl =>
-        val context =
-          tl.context
-            .entrySet()
-            .stream()
-            .map[(String, String)](e => e.getKey -> e.getValue)
-            .collect(toScalaList)
-            .toMap
-        DeferredLogMessage(tl.logLevel, context, tl.throwableOpt, () => tl.message.get())
-      }
-      .collect(toScalaList[DeferredLogMessage])
 
   testLoggerFixture().test("Slf4jLoggerInternal correctly sets the MDC") { testLogger =>
     prepareMDC >>

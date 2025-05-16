@@ -19,6 +19,7 @@ package org.typelevel.log4cats
 import cats.*
 import cats.effect.std.UUIDGen
 import cats.syntax.all.*
+import org.typelevel.log4cats.extras.LogLevel
 
 import java.io.{PrintWriter, StringWriter}
 import java.util.UUID
@@ -87,15 +88,14 @@ object PagingSelfAwareStructuredLogger {
     private val pageSize = pageSizeK * 1024
 
     private def pagedLogging(
-        logOpWithCtx: Map[String, String] => (=> String) => F[Unit],
+        logLevel: LogLevel,
         ctx: Map[String, String],
         logSplitId: String,
         msg: String
     ): F[Unit] = {
       val numOfPagesRaw = (msg.length - 1) / pageSize + 1
       val numOfPages = Math.min(numOfPagesRaw, maxPageNeeded)
-      if (numOfPages <= 1)
-        logOpWithCtx(addPageCtx(msg, 1, 1, ctx))(msg)
+      if (numOfPages <= 1) sl.log(logLevel, addPageCtx(msg, 1, 1, ctx), msg)
       else {
         val logSplitIdPart1 = logSplitId.split('-').head
         val pageHeaderTail = s"$numOfPages $logSplitIdPart1"
@@ -112,24 +112,21 @@ object PagingSelfAwareStructuredLogger {
                             |
                             |Page $pi/$pageFooterTail""".stripMargin
 
-            logOpWithCtx(addPageCtx(page, pi, numOfPages, ctx))(page)
+            sl.log(logLevel, addPageCtx(page, pi, numOfPages, ctx), page)
           }
       }
     }
 
-    private def addMsgCtx(
-        msg: String,
-        ctx: Map[String, String]
-    ): F[(String, Map[String, String])] =
+    private def addMsgCtx(msg: String, ctx: Map[String, String]): F[(String, Map[String, String])] =
       randomUUID.map { uuid =>
         val logSplitId = uuid.show
-        val msgLength = msg.length
+        val msgLength = s"${msg.length}"
         (
           logSplitId,
           ctx
             .updated(logSplitIdN, logSplitId)
             .updated("page_size", s"$pageSizeK Kib")
-            .updated("whole_message_size_bytes", s"$msgLength")
+            .updated("whole_message_size_bytes", msgLength)
             // The following is deprecated
             .updated("log_size", s"$msgLength Byte")
         )
@@ -146,38 +143,24 @@ object PagingSelfAwareStructuredLogger {
         .updated("page_num", s"$pageNum")
         .updated("log_size_bytes", s"${page.length}")
 
-    private def doLogging(
-        loggingLevelChk: => F[Boolean],
-        logOpWithCtx: Map[String, String] => (=> String) => F[Unit],
-        msg: => String,
-        ctx: Map[String, String] = Map()
-    ): F[Unit] = {
-      loggingLevelChk.ifM(
-        {
-          // At this point we know we're going to log and/or interact
-          // with msg, so we materialize the message here so we don't
-          // materialize it multiple times
-          val materializedMsg = msg
-          addMsgCtx(materializedMsg, ctx).flatMap { case (logSplitId, newCtx) =>
-            pagedLogging(logOpWithCtx, newCtx, logSplitId, materializedMsg)
-          }
-        },
-        Applicative[F].unit
-      )
-    }
+    private def doLogging(logLevel: LogLevel, ctx: Map[String, String], msg: => String): F[Unit] =
+      sl.isEnabled(logLevel)
+        .ifM(
+          {
+            val cachedMsg = msg
+            addMsgCtx(cachedMsg, ctx).flatMap { case (logSplitId, newCtx) =>
+              pagedLogging(logLevel, newCtx, logSplitId, cachedMsg)
+            }
+          },
+          Applicative[F].unit
+        )
 
     private def doLoggingThrowable(
-        loggingLevelChk: => F[Boolean],
-        logOpWithCtx: Map[String, String] => (=> String) => F[Unit],
+        logLevel: LogLevel,
+        ctx: Map[String, String],
         t: Throwable,
-        msg: => String,
-        ctx: Map[String, String] = Map()
-    ): F[Unit] = {
-      loggingLevelChk.ifM(
-        doLogging(loggingLevelChk, logOpWithCtx, s"$msg\n${getStackTrace(t)}", ctx),
-        Applicative[F].unit
-      )
-    }
+        msg: => String
+    ): F[Unit] = doLogging(logLevel, ctx, s"$msg\n${getStackTrace(t)}")
 
     def getStackTrace(t: Throwable): String = {
       val sw = new StringWriter()
@@ -186,82 +169,23 @@ object PagingSelfAwareStructuredLogger {
       sw.getBuffer.toString
     }
 
-    override def isTraceEnabled: F[Boolean] = sl.isTraceEnabled
+    override def isEnabled(ll: LogLevel): F[Boolean] = sl.isEnabled(ll)
 
-    override def isDebugEnabled: F[Boolean] = sl.isDebugEnabled
+    override def log(ll: LogLevel, msg: => String): F[Unit] =
+      doLogging(ll, Map.empty, msg)
 
-    override def isInfoEnabled: F[Boolean] = sl.isInfoEnabled
+    override def log(ll: LogLevel, t: Throwable, msg: => String): F[Unit] =
+      doLoggingThrowable(ll, Map.empty, t, msg)
 
-    override def isWarnEnabled: F[Boolean] = sl.isWarnEnabled
+    override def log(ll: LogLevel, ctx: Map[String, String], msg: => String): F[Unit] =
+      doLogging(ll, ctx, msg)
 
-    override def isErrorEnabled: F[Boolean] = sl.isErrorEnabled
-
-    // Log message
-
-    override def trace(msg: => String): F[Unit] =
-      doLogging(isTraceEnabled, sl.trace, msg)
-
-    override def debug(msg: => String): F[Unit] =
-      doLogging(isDebugEnabled, sl.debug, msg)
-
-    override def info(msg: => String): F[Unit] =
-      doLogging(isInfoEnabled, sl.info, msg)
-
-    override def warn(msg: => String): F[Unit] =
-      doLogging(isWarnEnabled, sl.warn, msg)
-
-    override def error(msg: => String): F[Unit] =
-      doLogging(isErrorEnabled, sl.error, msg)
-
-    // Log message and throwable
-
-    override def trace(t: Throwable)(msg: => String): F[Unit] =
-      doLoggingThrowable(isTraceEnabled, sl.trace, t, msg)
-
-    override def debug(t: Throwable)(msg: => String): F[Unit] =
-      doLoggingThrowable(isDebugEnabled, sl.debug, t, msg)
-
-    override def info(t: Throwable)(msg: => String): F[Unit] =
-      doLoggingThrowable(isInfoEnabled, sl.info, t, msg)
-
-    override def warn(t: Throwable)(msg: => String): F[Unit] =
-      doLoggingThrowable(isWarnEnabled, sl.warn, t, msg)
-
-    override def error(t: Throwable)(msg: => String): F[Unit] =
-      doLoggingThrowable(isErrorEnabled, sl.error, t, msg)
-
-    // Log message, passing context
-
-    override def trace(ctx: Map[String, String])(msg: => String): F[Unit] =
-      doLogging(isTraceEnabled, sl.trace, msg, ctx)
-
-    override def debug(ctx: Map[String, String])(msg: => String): F[Unit] =
-      doLogging(isDebugEnabled, sl.debug, msg, ctx)
-
-    override def info(ctx: Map[String, String])(msg: => String): F[Unit] =
-      doLogging(isInfoEnabled, sl.info, msg, ctx)
-
-    override def warn(ctx: Map[String, String])(msg: => String): F[Unit] =
-      doLogging(isWarnEnabled, sl.warn, msg, ctx)
-
-    override def error(ctx: Map[String, String])(msg: => String): F[Unit] =
-      doLogging(isErrorEnabled, sl.error, msg, ctx)
-
-    // Log message and throwable, passing context
-
-    override def trace(ctx: Map[String, String], t: Throwable)(msg: => String): F[Unit] =
-      doLoggingThrowable(isTraceEnabled, sl.trace, t, msg, ctx)
-
-    override def debug(ctx: Map[String, String], t: Throwable)(msg: => String): F[Unit] =
-      doLoggingThrowable(isDebugEnabled, sl.debug, t, msg, ctx)
-
-    override def info(ctx: Map[String, String], t: Throwable)(msg: => String): F[Unit] =
-      doLoggingThrowable(isInfoEnabled, sl.info, t, msg, ctx)
-
-    override def warn(ctx: Map[String, String], t: Throwable)(msg: => String): F[Unit] =
-      doLoggingThrowable(isWarnEnabled, sl.warn, t, msg, ctx)
-
-    override def error(ctx: Map[String, String], t: Throwable)(msg: => String): F[Unit] =
-      doLoggingThrowable(isErrorEnabled, sl.error, t, msg, ctx)
+    override def log(
+        ll: LogLevel,
+        ctx: Map[String, String],
+        t: Throwable,
+        msg: => String
+    ): F[Unit] =
+      doLoggingThrowable(ll, ctx, t, msg)
   }
 }
