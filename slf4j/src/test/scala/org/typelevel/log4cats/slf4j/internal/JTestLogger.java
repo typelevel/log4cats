@@ -21,13 +21,14 @@ import org.slf4j.MDC;
 import org.slf4j.Marker;
 import org.typelevel.log4cats.extras.LogLevel;
 import scala.Option;
+import scala.collection.immutable.Map$;
+import scala.collection.mutable.Builder;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.BooleanSupplier;
 import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.function.Supplier;
 
 public class JTestLogger implements Logger {
@@ -40,6 +41,23 @@ public class JTestLogger implements Logger {
     private static final LogLevel.Info$ Info = LogLevel.Info$.MODULE$;
     private static final LogLevel.Warn$ Warn = LogLevel.Warn$.MODULE$;
     private static final LogLevel.Error$ Error = LogLevel.Error$.MODULE$;
+
+    public static BooleanSupplier Enabled = () -> true;
+    public static BooleanSupplier Disabled = () -> false;
+    public static BooleanSupplier dynamicUsingMDC(Predicate<scala.collection.immutable.Map<String, String>> f) {
+        return () -> {
+            Map<String, String> map = MDC.getCopyOfContextMap();
+            if (Objects.isNull(map)) {
+                map = new HashMap<>();
+            }
+
+            Builder<scala.Tuple2<String, String>, scala.collection.immutable.Map<String, String>> builder =
+                    Map$.MODULE$.newBuilder();;
+
+            map.forEach((k,v) -> builder.$plus$eq(scala.Tuple2$.MODULE$.apply(k,v)));
+            return f.test(builder.result());
+        };
+    }
 
     private Map<String, String> captureContext () {
         java.util.Map<String, String> mdc = MDC.getCopyOfContextMap();
@@ -95,20 +113,19 @@ public class JTestLogger implements Logger {
     }
 
     private final String loggerName;
-    private final boolean traceEnabled;
-    private final boolean debugEnabled;
-    private final boolean infoEnabled;
-    private final boolean warnEnabled;
-    private final boolean errorEnabled;
+    private final BooleanSupplier traceEnabled;
+    private final BooleanSupplier debugEnabled;
+    private final BooleanSupplier infoEnabled;
+    private final BooleanSupplier warnEnabled;
+    private final BooleanSupplier errorEnabled;
     private final AtomicReference<List<TestLogMessage>> loggedMessages;
 
-
     public JTestLogger(String loggerName,
-                       boolean traceEnabled,
-                       boolean debugEnabled,
-                       boolean infoEnabled,
-                       boolean warnEnabled,
-                       boolean errorEnabled) {
+                       BooleanSupplier traceEnabled,
+                       BooleanSupplier debugEnabled,
+                       BooleanSupplier infoEnabled,
+                       BooleanSupplier warnEnabled,
+                       BooleanSupplier errorEnabled) {
         this.loggerName = loggerName;
         this.traceEnabled = traceEnabled;
         this.debugEnabled = debugEnabled;
@@ -126,22 +143,22 @@ public class JTestLogger implements Logger {
     }
 
     public List<TestLogMessage> logs() { return loggedMessages.get(); }
-    public void reset() { loggedMessages.set(new ArrayList<>()); }
+    public void clearLogs() { loggedMessages.set(new ArrayList<>()); }
 
     @Override public String getName() { return loggerName;}
 
-    @Override public boolean isTraceEnabled() { return traceEnabled; }
-    @Override public boolean isDebugEnabled() { return debugEnabled; }
-    @Override public boolean isInfoEnabled() { return infoEnabled; }
-    @Override public boolean isWarnEnabled() { return warnEnabled; }
-    @Override public boolean isErrorEnabled() { return errorEnabled; }
+    @Override public boolean isTraceEnabled() { return traceEnabled.getAsBoolean(); }
+    @Override public boolean isDebugEnabled() { return debugEnabled.getAsBoolean(); }
+    @Override public boolean isInfoEnabled() { return infoEnabled.getAsBoolean(); }
+    @Override public boolean isWarnEnabled() { return warnEnabled.getAsBoolean(); }
+    @Override public boolean isErrorEnabled() { return errorEnabled.getAsBoolean(); }
 
     // We don't use them, so we're going to ignore Markers
-    @Override public boolean isTraceEnabled(Marker marker) { return traceEnabled; }
-    @Override public boolean isDebugEnabled(Marker marker) { return debugEnabled; }
-    @Override public boolean isInfoEnabled(Marker marker) { return infoEnabled; }
-    @Override public boolean isWarnEnabled(Marker marker) { return warnEnabled; }
-    @Override public boolean isErrorEnabled(Marker marker) { return errorEnabled; }
+    @Override public boolean isTraceEnabled(Marker marker) { return traceEnabled.getAsBoolean(); }
+    @Override public boolean isDebugEnabled(Marker marker) { return debugEnabled.getAsBoolean(); }
+    @Override public boolean isInfoEnabled(Marker marker) { return infoEnabled.getAsBoolean(); }
+    @Override public boolean isWarnEnabled(Marker marker) { return warnEnabled.getAsBoolean(); }
+    @Override public boolean isErrorEnabled(Marker marker) { return errorEnabled.getAsBoolean(); }
 
     @Override public void trace(String msg) { save(ctx -> TestLogMessage.of(Trace, ctx, () -> msg)); }
     @Override public void trace(String msg, Throwable t) { save(ctx -> TestLogMessage.of(Trace, ctx, t, () -> msg)); }
