@@ -37,37 +37,37 @@ import java.time.Instant
  *   %throwable
  * }}}
  */
-trait ConsoleLogger[F[_]] extends SelfAwareStructuredLogger[F] {
+trait StdErrLogger[F[_]] extends SelfAwareStructuredLogger[F] {
 
   /**
    * Because there is no `log4j` backend, the log level can be set directly
    */
   def setLogLevel(level: LogLevel): F[Unit]
 
-  override def mapK[G[_]](fk: F ~> G): ConsoleLogger[G] =
-    ConsoleLogger.mapK(this, fk)
+  override def mapK[G[_]](fk: F ~> G): StdErrLogger[G] =
+    StdErrLogger.mapK(this, fk)
 
-  override def addContext(ctx: Map[String, String]): ConsoleLogger[F] =
-    ConsoleLogger.withContext(this)(ctx)
+  override def addContext(ctx: Map[String, String]): StdErrLogger[F] =
+    StdErrLogger.withContext(this)(ctx)
 
-  override def addContext(pairs: (String, Show.Shown)*): ConsoleLogger[F] =
-    ConsoleLogger.withContext(this)(
+  override def addContext(pairs: (String, Show.Shown)*): StdErrLogger[F] =
+    StdErrLogger.withContext(this)(
       pairs.map { case (k, v) => (k, v.toString) }.toMap
     )
 
-  override def withModifiedString(f: String => String): ConsoleLogger[F] =
-    ConsoleLogger.withModifiedString(this, f)
+  override def withModifiedString(f: String => String): StdErrLogger[F] =
+    StdErrLogger.withModifiedString(this, f)
 }
-object ConsoleLogger {
-  def apply[F[_]: Console: Async](name: String, initialLogLevel: LogLevel): F[ConsoleLogger[F]] =
-    apply[F](name, initialLogLevel, ConsoleLogFormat.Default)
+object StdErrLogger {
+  def apply[F[_]: Console: Async](name: String, initialLogLevel: LogLevel): F[StdErrLogger[F]] =
+    apply[F](name, initialLogLevel, LogFormatter.Default)
 
-  def apply[F[_]](name: String, initialLogLevel: LogLevel, format: ConsoleLogFormat)(implicit
+  def apply[F[_]](name: String, initialLogLevel: LogLevel, format: LogFormatter)(implicit
       console: Console[F],
       F: Async[F]
-  ): F[ConsoleLogger[F]] =
+  ): F[StdErrLogger[F]] =
     Ref[F].of(initialLogLevel).map { logLevelRef =>
-      new ConsoleLogger[F] {
+      new StdErrLogger[F] {
         override def setLogLevel(level: LogLevel): F[Unit] = logLevelRef.set(level)
 
         private def isLevelEnabled(level: LogLevel): F[Boolean] = logLevelRef.get.map(_ >= level)
@@ -150,10 +150,10 @@ object ConsoleLogger {
     }
 
   private def mapK[F[_], G[_]](
-      logger: ConsoleLogger[F],
+      logger: StdErrLogger[F],
       fk: F ~> G
-  ): ConsoleLogger[G] =
-    new ConsoleLogger[G] {
+  ): StdErrLogger[G] =
+    new StdErrLogger[G] {
       override def setLogLevel(level: LogLevel): G[Unit] = fk(logger.setLogLevel(level))
 
       override def isTraceEnabled: G[Boolean] = fk(logger.isTraceEnabled)
@@ -208,9 +208,9 @@ object ConsoleLogger {
     }
 
   def withContext[F[_]](
-      logger: ConsoleLogger[F]
-  )(baseCtx: Map[String, String]): ConsoleLogger[F] =
-    new ConsoleLogger[F] {
+      logger: StdErrLogger[F]
+  )(baseCtx: Map[String, String]): StdErrLogger[F] =
+    new StdErrLogger[F] {
       private def addCtx(ctx: Map[String, String]): Map[String, String] = baseCtx ++ ctx
 
       override def setLogLevel(level: LogLevel): F[Unit] = logger.setLogLevel(level)
@@ -262,10 +262,10 @@ object ConsoleLogger {
     }
 
   def withModifiedString[F[_]](
-      logger: ConsoleLogger[F],
+      logger: StdErrLogger[F],
       f: String => String
-  ): ConsoleLogger[F] =
-    new ConsoleLogger[F] {
+  ): StdErrLogger[F] =
+    new StdErrLogger[F] {
       override def setLogLevel(level: LogLevel): F[Unit] = logger.setLogLevel(level)
 
       override def isTraceEnabled: F[Boolean] = logger.isTraceEnabled

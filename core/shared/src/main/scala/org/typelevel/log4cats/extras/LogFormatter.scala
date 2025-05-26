@@ -20,7 +20,7 @@ import java.io.{ByteArrayOutputStream, PrintStream}
 import java.time.Instant
 import java.time.format.DateTimeFormatter
 
-trait ConsoleLogFormat {
+trait LogFormatter {
   def format(loggerName: String, level: LogLevel, timestamp: Instant, msg: String): String
   def format(
       loggerName: String,
@@ -45,8 +45,8 @@ trait ConsoleLogFormat {
       throwable: Throwable
   ): String
 }
-object ConsoleLogFormat {
-  val Default: ConsoleLogFormat = new ConsoleLogFormat {
+object LogFormatter {
+  val Default: LogFormatter = new LogFormatter {
     private def fmt(i: Instant): String = DateTimeFormatter.ISO_INSTANT.format(i)
     private def fmt(ctx: Map[String, String]): String = {
       val builder = new StringBuilder()

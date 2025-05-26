@@ -33,7 +33,7 @@ import scala.concurrent.duration.Duration
  * The intended use-case is for one-off scripts, examples, and other situations where a more
  * fully-featured and performance-optimized logger would be overkill
  */
-trait ConsoleLoggerFactory[F[_]] extends LoggerFactory[F] {
+trait StdErrLoggerFactory[F[_]] extends LoggerFactory[F] {
   override def getLoggerFromName(name: String): SelfAwareStructuredLogger[F]
 
   /**
@@ -75,41 +75,41 @@ trait ConsoleLoggerFactory[F[_]] extends LoggerFactory[F] {
 
   override def addContext(ctx: Map[String, String])(implicit
       F: Functor[F]
-  ): ConsoleLoggerFactory[F] =
-    ConsoleLoggerFactory.addContext(this, ctx)
+  ): StdErrLoggerFactory[F] =
+    StdErrLoggerFactory.addContext(this, ctx)
 
   override def addContext(pairs: (String, Shown)*)(implicit
       F: Functor[F]
-  ): ConsoleLoggerFactory[F] =
-    ConsoleLoggerFactory.addContext(this, pairs.map { case (k, v) => (k, v.toString) }.toMap)
+  ): StdErrLoggerFactory[F] =
+    StdErrLoggerFactory.addContext(this, pairs.map { case (k, v) => (k, v.toString) }.toMap)
 
   override def withModifiedString(f: String => String)(implicit
       F: Functor[F]
-  ): ConsoleLoggerFactory[F] =
-    ConsoleLoggerFactory.withModifiedString(this, f)
+  ): StdErrLoggerFactory[F] =
+    StdErrLoggerFactory.withModifiedString(this, f)
 
-  override def mapK[G[_]](fk: F ~> G)(implicit F: Functor[F]): ConsoleLoggerFactory[G] =
-    ConsoleLoggerFactory.mapK[F, G](fk)(this)
+  override def mapK[G[_]](fk: F ~> G)(implicit F: Functor[F]): StdErrLoggerFactory[G] =
+    StdErrLoggerFactory.mapK[F, G](fk)(this)
 }
-object ConsoleLoggerFactory {
+object StdErrLoggerFactory {
 
   def apply[F[_]: Async: Console](
       defaultLogLevel: LogLevel,
       logLevelOverrides: (String, LogLevel)*
-  ): Resource[F, ConsoleLoggerFactory[F]] =
-    apply[F](defaultLogLevel, ConsoleLogFormat.Default, logLevelOverrides*)
+  ): Resource[F, StdErrLoggerFactory[F]] =
+    apply[F](defaultLogLevel, LogFormatter.Default, logLevelOverrides*)
 
   def apply[F[_]: Async: Console](
       defaultLogLevel: LogLevel,
-      format: ConsoleLogFormat,
+      format: LogFormatter,
       logLevelOverrides: (String, LogLevel)*
-  ): Resource[F, ConsoleLoggerFactory[F]] =
+  ): Resource[F, StdErrLoggerFactory[F]] =
     Dispatcher.sequential[F].evalMap { dispatcher =>
       (
         Ref[F].of(defaultLogLevel),
         Ref[F].of(Chain.fromSeq(logLevelOverrides.map((new LogLevelOverride(_, _)).tupled)))
       ).mapN { (globalLogLevelRef, logLevelOverrides) =>
-        new ConsoleLoggerFactory[F] {
+        new StdErrLoggerFactory[F] {
           override def setGlobalLogLevel(logLevel: LogLevel): F[Unit] =
             globalLogLevelRef.set(logLevel)
 
@@ -124,7 +124,7 @@ object ConsoleLoggerFactory {
               (globalLogLevel, logLevelOverrides) =>
                 val logLevel =
                   logLevelOverrides.find(_.matches(name)).fold(globalLogLevel)(_.logLevel)
-                ConsoleLogger[F](name, logLevel, format)
+                StdErrLogger[F](name, logLevel, format)
             }.widen
 
           override def getLoggerFromName(name: String): SelfAwareStructuredLogger[F] =
@@ -140,8 +140,8 @@ object ConsoleLoggerFactory {
 
   private def mapK[F[_]: Functor, G[_]](
       fk: F ~> G
-  )(lf: ConsoleLoggerFactory[F]): ConsoleLoggerFactory[G] =
-    new ConsoleLoggerFactory[G] {
+  )(lf: StdErrLoggerFactory[F]): StdErrLoggerFactory[G] =
+    new StdErrLoggerFactory[G] {
       override def setGlobalLogLevel(logLevel: LogLevel): G[Unit] = fk(
         lf.setGlobalLogLevel(logLevel)
       )
@@ -162,10 +162,10 @@ object ConsoleLoggerFactory {
     }
 
   private def addContext[F[_]: Functor](
-      lf: ConsoleLoggerFactory[F],
+      lf: StdErrLoggerFactory[F],
       ctx: Map[String, String]
-  ): ConsoleLoggerFactory[F] =
-    new ConsoleLoggerFactory[F] {
+  ): StdErrLoggerFactory[F] =
+    new StdErrLoggerFactory[F] {
       override def setGlobalLogLevel(logLevel: LogLevel): F[Unit] = lf.setGlobalLogLevel(logLevel)
 
       override def addLogLevelOverride(prefix: String, logLevel: LogLevel): F[Unit] =
@@ -182,10 +182,10 @@ object ConsoleLoggerFactory {
     }
 
   private def withModifiedString[F[_]: Functor](
-      lf: ConsoleLoggerFactory[F],
+      lf: StdErrLoggerFactory[F],
       f: String => String
-  ): ConsoleLoggerFactory[F] =
-    new ConsoleLoggerFactory[F] {
+  ): StdErrLoggerFactory[F] =
+    new StdErrLoggerFactory[F] {
       override def setGlobalLogLevel(logLevel: LogLevel): F[Unit] = lf.setGlobalLogLevel(logLevel)
 
       override def addLogLevelOverride(prefix: String, logLevel: LogLevel): F[Unit] =
