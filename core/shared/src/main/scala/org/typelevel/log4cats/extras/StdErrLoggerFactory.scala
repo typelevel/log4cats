@@ -120,7 +120,7 @@ object StdErrLoggerFactory {
             logLevelOverrides.update(_.filterNot(_.prefix == prefix))
 
           override def fromName(name: String): F[SelfAwareStructuredLogger[F]] =
-            (globalLogLevelRef.get, logLevelOverrides.get).flatMapN {
+            (globalLogLevelRef.get, logLevelOverrides.get).mapN {
               (globalLogLevel, logLevelOverrides) =>
                 val logLevel =
                   logLevelOverrides.find(_.matches(name)).fold(globalLogLevel)(_.logLevel)
