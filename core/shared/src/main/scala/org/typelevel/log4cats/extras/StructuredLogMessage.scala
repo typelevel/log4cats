@@ -21,27 +21,27 @@ import cats.syntax.all.*
 import org.typelevel.log4cats.StructuredLogger
 
 final case class StructuredLogMessage(
-    level: DefferedLogLevel,
+    level: LogLevel,
     context: Map[String, String],
     throwableOpt: Option[Throwable],
     message: String
 )
 object StructuredLogMessage {
   def log[F[_]](sm: StructuredLogMessage, l: StructuredLogger[F]): F[Unit] = sm match {
-    case StructuredLogMessage(DefferedLogLevel.Trace, ctx, Some(t), m) => l.trace(ctx, t)(m)
-    case StructuredLogMessage(DefferedLogLevel.Trace, ctx, None, m) => l.trace(ctx)(m)
+    case StructuredLogMessage(LogLevel.Trace, ctx, Some(t), m) => l.trace(ctx, t)(m)
+    case StructuredLogMessage(LogLevel.Trace, ctx, None, m) => l.trace(ctx)(m)
 
-    case StructuredLogMessage(DefferedLogLevel.Debug, ctx, Some(t), m) => l.debug(ctx, t)(m)
-    case StructuredLogMessage(DefferedLogLevel.Debug, ctx, None, m) => l.debug(ctx)(m)
+    case StructuredLogMessage(LogLevel.Debug, ctx, Some(t), m) => l.debug(ctx, t)(m)
+    case StructuredLogMessage(LogLevel.Debug, ctx, None, m) => l.debug(ctx)(m)
 
-    case StructuredLogMessage(DefferedLogLevel.Info, ctx, Some(t), m) => l.info(ctx, t)(m)
-    case StructuredLogMessage(DefferedLogLevel.Info, ctx, None, m) => l.info(ctx)(m)
+    case StructuredLogMessage(LogLevel.Info, ctx, Some(t), m) => l.info(ctx, t)(m)
+    case StructuredLogMessage(LogLevel.Info, ctx, None, m) => l.info(ctx)(m)
 
-    case StructuredLogMessage(DefferedLogLevel.Warn, ctx, Some(t), m) => l.warn(ctx, t)(m)
-    case StructuredLogMessage(DefferedLogLevel.Warn, ctx, None, m) => l.warn(ctx)(m)
+    case StructuredLogMessage(LogLevel.Warn, ctx, Some(t), m) => l.warn(ctx, t)(m)
+    case StructuredLogMessage(LogLevel.Warn, ctx, None, m) => l.warn(ctx)(m)
 
-    case StructuredLogMessage(DefferedLogLevel.Error, ctx, Some(t), m) => l.error(ctx, t)(m)
-    case StructuredLogMessage(DefferedLogLevel.Error, ctx, None, m) => l.error(ctx)(m)
+    case StructuredLogMessage(LogLevel.Error, ctx, Some(t), m) => l.error(ctx, t)(m)
+    case StructuredLogMessage(LogLevel.Error, ctx, None, m) => l.error(ctx)(m)
   }
 
   implicit val structuredLogMessageShow: Show[StructuredLogMessage] =

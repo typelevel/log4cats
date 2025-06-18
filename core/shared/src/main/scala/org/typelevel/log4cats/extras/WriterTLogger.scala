@@ -20,7 +20,7 @@ import cats.*
 import cats.data.*
 import cats.syntax.all.*
 import org.typelevel.log4cats.*
-import org.typelevel.log4cats.extras.DefferedLogLevel
+import org.typelevel.log4cats.extras.LogLevel
 
 /**
  * A `SelfAwareLogger` implemented using `cats.data.WriterT`.
@@ -48,36 +48,36 @@ object WriterTLogger {
       override def isErrorEnabled: WriterT[F, G[LogMessage], Boolean] = isEnabled(errorEnabled)
 
       override def trace(t: Throwable)(message: => String): WriterT[F, G[LogMessage], Unit] =
-        build(traceEnabled, DefferedLogLevel.Trace, t.some, message)
+        build(traceEnabled, LogLevel.Trace, t.some, message)
       override def trace(message: => String): WriterT[F, G[LogMessage], Unit] =
-        build(traceEnabled, DefferedLogLevel.Trace, None, message)
+        build(traceEnabled, LogLevel.Trace, None, message)
 
       override def debug(t: Throwable)(message: => String): WriterT[F, G[LogMessage], Unit] =
-        build(debugEnabled, DefferedLogLevel.Debug, t.some, message)
+        build(debugEnabled, LogLevel.Debug, t.some, message)
       override def debug(message: => String): WriterT[F, G[LogMessage], Unit] =
-        build(debugEnabled, DefferedLogLevel.Debug, None, message)
+        build(debugEnabled, LogLevel.Debug, None, message)
 
       override def info(t: Throwable)(message: => String): WriterT[F, G[LogMessage], Unit] =
-        build(infoEnabled, DefferedLogLevel.Info, t.some, message)
+        build(infoEnabled, LogLevel.Info, t.some, message)
       override def info(message: => String): WriterT[F, G[LogMessage], Unit] =
-        build(infoEnabled, DefferedLogLevel.Info, None, message)
+        build(infoEnabled, LogLevel.Info, None, message)
 
       override def warn(t: Throwable)(message: => String): WriterT[F, G[LogMessage], Unit] =
-        build(warnEnabled, DefferedLogLevel.Warn, t.some, message)
+        build(warnEnabled, LogLevel.Warn, t.some, message)
       override def warn(message: => String): WriterT[F, G[LogMessage], Unit] =
-        build(warnEnabled, DefferedLogLevel.Warn, None, message)
+        build(warnEnabled, LogLevel.Warn, None, message)
 
       override def error(t: Throwable)(message: => String): WriterT[F, G[LogMessage], Unit] =
-        build(errorEnabled, DefferedLogLevel.Error, t.some, message)
+        build(errorEnabled, LogLevel.Error, t.some, message)
       override def error(message: => String): WriterT[F, G[LogMessage], Unit] =
-        build(errorEnabled, DefferedLogLevel.Error, None, message)
+        build(errorEnabled, LogLevel.Error, None, message)
 
       private def isEnabled(enabled: Boolean): WriterT[F, G[LogMessage], Boolean] =
         WriterT.liftF[F, G[LogMessage], Boolean](Applicative[F].pure(enabled))
 
       private def build(
           enabled: Boolean,
-          level: DefferedLogLevel,
+          level: LogLevel,
           t: Option[Throwable],
           message: => String
       ): WriterT[F, G[LogMessage], Unit] =
