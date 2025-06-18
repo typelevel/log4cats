@@ -20,7 +20,6 @@ import cats.*
 import cats.data.*
 import cats.syntax.all.*
 import org.typelevel.log4cats.*
-import org.typelevel.log4cats.extras.LogLevel
 
 /**
  * A `SelfAwareLogger` implemented using `cats.data.WriterT`.
