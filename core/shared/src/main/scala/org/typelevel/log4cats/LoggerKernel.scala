@@ -34,16 +34,16 @@ package org.typelevel.log4cats
  * implementation.
  */
 trait LoggerKernel[F[_]] {
-  def log(level: LogLevel, record: Log.Builder => Log.Builder): F[Unit]
+  def log(level: KernelLogLevel, record: Log.Builder => Log.Builder): F[Unit]
 
   final def logTrace(record: Log.Builder => Log.Builder): F[Unit] =
-    log(LogLevel.Trace, record)
+    log(KernelLogLevel.Trace, record)
   final def logDebug(record: Log.Builder => Log.Builder): F[Unit] =
-    log(LogLevel.Debug, record)
+    log(KernelLogLevel.Debug, record)
   final def logInfo(record: Log.Builder => Log.Builder): F[Unit] =
-    log(LogLevel.Info, record)
+    log(KernelLogLevel.Info, record)
   final def logWarn(record: Log.Builder => Log.Builder): F[Unit] =
-    log(LogLevel.Warn, record)
+    log(KernelLogLevel.Warn, record)
   final def logError(record: Log.Builder => Log.Builder): F[Unit] =
-    log(LogLevel.Error, record)
+    log(KernelLogLevel.Error, record)
 }

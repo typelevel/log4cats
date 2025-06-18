@@ -16,29 +16,29 @@
 
 package org.typelevel.log4cats
 
-final case class LogLevel(name: String, value: Double) {
-  def namePadded: String = LogLevel.padded(this)
+final case class KernelLogLevel(name: String, value: Double) {
+  def namePadded: String = KernelLogLevel.padded(this)
 
-  LogLevel.add(this)
+  KernelLogLevel.add(this)
 }
 
-object LogLevel {
+object KernelLogLevel {
   private var maxLength = 0
 
-  private var map = Map.empty[String, LogLevel]
-  private var padded = Map.empty[LogLevel, String]
+  private var map = Map.empty[String, KernelLogLevel]
+  private var padded = Map.empty[KernelLogLevel, String]
 
-  implicit final val LevelOrdering: Ordering[LogLevel] =
-    Ordering.by[LogLevel, Double](_.value).reverse
+  implicit final val LevelOrdering: Ordering[KernelLogLevel] =
+    Ordering.by[KernelLogLevel, Double](_.value).reverse
 
-  val Trace: LogLevel = LogLevel("TRACE", 100.0)
-  val Debug: LogLevel = LogLevel("DEBUG", 200.0)
-  val Info: LogLevel = LogLevel("INFO", 300.0)
-  val Warn: LogLevel = LogLevel("WARN", 400.0)
-  val Error: LogLevel = LogLevel("ERROR", 500.0)
-  val Fatal: LogLevel = LogLevel("FATAL", 600.0)
+  val Trace: KernelLogLevel = KernelLogLevel("TRACE", 100.0)
+  val Debug: KernelLogLevel = KernelLogLevel("DEBUG", 200.0)
+  val Info: KernelLogLevel = KernelLogLevel("INFO", 300.0)
+  val Warn: KernelLogLevel = KernelLogLevel("WARN", 400.0)
+  val Error: KernelLogLevel = KernelLogLevel("ERROR", 500.0)
+  val Fatal: KernelLogLevel = KernelLogLevel("FATAL", 600.0)
 
-  def add(level: LogLevel): Unit = synchronized {
+  def add(level: KernelLogLevel): Unit = synchronized {
     val length = level.name.length
     map += level.name.toLowerCase -> level
     if (length > maxLength) {
@@ -51,9 +51,9 @@ object LogLevel {
     }
   }
 
-  def get(name: String): Option[LogLevel] = map.get(name.toLowerCase)
+  def get(name: String): Option[KernelLogLevel] = map.get(name.toLowerCase)
 
-  def apply(name: String): LogLevel = get(name).getOrElse(
+  def apply(name: String): KernelLogLevel = get(name).getOrElse(
     throw new RuntimeException(s"Level not found by name: $name")
   )
 }

@@ -28,7 +28,7 @@ import scala.concurrent.duration.FiniteDuration
  */
 trait Log {
   def timestamp: Option[FiniteDuration]
-  def level: LogLevel
+  def level: KernelLogLevel
   def levelValue: Double
   def message: String
   def throwable: Option[Throwable]
@@ -45,7 +45,7 @@ trait Log {
 object Log {
   trait Builder {
     def withTimestamp(value: FiniteDuration): Builder
-    def withLevel(level: LogLevel): Builder
+    def withLevel(level: KernelLogLevel): Builder
     def withLevelValue(levelValue: Double): Builder
     def withMessage(message: => String): Builder
     def withThrowable(throwable: Throwable): Builder
@@ -73,7 +73,7 @@ object Log {
     def build(): Log = this
 
     def timestamp: Option[FiniteDuration] = Option(_timestamp)
-    def level: LogLevel = if (_level == null) LogLevel.Debug else _level
+    def level: KernelLogLevel = if (_level == null) KernelLogLevel.Debug else _level
     def levelValue: Double =
       if (_levelValue < 0) level.value else _levelValue
     def message: String = if (_message == null) "" else _message
@@ -90,7 +90,7 @@ object Log {
     def unsafeContext: MapLike[String, Context] = _context
 
     private var _timestamp: FiniteDuration = null
-    private var _level: LogLevel = null
+    private var _level: KernelLogLevel = null
     private var _levelValue: Double = -1
     private var _message: String = null
     private var _throwable: Throwable = null
@@ -105,7 +105,7 @@ object Log {
       this
     }
 
-    def withLevel(level: LogLevel): this.type = {
+    def withLevel(level: KernelLogLevel): this.type = {
       this._level = level
       this
     }

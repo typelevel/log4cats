@@ -20,7 +20,6 @@ import cats.*
 import cats.data.*
 import cats.syntax.all.*
 import org.typelevel.log4cats.*
-import org.typelevel.log4cats.extras.LogLevel
 
 /**
  * A `SelfAwareLogger` implemented using `cats.data.WriterT`.
@@ -82,9 +81,7 @@ object WriterTLogger {
           message: => String
       ): WriterT[F, G[LogMessage], Unit] =
         if (enabled)
-          WriterT.tell[F, G[LogMessage]](
-            Applicative[G].pure(org.typelevel.log4cats.extras.LogMessage(level, t, message))
-          )
+          WriterT.tell[F, G[LogMessage]](Applicative[G].pure(LogMessage(level, t, message)))
         else WriterT.value[F, G[LogMessage], Unit](())
 
       private implicit val monoidGLogMessage: Monoid[G[LogMessage]] =
