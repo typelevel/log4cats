@@ -18,9 +18,10 @@ package org.typelevel.log4cats
 
 import scala.concurrent.duration.FiniteDuration
 
-/** A visitor-like construct that allows for capturing contextual values of
-  * several types, without enforcing an in-memory representation or a third-party dependency.
-  */
+/**
+ * A visitor-like construct that allows for capturing contextual values of several types, without
+ * enforcing an in-memory representation or a third-party dependency.
+ */
 trait JsonLike {
   type J
 
@@ -40,4 +41,4 @@ object JsonLike {
   type Aux[Json] = JsonLike {
     type J = Json
   }
-} 
+}

@@ -20,11 +20,12 @@ import scala.collection.{Map => MapLike}
 import scala.collection.mutable.{Map => MMap}
 import scala.concurrent.duration.FiniteDuration
 
-/** Low-level interface exposing methods to enrich a log record with relevant
-  * information. The methods are designed to capture elements that cannot be
-  * easily captured from a monadic context (or by running an effect). Elements
-  * such as timestamps should be provided by means of middlewares.
-  */
+/**
+ * Low-level interface exposing methods to enrich a log record with relevant information. The
+ * methods are designed to capture elements that cannot be easily captured from a monadic context
+ * (or by running an effect). Elements such as timestamps should be provided by means of
+ * middlewares.
+ */
 trait Log {
   def timestamp: Option[FiniteDuration]
   def level: LogLevel
@@ -147,4 +148,4 @@ object Log {
       this
     }
   }
-} 
+}

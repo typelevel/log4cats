@@ -56,4 +56,4 @@ object LogLevel {
   def apply(name: String): LogLevel = get(name).getOrElse(
     throw new RuntimeException(s"Level not found by name: $name")
   )
-} 
+}
