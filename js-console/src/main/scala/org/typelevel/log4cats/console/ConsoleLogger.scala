@@ -19,31 +19,31 @@ package console
 
 import cats.effect.kernel.Sync
 import cats.syntax.all.*
-import org.typelevel.log4cats.extras.LogLevel
-import org.typelevel.log4cats.extras.LogLevel.*
+import org.typelevel.log4cats.extras.DefferedLogLevel
+import org.typelevel.log4cats.extras.DefferedLogLevel.*
 
-class ConsoleLogger[F[_]: Sync](logLevel: Option[LogLevel] = Option(Trace))
+class ConsoleLogger[F[_]: Sync](DefferedLogLevel: Option[DefferedLogLevel] = Option(Trace))
     extends SelfAwareStructuredLogger[F] {
   private val ConsoleF: ConsoleF[F] = implicitly
   override def trace(t: Throwable)(message: => String): F[Unit] = ConsoleF.debug(message, t)
   override def trace(message: => String): F[Unit] = ConsoleF.debug(message)
-  override def isTraceEnabled: F[Boolean] = logLevel.exists(_ <= Trace).pure[F]
+  override def isTraceEnabled: F[Boolean] = DefferedLogLevel.exists(_ <= Trace).pure[F]
 
   override def debug(t: Throwable)(message: => String): F[Unit] = ConsoleF.debug(message, t)
   override def debug(message: => String): F[Unit] = ConsoleF.debug(message)
-  override def isDebugEnabled: F[Boolean] = logLevel.exists(_ <= Debug).pure[F]
+  override def isDebugEnabled: F[Boolean] = DefferedLogLevel.exists(_ <= Debug).pure[F]
 
   override def info(t: Throwable)(message: => String): F[Unit] = ConsoleF.info(message, t)
   override def info(message: => String): F[Unit] = ConsoleF.info(message)
-  override def isInfoEnabled: F[Boolean] = logLevel.exists(_ <= Info).pure[F]
+  override def isInfoEnabled: F[Boolean] = DefferedLogLevel.exists(_ <= Info).pure[F]
 
   override def warn(t: Throwable)(message: => String): F[Unit] = ConsoleF.warn(message, t)
   override def warn(message: => String): F[Unit] = ConsoleF.warn(message)
-  override def isWarnEnabled: F[Boolean] = logLevel.exists(_ <= Warn).pure[F]
+  override def isWarnEnabled: F[Boolean] = DefferedLogLevel.exists(_ <= Warn).pure[F]
 
   override def error(t: Throwable)(message: => String): F[Unit] = ConsoleF.error(message, t)
   override def error(message: => String): F[Unit] = ConsoleF.error(message)
-  override def isErrorEnabled: F[Boolean] = logLevel.exists(_ <= Error).pure[F]
+  override def isErrorEnabled: F[Boolean] = DefferedLogLevel.exists(_ <= Error).pure[F]
 
   /*
    * ConsoleLogger should probably not extend from StructuredLogger, because there's not

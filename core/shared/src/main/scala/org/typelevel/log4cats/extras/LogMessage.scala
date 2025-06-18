@@ -20,25 +20,25 @@ import cats.*
 import cats.syntax.all.*
 import org.typelevel.log4cats.Logger
 
-final case class LogMessage(level: LogLevel, t: Option[Throwable], message: String)
+final case class LogMessage(level: DefferedLogLevel, t: Option[Throwable], message: String)
 object LogMessage {
   implicit val logMessageShow: Show[LogMessage] =
     Show.show[LogMessage](l => show"LogMessage(${l.level},${l.t.map(_.getMessage)},${l.message})")
 
   def log[F[_]](sm: LogMessage, l: Logger[F]): F[Unit] = sm match {
-    case LogMessage(LogLevel.Trace, Some(t), m) => l.trace(t)(m)
-    case LogMessage(LogLevel.Trace, None, m) => l.trace(m)
+    case LogMessage(DefferedLogLevel.Trace, Some(t), m) => l.trace(t)(m)
+    case LogMessage(DefferedLogLevel.Trace, None, m) => l.trace(m)
 
-    case LogMessage(LogLevel.Debug, Some(t), m) => l.debug(t)(m)
-    case LogMessage(LogLevel.Debug, None, m) => l.debug(m)
+    case LogMessage(DefferedLogLevel.Debug, Some(t), m) => l.debug(t)(m)
+    case LogMessage(DefferedLogLevel.Debug, None, m) => l.debug(m)
 
-    case LogMessage(LogLevel.Info, Some(t), m) => l.info(t)(m)
-    case LogMessage(LogLevel.Info, None, m) => l.info(m)
+    case LogMessage(DefferedLogLevel.Info, Some(t), m) => l.info(t)(m)
+    case LogMessage(DefferedLogLevel.Info, None, m) => l.info(m)
 
-    case LogMessage(LogLevel.Warn, Some(t), m) => l.warn(t)(m)
-    case LogMessage(LogLevel.Warn, None, m) => l.warn(m)
+    case LogMessage(DefferedLogLevel.Warn, Some(t), m) => l.warn(t)(m)
+    case LogMessage(DefferedLogLevel.Warn, None, m) => l.warn(m)
 
-    case LogMessage(LogLevel.Error, Some(t), m) => l.error(t)(m)
-    case LogMessage(LogLevel.Error, None, m) => l.error(m)
+    case LogMessage(DefferedLogLevel.Error, Some(t), m) => l.error(t)(m)
+    case LogMessage(DefferedLogLevel.Error, None, m) => l.error(m)
   }
 }

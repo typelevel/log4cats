@@ -35,34 +35,34 @@ import org.typelevel.log4cats.extras.DeferredLogMessage.{
  * At some point, this should be renamed to `StructuredLogMessage` and replace the old class.
  */
 sealed trait DeferredLogMessage {
-  def level: LogLevel
+  def level: DefferedLogLevel
   def context: Map[String, String]
   def throwableOpt: Option[Throwable]
   def message: () => String
 
   def log[F[_]](logger: Logger[F]): F[Unit] = {
     level match {
-      case LogLevel.Error =>
+      case DefferedLogLevel.Error =>
         throwableOpt match {
           case Some(e) => logger.error(e)(message())
           case None => logger.error(message())
         }
-      case LogLevel.Warn =>
+      case DefferedLogLevel.Warn =>
         throwableOpt match {
           case Some(e) => logger.warn(e)(message())
           case None => logger.warn(message())
         }
-      case LogLevel.Info =>
+      case DefferedLogLevel.Info =>
         throwableOpt match {
           case Some(e) => logger.info(e)(message())
           case None => logger.info(message())
         }
-      case LogLevel.Debug =>
+      case DefferedLogLevel.Debug =>
         throwableOpt match {
           case Some(e) => logger.debug(e)(message())
           case None => logger.debug(message())
         }
-      case LogLevel.Trace =>
+      case DefferedLogLevel.Trace =>
         throwableOpt match {
           case Some(e) => logger.trace(e)(message())
           case None => logger.trace(message())
@@ -72,27 +72,27 @@ sealed trait DeferredLogMessage {
 
   def logStructured[F[_]](logger: StructuredLogger[F]): F[Unit] = {
     level match {
-      case LogLevel.Error =>
+      case DefferedLogLevel.Error =>
         throwableOpt match {
           case Some(e) => logger.error(context, e)(message())
           case None => logger.error(context)(message())
         }
-      case LogLevel.Warn =>
+      case DefferedLogLevel.Warn =>
         throwableOpt match {
           case Some(e) => logger.warn(context, e)(message())
           case None => logger.warn(context)(message())
         }
-      case LogLevel.Info =>
+      case DefferedLogLevel.Info =>
         throwableOpt match {
           case Some(e) => logger.info(context, e)(message())
           case None => logger.info(context)(message())
         }
-      case LogLevel.Debug =>
+      case DefferedLogLevel.Debug =>
         throwableOpt match {
           case Some(e) => logger.debug(context, e)(message())
           case None => logger.debug(context)(message())
         }
-      case LogLevel.Trace =>
+      case DefferedLogLevel.Trace =>
         throwableOpt match {
           case Some(e) => logger.trace(context, e)(message())
           case None => logger.trace(context)(message())
@@ -111,32 +111,32 @@ sealed trait DeferredLogMessage {
 }
 object DeferredLogMessage {
   def apply(
-      l: LogLevel,
+      l: DefferedLogLevel,
       c: Map[String, String],
       t: Option[Throwable],
       m: () => String
   ): DeferredLogMessage =
     new DeferredLogMessage {
-      override val level: LogLevel = l
+      override val level: DefferedLogLevel = l
       override val context: Map[String, String] = c
       override val throwableOpt: Option[Throwable] = t
       override val message: () => String = m
     }
 
   def trace(c: Map[String, String], t: Option[Throwable], m: () => String): DeferredLogMessage =
-    apply(LogLevel.Trace, c, t, m)
+    apply(DefferedLogLevel.Trace, c, t, m)
 
   def debug(c: Map[String, String], t: Option[Throwable], m: () => String): DeferredLogMessage =
-    apply(LogLevel.Debug, c, t, m)
+    apply(DefferedLogLevel.Debug, c, t, m)
 
   def info(c: Map[String, String], t: Option[Throwable], m: () => String): DeferredLogMessage =
-    apply(LogLevel.Info, c, t, m)
+    apply(DefferedLogLevel.Info, c, t, m)
 
   def warn(c: Map[String, String], t: Option[Throwable], m: () => String): DeferredLogMessage =
-    apply(LogLevel.Warn, c, t, m)
+    apply(DefferedLogLevel.Warn, c, t, m)
 
   def error(c: Map[String, String], t: Option[Throwable], m: () => String): DeferredLogMessage =
-    apply(LogLevel.Error, c, t, m)
+    apply(DefferedLogLevel.Error, c, t, m)
 
   implicit val deferredStructuredLogMessageHash: Hash[DeferredLogMessage] = Hash.by { l =>
     (l.level, l.context, l.throwableOpt.map(_.getMessage), l.message())

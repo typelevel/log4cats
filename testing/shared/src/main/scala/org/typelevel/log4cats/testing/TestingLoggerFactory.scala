@@ -20,7 +20,7 @@ import cats.Show
 import cats.data.Chain
 import cats.effect.{Ref, Sync}
 import cats.syntax.all.*
-import org.typelevel.log4cats.extras.LogLevel
+import org.typelevel.log4cats.extras.DefferedLogLevel
 import org.typelevel.log4cats.testing.TestingLoggerFactory.LogMessage
 import org.typelevel.log4cats.{LoggerFactory, SelfAwareStructuredLogger}
 
@@ -38,12 +38,12 @@ object TestingLoggerFactory {
     def ctx: Map[String, String]
     def message: String
     def throwOpt: Option[Throwable]
-    def level: LogLevel = this match {
-      case _: Trace => LogLevel.Trace
-      case _: Debug => LogLevel.Debug
-      case _: Info => LogLevel.Info
-      case _: Warn => LogLevel.Warn
-      case _: Error => LogLevel.Error
+    def level: DefferedLogLevel = this match {
+      case _: Trace => DefferedLogLevel.Trace
+      case _: Debug => DefferedLogLevel.Debug
+      case _: Info => DefferedLogLevel.Info
+      case _: Warn => DefferedLogLevel.Warn
+      case _: Error => DefferedLogLevel.Error
     }
   }
 
