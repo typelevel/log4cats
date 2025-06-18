@@ -147,5 +147,10 @@ object Log {
       this._line = line
       this
     }
+
+    def withMethodName(name: String): this.type = {
+      this._methodName = name
+      this
+    }
   }
 }
