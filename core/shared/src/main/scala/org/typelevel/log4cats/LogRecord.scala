@@ -23,16 +23,16 @@ package org.typelevel.log4cats
  * This allows for an interesting UX, where the details of the encoding of some data into a log can
  * be separate from the actual log statements.
  */
-trait LogRecord extends (Log.Builder => Log.Builder)
+trait LogRecord[Ctx] extends (Log.Builder[Ctx] => Log.Builder[Ctx])
 
 object LogRecord {
-  def combine(all: Seq[LogRecord]): LogRecord = Combined(all)
+  def combine[Ctx](all: Seq[LogRecord[Ctx]]): LogRecord[Ctx] = Combined(all)
 
-  implicit def toLogRecord[A: Recordable](value: => A): LogRecord =
-    Recordable[A].record(value)
+  implicit def toLogRecord[Ctx, A: Recordable[Ctx, *]](value: => A): LogRecord[Ctx] =
+    Recordable[Ctx, A].record(value)
 
-  private case class Combined(all: Seq[LogRecord]) extends LogRecord {
-    def apply(record: Log.Builder): Log.Builder = {
+  private case class Combined[Ctx](all: Seq[LogRecord[Ctx]]) extends LogRecord[Ctx] {
+    def apply(record: Log.Builder[Ctx]): Log.Builder[Ctx] = {
       var current = record
       all.foreach { logBit =>
         current = logBit(current)

@@ -20,27 +20,47 @@ package org.typelevel.log4cats
  * Typeclass representing the notion that a value can contribute to a log, by transforming it in
  * some way.
  */
-trait Recordable[A] {
-  def record(value: => A): LogRecord
+trait Recordable[Ctx, A] {
+  def record(value: => A): LogRecord[Ctx]
 }
 
 object Recordable {
-  def apply[A](implicit ev: Recordable[A]): ev.type = ev
+  def apply[Ctx, A](implicit ev: Recordable[Ctx, A]): ev.type = ev
 
-  implicit val stringLoggable: Recordable[String] = new Recordable[String] {
+  implicit def stringLoggable[Ctx]: Recordable[Ctx, String] = new Recordable[Ctx, String] {
     def record(value: => String) = _.withMessage(value)
   }
 
-  implicit def tupleLoggable[T: Context.Encoder]: Recordable[(String, T)] =
-    new Recordable[(String, T)] {
-      override def record(value: => (String, T)): LogRecord = {
+  implicit def tupleLoggable[Ctx, T: Context.Encoder](implicit
+      ev: T =:= Ctx
+  ): Recordable[Ctx, (String, T)] =
+    new Recordable[Ctx, (String, T)] {
+      override def record(value: => (String, T)): LogRecord[Ctx] = {
         val (k, v) = value
-        (_: Log.Builder).withContext(k)(v)
+        (_: Log.Builder[Ctx]).withContext(k)(ev(v))
       }
     }
 
-  implicit def throwableLoggable[T <: Throwable]: Recordable[T] =
-    new Recordable[T] {
-      def record(value: => T): LogRecord = _.withThrowable(value)
+  // Special case for (String, String) when Ctx is Context
+  implicit def stringTupleLoggable: Recordable[Context, (String, String)] =
+    new Recordable[Context, (String, String)] {
+      override def record(value: => (String, String)): LogRecord[Context] = {
+        val (k, v) = value
+        (_: Log.Builder[Context]).withContext(k)(v: Context)
+      }
+    }
+
+  // Special case for (String, Int) when Ctx is Context
+  implicit def intTupleLoggable: Recordable[Context, (String, Int)] =
+    new Recordable[Context, (String, Int)] {
+      override def record(value: => (String, Int)): LogRecord[Context] = {
+        val (k, v) = value
+        (_: Log.Builder[Context]).withContext(k)(v: Context)
+      }
+    }
+
+  implicit def throwableLoggable[Ctx, T <: Throwable]: Recordable[Ctx, T] =
+    new Recordable[Ctx, T] {
+      def record(value: => T): LogRecord[Ctx] = _.withThrowable(value)
     }
 }
