@@ -33,8 +33,8 @@ trait JsonLike {
   def double(value: Double): J
   def timestamp(ts: FiniteDuration): J
   def string(value: String): J
-  def obj(bindings: (String, J)*): J
-  def arr(elems: J*): J
+  def obj(bindings: Iterable[(String, J)]): J
+  def arr(elems: Iterable[J]): J
 }
 
 object JsonLike {
