@@ -31,7 +31,7 @@ object Recordable {
     def record(value: => String) = _.withMessage(value)
   }
 
-  implicit def tupleLoggable[Ctx, T: Context.Encoder](implicit
+  implicit def tupleLoggable[Ctx, T](implicit
       ev: T =:= Ctx
   ): Recordable[Ctx, (String, T)] =
     new Recordable[Ctx, (String, T)] {

@@ -53,7 +53,7 @@ object Log {
     def withClassName(name: String): Builder[Ctx]
     def withLine(line: Int): Builder[Ctx]
 
-    final def withContextMap[A: Context.Encoder](
+    final def withContextMap[A](
         contextMap: Map[String, A]
     )(implicit ev: A =:= Ctx): Builder[Ctx] = {
       var builder = this
