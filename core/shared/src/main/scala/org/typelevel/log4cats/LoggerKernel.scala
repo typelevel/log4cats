@@ -33,17 +33,19 @@ package org.typelevel.log4cats
  * whatever UX is preferred without necessarily imposing constraints on the underlying
  * implementation.
  */
-trait LoggerKernel[F[_]] {
-  def log(level: KernelLogLevel, record: Log.Builder => Log.Builder): F[Unit]
+trait LoggerKernel[F[_], Ctx] {
+  type Builder = Log.Builder[Ctx]
 
-  final def logTrace(record: Log.Builder => Log.Builder): F[Unit] =
+  def log(level: KernelLogLevel, record: Builder => Builder): F[Unit]
+
+  final def logTrace(record: Builder => Builder): F[Unit] =
     log(KernelLogLevel.Trace, record)
-  final def logDebug(record: Log.Builder => Log.Builder): F[Unit] =
+  final def logDebug(record: Builder => Builder): F[Unit] =
     log(KernelLogLevel.Debug, record)
-  final def logInfo(record: Log.Builder => Log.Builder): F[Unit] =
+  final def logInfo(record: Builder => Builder): F[Unit] =
     log(KernelLogLevel.Info, record)
-  final def logWarn(record: Log.Builder => Log.Builder): F[Unit] =
+  final def logWarn(record: Builder => Builder): F[Unit] =
     log(KernelLogLevel.Warn, record)
-  final def logError(record: Log.Builder => Log.Builder): F[Unit] =
+  final def logError(record: Builder => Builder): F[Unit] =
     log(KernelLogLevel.Error, record)
 }
