@@ -16,7 +16,9 @@
 
 package org.typelevel.log4cats
 
-final case class KernelLogLevel(name: String, value: Double) {
+import cats.Order
+
+final case class KernelLogLevel(name: String, value: Int) {
   def namePadded: String = KernelLogLevel.padded(this)
 
   KernelLogLevel.add(this)
@@ -28,15 +30,19 @@ object KernelLogLevel {
   private var map = Map.empty[String, KernelLogLevel]
   private var padded = Map.empty[KernelLogLevel, String]
 
-  implicit final val LevelOrdering: Ordering[KernelLogLevel] =
-    Ordering.by[KernelLogLevel, Double](_.value).reverse
+  implicit final val orderKernelLogLevel: Order[KernelLogLevel] =
+    Order.by[KernelLogLevel, Int](-_.value)
 
-  val Trace: KernelLogLevel = KernelLogLevel("TRACE", 100.0)
-  val Debug: KernelLogLevel = KernelLogLevel("DEBUG", 200.0)
-  val Info: KernelLogLevel = KernelLogLevel("INFO", 300.0)
-  val Warn: KernelLogLevel = KernelLogLevel("WARN", 400.0)
-  val Error: KernelLogLevel = KernelLogLevel("ERROR", 500.0)
-  val Fatal: KernelLogLevel = KernelLogLevel("FATAL", 600.0)
+  // For Java/legacy interop, if needed (not implicit)
+  val LevelOrdering: Ordering[KernelLogLevel] =
+    Ordering.by[KernelLogLevel, Int](_.value).reverse
+
+  val Trace: KernelLogLevel = KernelLogLevel("TRACE", 100)
+  val Debug: KernelLogLevel = KernelLogLevel("DEBUG", 200)
+  val Info: KernelLogLevel = KernelLogLevel("INFO", 300)
+  val Warn: KernelLogLevel = KernelLogLevel("WARN", 400)
+  val Error: KernelLogLevel = KernelLogLevel("ERROR", 500)
+  val Fatal: KernelLogLevel = KernelLogLevel("FATAL", 600)
 
   def add(level: KernelLogLevel): Unit = synchronized {
     val length = level.name.length
