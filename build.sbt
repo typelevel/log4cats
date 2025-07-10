@@ -27,7 +27,7 @@ ThisBuild / githubWorkflowJavaVersions := Seq(JavaSpec.temurin("8"), JavaSpec.te
 ThisBuild / tlVersionIntroduced := Map("3" -> "2.1.1")
 
 val catsV = "2.11.0"
-val catsEffectV = "3.6.1"
+val catsEffectV = "3.6.2"
 val slf4jV = "1.7.36"
 val munitCatsEffectV = "2.1.0"
 val logbackClassicV = "1.2.13"
