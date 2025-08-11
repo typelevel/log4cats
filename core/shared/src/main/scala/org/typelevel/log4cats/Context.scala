@@ -16,47 +16,42 @@
 
 package org.typelevel.log4cats
 
+import java.time.Instant
+import java.time.format.DateTimeFormatter
 import scala.concurrent.duration.FiniteDuration
-import org.typelevel.log4cats.JsonLike.Aux
+
+import org.typelevel.log4cats.Context.Encoder
 
 /**
  * A value that can be written into a json-like construct, provided a visitor.
  */
-trait Context {
-  def capture[J](jsonLike: JsonLike.Aux[J]): J
+trait Context[C] {
+  def capture[A](a: A)(implicit E: Encoder[A, C]): C
 }
 
 object Context {
-  trait Encoder[A] {
-    def encode[J](json: JsonLike.Aux[J], a: A): J
+  trait Encoder[A, B] {
+    def encode(a: A): B
   }
 
   object Encoder {
-    def apply[A](implicit ev: Encoder[A]): ev.type = ev
+    def apply[A, B](implicit ev: Encoder[A, B]): ev.type = ev
 
-    implicit val stringEncoder: Encoder[String] = new Encoder[String] {
-      def encode[J](json: JsonLike.Aux[J], a: String) = json.string(a)
-    }
+    // Identity encoder for when input and output types are the same
+    implicit def identityEncoder[A]: Encoder[A, A] = a => a
 
-    implicit val intEncoder: Encoder[Int] = new Encoder[Int] {
-      def encode[J](json: JsonLike.Aux[J], a: Int) = json.int(a)
-    }
+    implicit val stringToStringEncoder: Encoder[String, String] = a => a
 
-    implicit val booleanEncoder: Encoder[Boolean] = new Encoder[Boolean] {
-      def encode[J](json: Aux[J], a: Boolean): J = json.bool(a)
-    }
+    implicit val intToStringEncoder: Encoder[Int, String] = _.toString
 
-    implicit val timestampEncoder: Encoder[FiniteDuration] =
-      new Encoder[FiniteDuration] {
-        def encode[J](json: JsonLike.Aux[J], a: FiniteDuration) =
-          json.timestamp(a)
-      }
-  }
+    implicit val longToStringEncoder: Encoder[Long, String] = _.toString
 
-  implicit def toContext[A: Encoder](a: A): Context =
-    DeferredRecord(a, Encoder[A])
+    implicit val doubleToStringEncoder: Encoder[Double, String] = _.toString
 
-  private case class DeferredRecord[A](a: A, encoder: Encoder[A]) extends Context {
-    def capture[J](jsonLike: JsonLike.Aux[J]): J = encoder.encode(jsonLike, a)
+    implicit val booleanToStringEncoder: Encoder[Boolean, String] = if (_) "true" else "false"
+
+    implicit val instantToStringEncoder: Encoder[Instant, String] = DateTimeFormatter.ISO_INSTANT.format(_)
+
+    implicit val finiteDurationToStringEncoder: Encoder[FiniteDuration, String] = _.toString
   }
 }

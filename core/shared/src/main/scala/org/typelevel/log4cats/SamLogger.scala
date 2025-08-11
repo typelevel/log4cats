@@ -128,14 +128,14 @@ object SamLogger {
             .withLevel(level)
             .withMessage(modifiedMessage)
 
-          // we can copy the fields from the original log like this
+          // Copy the fields from the original log
           originalLog.timestamp.foreach(newBuilder.withTimestamp)
           originalLog.throwable.foreach(newBuilder.withThrowable)
-
           originalLog.fileName.foreach(newBuilder.withFileName)
           originalLog.className.foreach(newBuilder.withClassName)
           originalLog.line.foreach(newBuilder.withLine)
 
+          // Copy context - since Ctx is the same type, we can use identity encoder
           originalLog.context.foreach { case (k, v) =>
             newBuilder.withContext(k)(v)
           }

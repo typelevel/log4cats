@@ -45,112 +45,94 @@ object Log {
   trait Builder[Ctx] {
     def withTimestamp(value: FiniteDuration): Builder[Ctx]
     def withLevel(level: KernelLogLevel): Builder[Ctx]
-    def withLevelValue(levelValue: Int): Builder[Ctx]
     def withMessage(message: => String): Builder[Ctx]
     def withThrowable(throwable: Throwable): Builder[Ctx]
-    def withContext(name: String)(f: Ctx): Builder[Ctx]
+    def withContext[A](name: String)(ctx: A)(implicit E: Context.Encoder[A, Ctx]): Builder[Ctx]
     def withFileName(name: String): Builder[Ctx]
     def withClassName(name: String): Builder[Ctx]
+    def withMethodName(name: String): Builder[Ctx]
     def withLine(line: Int): Builder[Ctx]
 
     final def withContextMap[A](
         contextMap: Map[String, A]
-    )(implicit ev: A =:= Ctx): Builder[Ctx] = {
-      var builder = this
-      contextMap.foreach { case (k, v) =>
-        builder = withContext(k)(ev(v))
-      }
-      builder
-    }
+    )(implicit E: Context.Encoder[A, Ctx]): Builder[Ctx] = 
+      contextMap.foldLeft(this) { case (ctx, (k, v)) => ctx.withContext(k)(v) }
 
     def build(): Log[Ctx]
   }
 
   def mutableBuilder[Ctx](): Builder[Ctx] = new MutableBuilder[Ctx]()
 
-  private class MutableBuilder[Ctx] private[Log] () extends Builder[Ctx] with Log[Ctx] {
+  private val noopMessage: () => String = () => ""
+
+  private class MutableBuilder[Ctx] extends Builder[Ctx] {
     private var _timestamp: Option[FiniteDuration] = None
     private var _level: Option[KernelLogLevel] = None
-    private var _levelValue: Option[Int] = None
-    private var _message: Option[String] = None
+    private var _message: () => String = noopMessage
     private var _throwable: Option[Throwable] = None
-    private var _context: Option[mutable.Map[String, Ctx]] = None
+    private var _context: mutable.Map[String, Ctx] = mutable.Map.empty[String, Ctx]
     private var _fileName: Option[String] = None
     private var _className: Option[String] = None
     private var _methodName: Option[String] = None
     private var _line: Option[Int] = None
 
-    def build(): Log[Ctx] = this
+    def build(): Log[Ctx] = new Log[Ctx] {
+      override def timestamp: Option[FiniteDuration] = _timestamp
+      override def level: KernelLogLevel = _level.getOrElse(KernelLogLevel.Info)
+      override def levelValue: Int = level.value
+      override def message: String = _message()
+      override def throwable: Option[Throwable] = _throwable
+      override def context: Map[String, Ctx] = _context.toMap
+      override def className: Option[String] = _className
+      override def fileName: Option[String] = _fileName
+      override def methodName: Option[String] = _methodName
+      override def line: Option[Int] = _line.filter(_ > 0)
+      override def unsafeThrowable: Throwable = _throwable.get
+      override def unsafeContext: Map[String, Ctx] = _context.toMap
+    }
 
-    def timestamp: Option[FiniteDuration] = _timestamp
-    def level: KernelLogLevel = _level.getOrElse(KernelLogLevel.Debug)
-    def levelValue: Int =
-      _levelValue.getOrElse(level.value)
-    def message: String = _message.getOrElse("")
-    def throwable: Option[Throwable] = _throwable
-    def context: Map[String, Ctx] =
-      _context.map(_.toMap).getOrElse(Map.empty)
-
-    def className: Option[String] = _className
-    def fileName: Option[String] = _fileName
-    def methodName: Option[String] = _methodName
-    def line: Option[Int] = _line.filter(_ > 0)
-
-    def unsafeThrowable: Throwable = _throwable.get
-    def unsafeContext: Map[String, Ctx] = _context.get.toMap
-
-    def withTimestamp(value: FiniteDuration): this.type = {
-      this._timestamp = Some(value)
+    override def withTimestamp(value: FiniteDuration): this.type = {
+      _timestamp = Some(value)
       this
     }
 
-    def withLevel(level: KernelLogLevel): this.type = {
-      this._level = Some(level)
+    override def withLevel(level: KernelLogLevel): this.type = {
+      _level = Some(level)
       this
     }
 
-    def withLevelValue(levelValue: Int): this.type = {
-      this._levelValue = Some(levelValue)
+    override def withMessage(message: => String): this.type = {
+      _message = () => message
       this
     }
 
-    def withMessage(message: => String): this.type = {
-      this._message = Some(message)
+    override def withThrowable(throwable: Throwable): this.type = {
+      _throwable = Some(throwable)
       this
     }
 
-    def withThrowable(throwable: Throwable): this.type = {
-      this._throwable = Some(throwable)
+    override def withContext[A](name: String)(ctx: A)(implicit E: Context.Encoder[A, Ctx]): this.type = {
+      _context += (name -> E.encode(ctx))
       this
     }
 
-    def withContext(name: String)(value: Ctx): this.type = {
-      val map = _context.getOrElse {
-        val newMap = mutable.Map.empty[String, Ctx]
-        this._context = Some(newMap)
-        newMap
-      }
-      map += name -> value
+    override def withFileName(name: String): this.type = {
+      _fileName = Some(name)
       this
     }
 
-    def withFileName(name: String): this.type = {
-      this._fileName = Some(name)
+    override def withClassName(name: String): this.type = {
+      _className = Some(name)
       this
     }
 
-    def withClassName(name: String): this.type = {
-      this._className = Some(name)
+    override def withMethodName(name: String): this.type = {
+      _methodName = Some(name)
       this
     }
 
-    def withLine(line: Int): this.type = {
-      this._line = Some(line)
-      this
-    }
-
-    def withMethodName(name: String): this.type = {
-      this._methodName = Some(name)
+    override def withLine(line: Int): this.type = {
+      _line = if (line > 0) Some(line) else None
       this
     }
   }
