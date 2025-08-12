@@ -56,7 +56,7 @@ object Log {
     final def withContextMap[A](
         contextMap: Map[String, A]
     )(implicit E: Context.Encoder[A, Ctx]): Builder[Ctx] = 
-      contextMap.foldLeft(this) { case (ctx, (k, v)) => ctx.withContext(k)(v) }
+      contextMap.foldLeft(this) { case (builder, (k, v)) => builder.withContext(k)(v) }
 
     def build(): Log[Ctx]
   }
