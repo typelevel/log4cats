@@ -70,7 +70,7 @@ object Log {
     private var _level: Option[KernelLogLevel] = None
     private var _message: () => String = noopMessage
     private var _throwable: Option[Throwable] = None
-    private var _context: mutable.Map[String, Ctx] = mutable.Map.empty[String, Ctx]
+    private val _context: mutable.Map[String, Ctx] = mutable.Map.empty[String, Ctx]
     private var _fileName: Option[String] = None
     private var _className: Option[String] = None
     private var _methodName: Option[String] = None
