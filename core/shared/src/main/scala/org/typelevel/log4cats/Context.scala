@@ -50,7 +50,8 @@ object Context {
 
     implicit val booleanToStringEncoder: Encoder[Boolean, String] = if (_) "true" else "false"
 
-    implicit val instantToStringEncoder: Encoder[Instant, String] = DateTimeFormatter.ISO_INSTANT.format(_)
+    implicit val instantToStringEncoder: Encoder[Instant, String] =
+      DateTimeFormatter.ISO_INSTANT.format(_)
 
     implicit val finiteDurationToStringEncoder: Encoder[FiniteDuration, String] = _.toString
   }

@@ -27,40 +27,81 @@ trait Recordable[Ctx, A] {
 object Recordable {
   def apply[Ctx, A](implicit ev: Recordable[Ctx, A]): ev.type = ev
 
+  // Basic string message recording
   implicit def stringLoggable[Ctx]: Recordable[Ctx, String] = new Recordable[Ctx, String] {
     def record(value: => String) = _.withMessage(value)
   }
 
-  implicit def tupleLoggable[Ctx, T](implicit
-      ev: T =:= Ctx
-  ): Recordable[Ctx, (String, T)] =
-    new Recordable[Ctx, (String, T)] {
-      override def record(value: => (String, T)): LogRecord[Ctx] = {
+  // Context key-value pair recording with proper encoding
+  implicit def contextPairLoggable[Ctx, A](implicit
+      encoder: Context.Encoder[A, Ctx]
+  ): Recordable[Ctx, (String, A)] =
+    new Recordable[Ctx, (String, A)] {
+      override def record(value: => (String, A)): LogRecord[Ctx] = {
         val (k, v) = value
-        (_: Log.Builder[Ctx]).withContext(k)(ev(v))
+        (_: Log.Builder[Ctx]).withContext(k)(v)
       }
     }
 
-  // Special case for (String, String) when Ctx is Context
-  implicit def stringTupleLoggable: Recordable[Context, (String, String)] =
-    new Recordable[Context, (String, String)] {
-      override def record(value: => (String, String)): LogRecord[Context] = {
-        val (k, v) = value
-        (_: Log.Builder[Context]).withContext(k)(v: Context)
-      }
-    }
-
-  // Special case for (String, Int) when Ctx is Context
-  implicit def intTupleLoggable: Recordable[Context, (String, Int)] =
-    new Recordable[Context, (String, Int)] {
-      override def record(value: => (String, Int)): LogRecord[Context] = {
-        val (k, v) = value
-        (_: Log.Builder[Context]).withContext(k)(v: Context)
-      }
-    }
-
+  // Throwable recording
   implicit def throwableLoggable[Ctx, T <: Throwable]: Recordable[Ctx, T] =
     new Recordable[Ctx, T] {
       def record(value: => T): LogRecord[Ctx] = _.withThrowable(value)
+    }
+
+  // Numeric value recording with automatic string conversion
+  implicit def intLoggable[Ctx](implicit
+      encoder: Context.Encoder[Int, Ctx]
+  ): Recordable[Ctx, Int] =
+    new Recordable[Ctx, Int] {
+      def record(value: => Int): LogRecord[Ctx] = {
+        val v = value
+        (builder: Log.Builder[Ctx]) => builder.withContext("value")(v)
+      }
+    }
+
+  implicit def longLoggable[Ctx](implicit
+      encoder: Context.Encoder[Long, Ctx]
+  ): Recordable[Ctx, Long] =
+    new Recordable[Ctx, Long] {
+      def record(value: => Long): LogRecord[Ctx] = {
+        val v = value
+        (builder: Log.Builder[Ctx]) => builder.withContext("value")(v)
+      }
+    }
+
+  implicit def doubleLoggable[Ctx](implicit
+      encoder: Context.Encoder[Double, Ctx]
+  ): Recordable[Ctx, Double] =
+    new Recordable[Ctx, Double] {
+      def record(value: => Double): LogRecord[Ctx] = {
+        val v = value
+        (builder: Log.Builder[Ctx]) => builder.withContext("value")(v)
+      }
+    }
+
+  implicit def booleanLoggable[Ctx](implicit
+      encoder: Context.Encoder[Boolean, Ctx]
+  ): Recordable[Ctx, Boolean] =
+    new Recordable[Ctx, Boolean] {
+      def record(value: => Boolean): LogRecord[Ctx] = {
+        val v = value
+        (builder: Log.Builder[Ctx]) => builder.withContext("value")(v)
+      }
+    }
+
+  // Map recording for structured data
+  implicit def mapLoggable[Ctx, A](implicit
+      encoder: Context.Encoder[A, Ctx]
+  ): Recordable[Ctx, Map[String, A]] =
+    new Recordable[Ctx, Map[String, A]] {
+      def record(value: => Map[String, A]): LogRecord[Ctx] = {
+        val map = value
+        (builder: Log.Builder[Ctx]) => {
+          var current = builder
+          map.foreach { case (k, v) => current = current.withContext(k)(v) }
+          current
+        }
+      }
     }
 }

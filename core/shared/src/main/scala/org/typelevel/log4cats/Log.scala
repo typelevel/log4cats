@@ -55,7 +55,7 @@ object Log {
 
     final def withContextMap[A](
         contextMap: Map[String, A]
-    )(implicit E: Context.Encoder[A, Ctx]): Builder[Ctx] = 
+    )(implicit E: Context.Encoder[A, Ctx]): Builder[Ctx] =
       contextMap.foldLeft(this) { case (builder, (k, v)) => builder.withContext(k)(v) }
 
     def build(): Log[Ctx]
@@ -111,7 +111,9 @@ object Log {
       this
     }
 
-    override def withContext[A](name: String)(ctx: A)(implicit E: Context.Encoder[A, Ctx]): this.type = {
+    override def withContext[A](
+        name: String
+    )(ctx: A)(implicit E: Context.Encoder[A, Ctx]): this.type = {
       _context += (name -> E.encode(ctx))
       this
     }
