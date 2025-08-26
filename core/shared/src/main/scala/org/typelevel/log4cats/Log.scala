@@ -62,12 +62,10 @@ object Log {
 
   def mutableBuilder[Ctx](): Builder[Ctx] = new MutableBuilder[Ctx]()
 
-  private val noopMessage: () => String = () => ""
-
   private class MutableBuilder[Ctx] extends Builder[Ctx] {
     private var _timestamp: Option[FiniteDuration] = None
     private var _level: Option[KernelLogLevel] = None
-    private var _message: () => String = noopMessage
+    private var _message: Option[String] = None
     private var _throwable: Option[Throwable] = None
     private val _context: mutable.Map[String, Ctx] = mutable.Map.empty[String, Ctx]
     private var _fileName: Option[String] = None
@@ -78,7 +76,7 @@ object Log {
     def build(): Log[Ctx] = new Log[Ctx] {
       override def timestamp: Option[FiniteDuration] = _timestamp
       override def level: KernelLogLevel = _level.getOrElse(KernelLogLevel.Info)
-      override def message: String = _message()
+      override def message: String = _message.getOrElse("")
       override def throwable: Option[Throwable] = _throwable
       override def context: Map[String, Ctx] = _context.toMap
       override def className: Option[String] = _className
@@ -100,7 +98,7 @@ object Log {
     }
 
     override def withMessage(message: => String): this.type = {
-      _message = () => message
+      _message = Some(message)
       this
     }
 
