@@ -28,7 +28,6 @@ import scala.concurrent.duration.FiniteDuration
 trait Log[Ctx] {
   def timestamp: Option[FiniteDuration]
   def level: KernelLogLevel
-  def levelValue: Int
   def message: String
   def throwable: Option[Throwable]
   def context: Map[String, Ctx]
@@ -79,7 +78,6 @@ object Log {
     def build(): Log[Ctx] = new Log[Ctx] {
       override def timestamp: Option[FiniteDuration] = _timestamp
       override def level: KernelLogLevel = _level.getOrElse(KernelLogLevel.Info)
-      override def levelValue: Int = level.value
       override def message: String = _message()
       override def throwable: Option[Throwable] = _throwable
       override def context: Map[String, Ctx] = _context.toMap
