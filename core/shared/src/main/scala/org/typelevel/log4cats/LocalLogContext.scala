@@ -81,7 +81,8 @@ object LocalLogContext {
     def ask[E2 >: Map[String, String]]: F[E2] =
       asks
         .traverse(_.ask[Map[String, String]])
-        .map(_.reduceLeft(_ ++ _))
+        .map[Map[String, String]](_.reduceLeft(_ ++ _))
+        .widen // tparam on `map` and `widen` to make scala 3 happy
     def prependLowPriority(ask: AskContext[F]): MultiAskContext[F] =
       new MultiAskContext(ask +: asks)
     def appendHighPriority(ask: AskContext[F]): MultiAskContext[F] =
