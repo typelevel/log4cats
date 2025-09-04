@@ -28,45 +28,35 @@ import cats.Show.Shown
 trait SamStructuredLogger[F[_]] extends Logger[F] {
   protected def kernel: LoggerKernel[F, String]
 
-  def trace(ctx: Map[String, String])(msg: => String): F[Unit] = {
+  def trace(ctx: Map[String, String])(msg: => String): F[Unit] =
     kernel.logTrace(_.withMessage(msg).withContextMap(ctx))
-  }
 
-  def trace(ctx: Map[String, String], t: Throwable)(msg: => String): F[Unit] = {
+  def trace(ctx: Map[String, String], t: Throwable)(msg: => String): F[Unit] =
     kernel.logTrace(_.withMessage(msg).withThrowable(t).withContextMap(ctx))
-  }
 
-  def debug(ctx: Map[String, String])(msg: => String): F[Unit] = {
+  def debug(ctx: Map[String, String])(msg: => String): F[Unit] =
     kernel.logDebug(_.withMessage(msg).withContextMap(ctx))
-  }
 
-  def debug(ctx: Map[String, String], t: Throwable)(msg: => String): F[Unit] = {
+  def debug(ctx: Map[String, String], t: Throwable)(msg: => String): F[Unit] =
     kernel.logDebug(_.withMessage(msg).withThrowable(t).withContextMap(ctx))
-  }
 
-  def info(ctx: Map[String, String])(msg: => String): F[Unit] = {
+  def info(ctx: Map[String, String])(msg: => String): F[Unit] =
     kernel.logInfo(_.withMessage(msg).withContextMap(ctx))
-  }
 
-  def info(ctx: Map[String, String], t: Throwable)(msg: => String): F[Unit] = {
+  def info(ctx: Map[String, String], t: Throwable)(msg: => String): F[Unit] =
     kernel.logInfo(_.withMessage(msg).withThrowable(t).withContextMap(ctx))
-  }
 
-  def warn(ctx: Map[String, String])(msg: => String): F[Unit] = {
+  def warn(ctx: Map[String, String])(msg: => String): F[Unit] =
     kernel.logWarn(_.withMessage(msg).withContextMap(ctx))
-  }
 
-  def warn(ctx: Map[String, String], t: Throwable)(msg: => String): F[Unit] = {
+  def warn(ctx: Map[String, String], t: Throwable)(msg: => String): F[Unit] =
     kernel.logWarn(_.withMessage(msg).withThrowable(t).withContextMap(ctx))
-  }
 
-  def error(ctx: Map[String, String])(msg: => String): F[Unit] = {
+  def error(ctx: Map[String, String])(msg: => String): F[Unit] =
     kernel.logError(_.withMessage(msg).withContextMap(ctx))
-  }
 
-  def error(ctx: Map[String, String], t: Throwable)(msg: => String): F[Unit] = {
+  def error(ctx: Map[String, String], t: Throwable)(msg: => String): F[Unit] =
     kernel.logError(_.withMessage(msg).withThrowable(t).withContextMap(ctx))
-  }
 
   override def trace(message: => String): F[Unit] =
     kernel.logTrace(_.withMessage(message))
