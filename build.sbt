@@ -31,7 +31,7 @@ val catsEffectV = "3.6.3"
 val slf4jV = "1.7.36"
 val munitCatsEffectV = "2.1.0"
 val logbackClassicV = "1.2.13"
-val sourcecodeV = "0.3.1"
+val sourcecodeV = "0.4.2"
 
 Global / onChangedBuildSource := ReloadOnSourceChanges
 
@@ -48,13 +48,18 @@ lazy val core = crossProject(JSPlatform, JVMPlatform, NativePlatform)
     name := "log4cats-core",
     libraryDependencies ++= Seq(
       "org.typelevel" %%% "cats-core"       % catsV,
-      "org.typelevel" %%% "cats-effect-std" % catsEffectV,
-      "com.lihaoyi" %%% "sourcecode"        % sourcecodeV
+      "org.typelevel" %%% "cats-effect-std" % catsEffectV
     ),
     libraryDependencies ++= {
       if (tlIsScala3.value) Seq.empty
       else Seq("org.scala-lang" % "scala-reflect" % scalaVersion.value % Provided)
     }
+  )
+  .jvmSettings(
+    libraryDependencies += "com.lihaoyi" %%% "sourcecode" % sourcecodeV
+  )
+  .jsSettings(
+    libraryDependencies += "com.lihaoyi" %%% "sourcecode" % sourcecodeV
   )
   .nativeSettings(commonNativeSettings)
 
