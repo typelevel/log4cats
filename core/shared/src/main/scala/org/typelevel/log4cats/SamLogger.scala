@@ -121,7 +121,7 @@ object SamLogger {
       def log(level: KernelLogLevel, record: Builder => Builder): F[Unit] = {
         val modifiedRecord = (builder: Builder) => {
           val originalLog = record(builder).build()
-          val modifiedMessage = f(originalLog.message)
+          val modifiedMessage = f(originalLog.message())
 
           val newBuilder = Log
             .mutableBuilder[Ctx]()

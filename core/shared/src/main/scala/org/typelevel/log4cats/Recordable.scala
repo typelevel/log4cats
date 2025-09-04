@@ -27,12 +27,10 @@ trait Recordable[Ctx, A] {
 object Recordable {
   def apply[Ctx, A](implicit ev: Recordable[Ctx, A]): ev.type = ev
 
-  // Basic string message recording
   implicit def stringLoggable[Ctx]: Recordable[Ctx, String] = new Recordable[Ctx, String] {
     def record(value: => String) = _.withMessage(value)
   }
 
-  // Context key-value pair recording with proper encoding
   implicit def contextPairLoggable[Ctx, A](implicit
       encoder: Context.Encoder[A, Ctx]
   ): Recordable[Ctx, (String, A)] =
@@ -43,13 +41,11 @@ object Recordable {
       }
     }
 
-  // Throwable recording
   implicit def throwableLoggable[Ctx, T <: Throwable]: Recordable[Ctx, T] =
     new Recordable[Ctx, T] {
       def record(value: => T): LogRecord[Ctx] = _.withThrowable(value)
     }
 
-  // Numeric value recording with automatic string conversion
   implicit def intLoggable[Ctx](implicit
       encoder: Context.Encoder[Int, Ctx]
   ): Recordable[Ctx, Int] =
@@ -90,18 +86,13 @@ object Recordable {
       }
     }
 
-  // Map recording for structured data
   implicit def mapLoggable[Ctx, A](implicit
       encoder: Context.Encoder[A, Ctx]
   ): Recordable[Ctx, Map[String, A]] =
     new Recordable[Ctx, Map[String, A]] {
       def record(value: => Map[String, A]): LogRecord[Ctx] = {
         val map = value
-        (builder: Log.Builder[Ctx]) => {
-          var current = builder
-          map.foreach { case (k, v) => current = current.withContext(k)(v) }
-          current
-        }
+        (builder: Log.Builder[Ctx]) => builder.withContextMap(map)
       }
     }
 }

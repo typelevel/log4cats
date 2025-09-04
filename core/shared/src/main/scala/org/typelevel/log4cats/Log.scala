@@ -28,16 +28,14 @@ import scala.concurrent.duration.FiniteDuration
 trait Log[Ctx] {
   def timestamp: Option[FiniteDuration]
   def level: KernelLogLevel
-  def message: String
+  def message: () => String
   def throwable: Option[Throwable]
   def context: Map[String, Ctx]
   def fileName: Option[String]
   def className: Option[String]
   def methodName: Option[String]
   def line: Option[Int]
-
-  def unsafeThrowable: Throwable
-  def unsafeContext: Map[String, Ctx]
+  def levelValue: Int
 }
 
 object Log {
@@ -57,6 +55,16 @@ object Log {
     )(implicit E: Context.Encoder[A, Ctx]): Builder[Ctx] =
       contextMap.foldLeft(this) { case (builder, (k, v)) => builder.withContext(k)(v) }
 
+    def adaptTimestamp(f: FiniteDuration => FiniteDuration): Builder[Ctx]
+    def adaptLevel(f: KernelLogLevel => KernelLogLevel): Builder[Ctx]
+    def adaptMessage(f: String => String): Builder[Ctx]
+    def adaptThrowable(f: Throwable => Throwable): Builder[Ctx]
+    def adaptContext(f: Map[String, Ctx] => Map[String, Ctx]): Builder[Ctx]
+    def adaptFileName(f: String => String): Builder[Ctx]
+    def adaptClassName(f: String => String): Builder[Ctx]
+    def adaptMethodName(f: String => String): Builder[Ctx]
+    def adaptLine(f: Int => Int): Builder[Ctx]
+
     def build(): Log[Ctx]
   }
 
@@ -64,8 +72,8 @@ object Log {
 
   private class MutableBuilder[Ctx] extends Builder[Ctx] {
     private var _timestamp: Option[FiniteDuration] = None
-    private var _level: Option[KernelLogLevel] = None
-    private var _message: Option[String] = None
+    private var _level: KernelLogLevel = KernelLogLevel.Info
+    private var _message: () => String = () => ""
     private var _throwable: Option[Throwable] = None
     private val _context: mutable.Map[String, Ctx] = mutable.Map.empty[String, Ctx]
     private var _fileName: Option[String] = None
@@ -75,16 +83,15 @@ object Log {
 
     def build(): Log[Ctx] = new Log[Ctx] {
       override def timestamp: Option[FiniteDuration] = _timestamp
-      override def level: KernelLogLevel = _level.getOrElse(KernelLogLevel.Info)
-      override def message: String = _message.getOrElse("")
+      override def level: KernelLogLevel = _level
+      override def message: () => String = _message
       override def throwable: Option[Throwable] = _throwable
       override def context: Map[String, Ctx] = _context.toMap
       override def className: Option[String] = _className
       override def fileName: Option[String] = _fileName
       override def methodName: Option[String] = _methodName
       override def line: Option[Int] = _line.filter(_ > 0)
-      override def unsafeThrowable: Throwable = _throwable.get
-      override def unsafeContext: Map[String, Ctx] = _context.toMap
+      override def levelValue: Int = _level.value
     }
 
     override def withTimestamp(value: FiniteDuration): this.type = {
@@ -93,12 +100,60 @@ object Log {
     }
 
     override def withLevel(level: KernelLogLevel): this.type = {
-      _level = Some(level)
+      _level = level
       this
     }
 
     override def withMessage(message: => String): this.type = {
-      _message = Some(message)
+      _message = () => message
+      this
+    }
+
+    override def adaptMessage(f: String => String): this.type = {
+      _message = () => f(_message())
+      this
+    }
+
+    override def adaptTimestamp(f: FiniteDuration => FiniteDuration): this.type = {
+      _timestamp = _timestamp.map(f)
+      this
+    }
+
+    override def adaptLevel(f: KernelLogLevel => KernelLogLevel): this.type = {
+      _level = f(_level)
+      this
+    }
+
+    override def adaptThrowable(f: Throwable => Throwable): this.type = {
+      _throwable = _throwable.map(f)
+      this
+    }
+
+    override def adaptContext(f: Map[String, Ctx] => Map[String, Ctx]): this.type = {
+      val newContext = Map.newBuilder[String, Ctx]
+      newContext.addAll(f(_context.toMap))
+      _context.clear()
+      _context.addAll(newContext.result())
+      this
+    }
+
+    override def adaptFileName(f: String => String): this.type = {
+      _fileName = _fileName.map(f)
+      this
+    }
+
+    override def adaptClassName(f: String => String): this.type = {
+      _className = _className.map(f)
+      this
+    }
+
+    override def adaptMethodName(f: String => String): this.type = {
+      _methodName = _methodName.map(f)
+      this
+    }
+
+    override def adaptLine(f: Int => Int): this.type = {
+      _line = _line.map(f)
       this
     }
 

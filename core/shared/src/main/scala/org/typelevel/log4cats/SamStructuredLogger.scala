@@ -29,93 +29,43 @@ trait SamStructuredLogger[F[_]] extends Logger[F] {
   protected def kernel: LoggerKernel[F, String]
 
   def trace(ctx: Map[String, String])(msg: => String): F[Unit] = {
-    val builder = (b: Log.Builder[String]) => {
-      var current = b.withMessage(msg)
-      ctx.foreach { case (k, v) => current = current.withContext[String](k)(v) }
-      current
-    }
-    kernel.logTrace(builder)
+    kernel.logTrace(_.withMessage(msg).withContextMap(ctx))
   }
 
   def trace(ctx: Map[String, String], t: Throwable)(msg: => String): F[Unit] = {
-    val builder = (b: Log.Builder[String]) => {
-      var current = b.withMessage(msg).withThrowable(t)
-      ctx.foreach { case (k, v) => current = current.withContext[String](k)(v) }
-      current
-    }
-    kernel.logTrace(builder)
+    kernel.logTrace(_.withMessage(msg).withThrowable(t).withContextMap(ctx))
   }
 
   def debug(ctx: Map[String, String])(msg: => String): F[Unit] = {
-    val builder = (b: Log.Builder[String]) => {
-      var current = b.withMessage(msg)
-      ctx.foreach { case (k, v) => current = current.withContext[String](k)(v) }
-      current
-    }
-    kernel.logDebug(builder)
+    kernel.logDebug(_.withMessage(msg).withContextMap(ctx))
   }
 
   def debug(ctx: Map[String, String], t: Throwable)(msg: => String): F[Unit] = {
-    val builder = (b: Log.Builder[String]) => {
-      var current = b.withMessage(msg).withThrowable(t)
-      ctx.foreach { case (k, v) => current = current.withContext[String](k)(v) }
-      current
-    }
-    kernel.logDebug(builder)
+    kernel.logDebug(_.withMessage(msg).withThrowable(t).withContextMap(ctx))
   }
 
   def info(ctx: Map[String, String])(msg: => String): F[Unit] = {
-    val builder = (b: Log.Builder[String]) => {
-      var current = b.withMessage(msg)
-      ctx.foreach { case (k, v) => current = current.withContext[String](k)(v) }
-      current
-    }
-    kernel.logInfo(builder)
+    kernel.logInfo(_.withMessage(msg).withContextMap(ctx))
   }
 
   def info(ctx: Map[String, String], t: Throwable)(msg: => String): F[Unit] = {
-    val builder = (b: Log.Builder[String]) => {
-      var current = b.withMessage(msg).withThrowable(t)
-      ctx.foreach { case (k, v) => current = current.withContext[String](k)(v) }
-      current
-    }
-    kernel.logInfo(builder)
+    kernel.logInfo(_.withMessage(msg).withThrowable(t).withContextMap(ctx))
   }
 
   def warn(ctx: Map[String, String])(msg: => String): F[Unit] = {
-    val builder = (b: Log.Builder[String]) => {
-      var current = b.withMessage(msg)
-      ctx.foreach { case (k, v) => current = current.withContext[String](k)(v) }
-      current
-    }
-    kernel.logWarn(builder)
+    kernel.logWarn(_.withMessage(msg).withContextMap(ctx))
   }
 
   def warn(ctx: Map[String, String], t: Throwable)(msg: => String): F[Unit] = {
-    val builder = (b: Log.Builder[String]) => {
-      var current = b.withMessage(msg).withThrowable(t)
-      ctx.foreach { case (k, v) => current = current.withContext[String](k)(v) }
-      current
-    }
-    kernel.logWarn(builder)
+    kernel.logWarn(_.withMessage(msg).withThrowable(t).withContextMap(ctx))
   }
 
   def error(ctx: Map[String, String])(msg: => String): F[Unit] = {
-    val builder = (b: Log.Builder[String]) => {
-      var current = b.withMessage(msg)
-      ctx.foreach { case (k, v) => current = current.withContext[String](k)(v) }
-      current
-    }
-    kernel.logError(builder)
+    kernel.logError(_.withMessage(msg).withContextMap(ctx))
   }
 
   def error(ctx: Map[String, String], t: Throwable)(msg: => String): F[Unit] = {
-    val builder = (b: Log.Builder[String]) => {
-      var current = b.withMessage(msg).withThrowable(t)
-      ctx.foreach { case (k, v) => current = current.withContext[String](k)(v) }
-      current
-    }
-    kernel.logError(builder)
+    kernel.logError(_.withMessage(msg).withThrowable(t).withContextMap(ctx))
   }
 
   override def trace(message: => String): F[Unit] =
