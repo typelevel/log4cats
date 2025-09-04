@@ -133,7 +133,7 @@ object Log {
     override def adaptContext(f: Map[String, Ctx] => Map[String, Ctx]): this.type = {
       val currentContext = _context.result()
       _context = Map.newBuilder[String, Ctx]
-      _context.addAll(f(currentContext))
+      f(currentContext).foreach { case (k, v) => _context += (k -> v) }
       this
     }
 
