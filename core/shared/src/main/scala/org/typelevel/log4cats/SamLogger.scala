@@ -19,6 +19,25 @@ package org.typelevel.log4cats
 import cats.*
 import cats.data.{EitherT, Kleisli, OptionT}
 
+// Conditional import for sourcecode - only available on JVM and JS
+//#if !scalaNative
+import sourcecode._
+//#else
+// Stub types for Native platform
+object sourcecode {
+  case class Pkg(value: String)
+  case class FileName(value: String)
+  case class Name(value: String)
+  case class Line(value: Int)
+
+  // Implicit values for Native
+  implicit val pkg: Pkg = Pkg("")
+  implicit val filename: FileName = FileName("")
+  implicit val name: Name = Name("")
+  implicit val line: Line = Line(0)
+}
+//#endif
+
 /**
  * A SAM-based Logger that extends LoggerKernel and provides a user-friendly interface. This is the
  * new design that will eventually replace the current Logger trait.
