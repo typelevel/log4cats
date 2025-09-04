@@ -75,7 +75,7 @@ object Log {
     private var _level: KernelLogLevel = KernelLogLevel.Info
     private var _message: () => String = () => ""
     private var _throwable: Option[Throwable] = None
-    private val _context: mutable.Map[String, Ctx] = mutable.Map.empty[String, Ctx]
+    private var _context: mutable.Builder[(String, Ctx), Map[String, Ctx]] = Map.newBuilder[String, Ctx]
     private var _fileName: Option[String] = None
     private var _className: Option[String] = None
     private var _methodName: Option[String] = None
@@ -86,7 +86,7 @@ object Log {
       override def level: KernelLogLevel = _level
       override def message: () => String = _message
       override def throwable: Option[Throwable] = _throwable
-      override def context: Map[String, Ctx] = _context.toMap
+      override def context: Map[String, Ctx] = _context.result()
       override def className: Option[String] = _className
       override def fileName: Option[String] = _fileName
       override def methodName: Option[String] = _methodName
@@ -130,10 +130,9 @@ object Log {
     }
 
     override def adaptContext(f: Map[String, Ctx] => Map[String, Ctx]): this.type = {
-      val newContext = Map.newBuilder[String, Ctx]
-      newContext.addAll(f(_context.toMap))
-      _context.clear()
-      _context.addAll(newContext.result())
+      val currentContext = _context.result()
+      _context = Map.newBuilder[String, Ctx]
+      _context.addAll(f(currentContext))
       this
     }
 
