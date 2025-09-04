@@ -75,7 +75,8 @@ object Log {
     private var _level: KernelLogLevel = KernelLogLevel.Info
     private var _message: () => String = () => ""
     private var _throwable: Option[Throwable] = None
-    private var _context: mutable.Builder[(String, Ctx), Map[String, Ctx]] = Map.newBuilder[String, Ctx]
+    private var _context: mutable.Builder[(String, Ctx), Map[String, Ctx]] =
+      Map.newBuilder[String, Ctx]
     private var _fileName: Option[String] = None
     private var _className: Option[String] = None
     private var _methodName: Option[String] = None
