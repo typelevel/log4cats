@@ -18,7 +18,7 @@ package org.typelevel.log4cats
 
 import cats.mtl.{LiftKind, Local}
 import cats.syntax.flatMap._
-import cats.{Monad, Show, ~>}
+import cats.{~>, Monad, Show}
 
 import scala.annotation.nowarn
 
