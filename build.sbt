@@ -54,6 +54,13 @@ lazy val core = crossProject(JSPlatform, JVMPlatform, NativePlatform)
     libraryDependencies ++= {
       if (tlIsScala3.value) Seq.empty
       else Seq("org.scala-lang" % "scala-reflect" % scalaVersion.value % Provided)
+    },
+    scalacOptions ++= {
+      if (!tlIsScala3.value) Seq.empty
+      else
+        Seq(
+          """-Wconf:src=org/typelevel/log4cats/LocalLogger.scala&msg=overrides concrete. non-deprecated definition:s"""
+        )
     }
   )
   .nativeSettings(commonNativeSettings)

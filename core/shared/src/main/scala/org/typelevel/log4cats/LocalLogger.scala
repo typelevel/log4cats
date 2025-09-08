@@ -20,8 +20,6 @@ import cats.mtl.{LiftKind, Local}
 import cats.syntax.flatMap._
 import cats.{~>, Monad, Show}
 
-import scala.annotation.nowarn
-
 /**
  * A logger with [[cats.mtl.Local `Local`]] semantics.
  *
@@ -57,7 +55,6 @@ sealed trait LocalLogger[F[_]] extends SelfAwareLogger[F] {
   def trace(ctx: Map[String, String])(msg: => String): F[Unit]
   def trace(ctx: Map[String, String], t: Throwable)(msg: => String): F[Unit]
 
-  @nowarn("msg=overrides concrete, non-deprecated definition")
   @deprecated("use `liftTo` instead", since = "log4cats 2.8.0")
   override def mapK[G[_]](fk: F ~> G): SelfAwareLogger[G] = super.mapK(fk)
 
@@ -106,7 +103,6 @@ object LocalLogger {
     def isDebugEnabled: F[Boolean] = underlying.isDebugEnabled
     def isTraceEnabled: F[Boolean] = underlying.isTraceEnabled
 
-    @nowarn("msg=overrides concrete, non-deprecated definition")
     @deprecated("use `liftTo` instead", since = "log4cats 2.8.0")
     override def mapK[G[_]](fk: F ~> G): SelfAwareStructuredLogger[G] =
       super.mapK(fk)
