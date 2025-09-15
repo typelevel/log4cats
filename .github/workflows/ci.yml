@@ -28,12 +28,10 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-22.04]
-        scala: [2.13, 2.12, 3]
+        scala: [2.13, 3]
         java: [temurin@8, temurin@11]
         project: [rootJS, rootJVM, rootNative]
         exclude:
-          - scala: 2.12
-            java: temurin@11
           - scala: 3
             java: temurin@11
           - project: rootJS
@@ -192,36 +190,6 @@ jobs:
           tar xf targets.tar
           rm targets.tar
 
-      - name: Download target directories (2.12, rootJS)
-        uses: actions/download-artifact@v4
-        with:
-          name: target-${{ matrix.os }}-${{ matrix.java }}-2.12-rootJS
-
-      - name: Inflate target directories (2.12, rootJS)
-        run: |
-          tar xf targets.tar
-          rm targets.tar
-
-      - name: Download target directories (2.12, rootJVM)
-        uses: actions/download-artifact@v4
-        with:
-          name: target-${{ matrix.os }}-${{ matrix.java }}-2.12-rootJVM
-
-      - name: Inflate target directories (2.12, rootJVM)
-        run: |
-          tar xf targets.tar
-          rm targets.tar
-
-      - name: Download target directories (2.12, rootNative)
-        uses: actions/download-artifact@v4
-        with:
-          name: target-${{ matrix.os }}-${{ matrix.java }}-2.12-rootNative
-
-      - name: Inflate target directories (2.12, rootNative)
-        run: |
-          tar xf targets.tar
-          rm targets.tar
-
       - name: Download target directories (3, rootJS)
         uses: actions/download-artifact@v4
         with:
@@ -322,7 +290,7 @@ jobs:
       - name: Submit Dependencies
         uses: scalacenter/sbt-dependency-submission@v2
         with:
-          modules-ignore: rootjs_2.13 rootjs_2.12 rootjs_3 docs_2.13 docs_2.12 docs_3 rootjvm_2.13 rootjvm_2.12 rootjvm_3 rootnative_2.13 rootnative_2.12 rootnative_3
+          modules-ignore: rootjs_2.13 rootjs_3 docs_2.13 docs_3 rootjvm_2.13 rootjvm_3 rootnative_2.13 rootnative_3
           configs-ignore: test scala-tool scala-doc-tool test-internal
 
   validate-steward:
