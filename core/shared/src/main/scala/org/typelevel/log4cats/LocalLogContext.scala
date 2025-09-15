@@ -21,7 +21,7 @@ import cats.syntax.functor.*
 import cats.syntax.traverse.*
 import cats.{Applicative, Show}
 
-import scala.collection.immutable.ArraySeq
+import scala.collection.compat.immutable.ArraySeq
 
 /**
  * Log context stored in a [[cats.mtl.Local `Local`]], as well as potentially additional log context
