@@ -16,8 +16,6 @@
 
 package org.typelevel.log4cats
 
-import java.time.Instant
-import java.time.format.DateTimeFormatter
 import scala.concurrent.duration.FiniteDuration
 
 import org.typelevel.log4cats.Context.Encoder
@@ -50,8 +48,9 @@ object Context {
 
     implicit val booleanToStringEncoder: Encoder[Boolean, String] = if (_) "true" else "false"
 
-    implicit val instantToStringEncoder: Encoder[Instant, String] =
-      DateTimeFormatter.ISO_INSTANT.format(_)
+    // Removed Instant encoder for Scala Native compatibility
+    // implicit val instantToStringEncoder: Encoder[Instant, String] =
+    //   DateTimeFormatter.ISO_INSTANT.format(_)
 
     implicit val finiteDurationToStringEncoder: Encoder[FiniteDuration, String] = _.toString
   }

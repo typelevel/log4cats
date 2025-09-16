@@ -17,7 +17,6 @@
 package org.typelevel.log4cats
 
 import cats.effect.kernel.Sync
-import java.time.Instant
 
 /**
  * A simple console implementation of LoggerKernel for testing the SAM design.
@@ -29,8 +28,8 @@ class ConsoleLoggerKernel[F[_], Ctx](implicit F: Sync[F]) extends LoggerKernel[F
       val logRecord = record(Log.mutableBuilder[Ctx]()).build()
 
       val timestamp = logRecord.timestamp.map(_.toMillis).getOrElse(System.currentTimeMillis())
-      val instant = Instant.ofEpochMilli(timestamp)
-      val timeStr = instant.toString
+      // Use simple timestamp formatting instead of java.time.Instant for Scala Native compatibility
+      val timeStr = s"${new java.util.Date(timestamp).toString}"
 
       val levelStr = logRecord.level.namePadded
       val message = logRecord.message
