@@ -19,25 +19,6 @@ package org.typelevel.log4cats
 import cats.*
 import cats.data.{EitherT, Kleisli, OptionT}
 
-// Conditional import for sourcecode - only available on JVM and JS
-//#if !scalaNative
-import sourcecode._
-//#else
-// Stub types for Native platform
-object sourcecode {
-  case class Pkg(value: String)
-  case class FileName(value: String)
-  case class Name(value: String)
-  case class Line(value: Int)
-
-  // Implicit values for Native
-  implicit val pkg: Pkg = Pkg("")
-  implicit val filename: FileName = FileName("")
-  implicit val name: Name = Name("")
-  implicit val line: Line = Line(0)
-}
-//#endif
-
 /**
  * A SAM-based Logger that extends LoggerKernel and provides a user-friendly interface. This is the
  * new design that will eventually replace the current Logger trait.
@@ -137,32 +118,8 @@ object SamLogger {
       f: String => String
   ): SamLogger[F, Ctx] =
     new SamLogger[F, Ctx] {
-      def log(level: KernelLogLevel, record: Builder => Builder): F[Unit] = {
-        val modifiedRecord = (builder: Builder) => {
-          val originalLog = record(builder).build()
-          val modifiedMessage = f(originalLog.message())
-
-          val newBuilder = Log
-            .mutableBuilder[Ctx]()
-            .withLevel(level)
-            .withMessage(modifiedMessage)
-
-          // Copy the fields from the original log
-          originalLog.timestamp.foreach(newBuilder.withTimestamp)
-          originalLog.throwable.foreach(newBuilder.withThrowable)
-          originalLog.fileName.foreach(newBuilder.withFileName)
-          originalLog.className.foreach(newBuilder.withClassName)
-          originalLog.line.foreach(newBuilder.withLine)
-
-          // Copy context - since Ctx is the same type, we can use identity encoder
-          originalLog.context.foreach { case (k, v) =>
-            newBuilder.withContext(k)(v)
-          }
-
-          newBuilder
-        }
-        l.log(level, modifiedRecord)
-      }
+      def log(level: KernelLogLevel, record: Builder => Builder): F[Unit] =
+        l.log(level, record(_).adaptMessage(f))
     }
 
   private def mapK[G[_], F[_], Ctx](f: G ~> F)(logger: SamLogger[G, Ctx]): SamLogger[F, Ctx] =

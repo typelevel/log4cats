@@ -48,18 +48,13 @@ lazy val core = crossProject(JSPlatform, JVMPlatform, NativePlatform)
     name := "log4cats-core",
     libraryDependencies ++= Seq(
       "org.typelevel" %%% "cats-core"       % catsV,
-      "org.typelevel" %%% "cats-effect-std" % catsEffectV
+      "org.typelevel" %%% "cats-effect-std" % catsEffectV,
+      "com.lihaoyi" %%% "sourcecode" % sourcecodeV
     ),
     libraryDependencies ++= {
       if (tlIsScala3.value) Seq.empty
       else Seq("org.scala-lang" % "scala-reflect" % scalaVersion.value % Provided)
     }
-  )
-  .jvmSettings(
-    libraryDependencies += "com.lihaoyi" %%% "sourcecode" % sourcecodeV
-  )
-  .jsSettings(
-    libraryDependencies += "com.lihaoyi" %%% "sourcecode" % sourcecodeV
   )
   .nativeSettings(commonNativeSettings)
 
