@@ -29,7 +29,8 @@ class SamStructuredLoggerTest extends CatsEffectSuite {
           level: KernelLogLevel,
           record: Log.Builder[String] => Log.Builder[String]
       ): IO[Unit] = {
-        capturedLogs = capturedLogs :+ (level, record)
+
+        capturedLogs = capturedLogs :+ ((level, record))
         IO.unit
       }
     }
