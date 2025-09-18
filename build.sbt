@@ -1,11 +1,10 @@
 import com.typesafe.tools.mima.core._
 
 val Scala213 = "2.13.16"
-val Scala212 = "2.12.20"
 val Scala3 = "3.3.6"
 
 ThisBuild / tlBaseVersion := "2.7"
-ThisBuild / crossScalaVersions := Seq(Scala213, Scala212, Scala3)
+ThisBuild / crossScalaVersions := Seq(Scala213, Scala3)
 ThisBuild / scalaVersion := Scala213
 ThisBuild / startYear := Some(2018)
 ThisBuild / developers := List(
@@ -28,6 +27,7 @@ ThisBuild / tlVersionIntroduced := Map("3" -> "2.1.1")
 
 val catsV = "2.13.0"
 val catsEffectV = "3.7.0-RC1"
+val catsMtlV = "1.6.0"
 val slf4jV = "1.7.36"
 val munitCatsEffectV = "2.2.0-RC1"
 val logbackClassicV = "1.2.13"
@@ -47,11 +47,19 @@ lazy val core = crossProject(JSPlatform, JVMPlatform, NativePlatform)
     name := "log4cats-core",
     libraryDependencies ++= Seq(
       "org.typelevel" %%% "cats-core"       % catsV,
-      "org.typelevel" %%% "cats-effect-std" % catsEffectV
+      "org.typelevel" %%% "cats-effect-std" % catsEffectV,
+      "org.typelevel" %%% "cats-mtl"        % catsMtlV
     ),
     libraryDependencies ++= {
       if (tlIsScala3.value) Seq.empty
       else Seq("org.scala-lang" % "scala-reflect" % scalaVersion.value % Provided)
+    },
+    scalacOptions ++= {
+      if (!tlIsScala3.value) Seq.empty
+      else
+        Seq(
+          """-Wconf:src=org/typelevel/log4cats/LocalLogger.scala&msg=overrides concrete. non-deprecated definition:s"""
+        )
     }
   )
   .nativeSettings(commonNativeSettings)
