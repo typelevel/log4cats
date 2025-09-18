@@ -24,7 +24,7 @@ import cats.{~>, Monad, Show}
  * A logger with [[cats.mtl.Local `Local`]] semantics.
  *
  * @see
- *   [[withAddedContext]]
+ *   [[withAddedContext[A](ctx:Map[String,String])*]]
  */
 sealed trait LocalLogger[F[_]] extends SelfAwareLogger[F] {
 
