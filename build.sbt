@@ -54,7 +54,18 @@ lazy val core = crossProject(JSPlatform, JVMPlatform, NativePlatform)
     libraryDependencies ++= {
       if (tlIsScala3.value) Seq.empty
       else Seq("org.scala-lang" % "scala-reflect" % scalaVersion.value % Provided)
-    }
+    },
+    mimaBinaryIssueFilters ++= Seq(
+      // Removed implicit conversions for monad transformers - these were intentionally removed
+      ProblemFilters
+        .exclude[DirectMissingMethodProblem]("org.typelevel.log4cats.Logger.kleisliLogger"),
+      ProblemFilters
+        .exclude[DirectMissingMethodProblem]("org.typelevel.log4cats.Logger.eitherTLogger"),
+      ProblemFilters
+        .exclude[DirectMissingMethodProblem]("org.typelevel.log4cats.Logger.optionTLogger"),
+      // Added new kernel method - this is a new API addition
+      ProblemFilters.exclude[ReversedMissingMethodProblem]("org.typelevel.log4cats.Logger.kernel")
+    )
   )
   .nativeSettings(commonNativeSettings)
 
