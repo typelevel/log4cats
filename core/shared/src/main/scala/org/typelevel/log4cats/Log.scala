@@ -111,7 +111,8 @@ object Log {
     }
 
     override def adaptMessage(f: String => String): this.type = {
-      _message = () => f(_message())
+      val originalMessage = _message
+      _message = () => f(originalMessage())
       this
     }
 
