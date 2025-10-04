@@ -23,9 +23,9 @@ import munit.CatsEffectSuite
 class SamStructuredLoggerTest extends CatsEffectSuite {
 
   // Test kernel that captures log calls for verification
-  def testKernel[F[_]: cats.effect.Sync](
+  def testKernel[F[_]](
       ref: Ref[F, List[Log[String]]]
-  ): LoggerKernel[F, String] = {
+  )(implicit F: cats.effect.Sync[F]): LoggerKernel[F, String] = {
     new LoggerKernel[F, String] {
       def log(
           level: KernelLogLevel,

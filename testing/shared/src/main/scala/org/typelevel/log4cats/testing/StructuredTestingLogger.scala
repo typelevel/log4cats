@@ -170,6 +170,9 @@ object StructuredTestingLogger {
             case KernelLogLevel.Error =>
               if (errorEnabled) appendLogMessage(ERROR(message, throwable, context))
               else Sync[F].unit
+            case _ =>
+              if (errorEnabled) appendLogMessage(ERROR(message, throwable, context))
+              else Sync[F].unit
           }
         }
       }

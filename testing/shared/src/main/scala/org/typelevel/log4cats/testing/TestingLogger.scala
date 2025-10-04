@@ -145,6 +145,8 @@ object TestingLogger {
               if (warnEnabled) appendLogMessage(WARN(message, throwable)) else Sync[F].unit
             case KernelLogLevel.Error =>
               if (errorEnabled) appendLogMessage(ERROR(message, throwable)) else Sync[F].unit
+            case _ =>
+              if (errorEnabled) appendLogMessage(ERROR(message, throwable)) else Sync[F].unit
           }
         }
       }
