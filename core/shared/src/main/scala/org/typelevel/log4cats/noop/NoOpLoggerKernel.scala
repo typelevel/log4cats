@@ -19,11 +19,9 @@ package org.typelevel.log4cats.noop
 import cats.Applicative
 import org.typelevel.log4cats.{KernelLogLevel, Log, LoggerKernel}
 
-class NoOpLoggerKernel[F[_]: Applicative, Ctx] extends LoggerKernel[F, Ctx] {
-  def log(level: KernelLogLevel, record: Log.Builder[Ctx] => Log.Builder[Ctx]): F[Unit] =
-    Applicative[F].unit
-}
-
 object NoOpLoggerKernel {
-  def apply[F[_]: Applicative, Ctx]: NoOpLoggerKernel[F, Ctx] = new NoOpLoggerKernel[F, Ctx]
+  def apply[F[_]: Applicative, Ctx]: LoggerKernel[F, Ctx] = new LoggerKernel[F, Ctx] {
+    override def log(level: KernelLogLevel, record: Log.Builder[Ctx] => Log.Builder[Ctx]): F[Unit] =
+      Applicative[F].unit
+  }
 }

@@ -21,21 +21,23 @@ import munit.CatsEffectSuite
 import org.typelevel.log4cats._
 
 class NoOpLoggerKernelTest extends CatsEffectSuite {
+  private def boom()(implicit loc: munit.Location): String = fail("This code should not have executed")
+  
   test("NoOpLoggerKernel should do nothing and not fail") {
     val kernel = NoOpLoggerKernel[IO, String]
     val logger = SamLogger.wrap(kernel)
     // All of these should be no-ops and not throw
-    logger.info("This should not appear").void *>
-      logger.error("This should not appear").void *>
-      logger.warn("This should not appear").void *>
-      logger.debug("This should not appear").void *>
-      logger.trace("This should not appear").void
+    logger.info("This should not appear") *>
+      logger.error(boom()) *>
+      logger.warn(boom()) *>
+      logger.debug(boom()) *>
+      logger.trace(boom())
   }
 
-  test("NoOpLoggerKernel should work with the adapter") {
+  test("NoOpLoggerKernel should work with SamLogger") {
     val kernel = NoOpLoggerKernel[IO, String]
-    val logger = SamLoggerAdapter.toLogger(kernel)
-    logger.info("Adapter test").void *>
-      logger.error("Adapter test").void
+    val logger = SamLogger.wrap(kernel)
+    logger.info("SamLogger test") *>
+      logger.error("SamLogger test")
   }
 }
