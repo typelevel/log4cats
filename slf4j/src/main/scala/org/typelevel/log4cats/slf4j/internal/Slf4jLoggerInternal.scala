@@ -49,6 +49,74 @@ private[slf4j] object Slf4jLoggerInternal {
     ) =
       this(logger, Sync.Type.Delay)(F)
 
+    protected def kernel: LoggerKernel[F, String] = new LoggerKernel[F, String] {
+      def log(level: KernelLogLevel, logBuilder: Log.Builder[String] => Log.Builder[String]): F[Unit] = {
+        // Check if the log level is enabled before building the Log object
+        val isEnabled = level match {
+          case KernelLogLevel.Trace => F.delay(logger.isTraceEnabled)
+          case KernelLogLevel.Debug => F.delay(logger.isDebugEnabled)
+          case KernelLogLevel.Info => F.delay(logger.isInfoEnabled)
+          case KernelLogLevel.Warn => F.delay(logger.isWarnEnabled)
+          case KernelLogLevel.Error => F.delay(logger.isErrorEnabled)
+        }
+        
+        Sync[F].flatMap(isEnabled) { enabled =>
+          if (enabled) {
+            // Only build the Log object if the level is enabled
+            val log = logBuilder(Log.mutableBuilder[String]()).build()
+            val context = log.context
+            
+            // Set MDC context
+            val setMdc = F.delay {
+              context.foreach { case (k, v) => MDC.put(k, v) }
+            }
+            
+            val clearMdc = F.delay {
+              context.keys.foreach(MDC.remove)
+            }
+            
+            val logMessage = level match {
+              case KernelLogLevel.Trace => 
+                F.delay {
+                  val message = log.message()
+                  val throwable = log.throwable
+                  if (throwable.isDefined) logger.trace(message, throwable.get) else logger.trace(message)
+                }
+              case KernelLogLevel.Debug => 
+                F.delay {
+                  val message = log.message()
+                  val throwable = log.throwable
+                  if (throwable.isDefined) logger.debug(message, throwable.get) else logger.debug(message)
+                }
+              case KernelLogLevel.Info => 
+                F.delay {
+                  val message = log.message()
+                  val throwable = log.throwable
+                  if (throwable.isDefined) logger.info(message, throwable.get) else logger.info(message)
+                }
+              case KernelLogLevel.Warn => 
+                F.delay {
+                  val message = log.message()
+                  val throwable = log.throwable
+                  if (throwable.isDefined) logger.warn(message, throwable.get) else logger.warn(message)
+                }
+              case KernelLogLevel.Error => 
+                F.delay {
+                  val message = log.message()
+                  val throwable = log.throwable
+                  if (throwable.isDefined) logger.error(message, throwable.get) else logger.error(message)
+                }
+            }
+            
+            Sync[F].flatMap(setMdc)(_ => Sync[F].flatMap(logMessage)(_ => clearMdc))
+          } else {
+            // If level is disabled, do nothing
+            F.unit
+          }
+        }
+      }
+    }
+
     private val isTraceEnabledUnsafe = () => logger.isTraceEnabled
     private val isDebugEnabledUnsafe = () => logger.isDebugEnabled
     private val isInfoEnabledUnsafe = () => logger.isInfoEnabled
