@@ -56,15 +56,31 @@ lazy val core = crossProject(JSPlatform, JVMPlatform, NativePlatform)
       else Seq("org.scala-lang" % "scala-reflect" % scalaVersion.value % Provided)
     },
     mimaBinaryIssueFilters ++= Seq(
-      // Removed implicit conversions for monad transformers - these were intentionally removed
+      // Removed implicit conversions for monad transformers from Logger - these were intentionally removed
       ProblemFilters
         .exclude[DirectMissingMethodProblem]("org.typelevel.log4cats.Logger.kleisliLogger"),
       ProblemFilters
         .exclude[DirectMissingMethodProblem]("org.typelevel.log4cats.Logger.eitherTLogger"),
       ProblemFilters
         .exclude[DirectMissingMethodProblem]("org.typelevel.log4cats.Logger.optionTLogger"),
-      // Added new kernel method - this is a new API addition
-      ProblemFilters.exclude[ReversedMissingMethodProblem]("org.typelevel.log4cats.Logger.kernel")
+      // Removed implicit conversions for monad transformers from LoggerFactory - these were intentionally removed
+      ProblemFilters
+        .exclude[DirectMissingMethodProblem]("org.typelevel.log4cats.LoggerFactory.kleisliFactory"),
+      ProblemFilters
+        .exclude[DirectMissingMethodProblem]("org.typelevel.log4cats.LoggerFactory.eitherTFactory"),
+      ProblemFilters
+        .exclude[DirectMissingMethodProblem]("org.typelevel.log4cats.LoggerFactory.optionTFactory"),
+      // Added new kernel methods - these are new API additions
+      ProblemFilters.exclude[ReversedMissingMethodProblem]("org.typelevel.log4cats.Logger.kernel"),
+      ProblemFilters.exclude[ReversedMissingMethodProblem](
+        "org.typelevel.log4cats.extras.DeferredLogger.kernel"
+      ),
+      ProblemFilters.exclude[ReversedMissingMethodProblem](
+        "org.typelevel.log4cats.extras.DeferredSelfAwareStructuredLogger.kernel"
+      ),
+      ProblemFilters.exclude[ReversedMissingMethodProblem](
+        "org.typelevel.log4cats.extras.DeferredStructuredLogger.kernel"
+      )
     )
   )
   .nativeSettings(commonNativeSettings)
