@@ -17,71 +17,70 @@
 package org.typelevel.log4cats
 
 import cats.*
-import cats.data.{EitherT, Kleisli, OptionT}
 
 /**
- * A SAM-based Logger that extends LoggerKernel and provides a user-friendly interface. This is the
+ * A SAM-based Logger that provides a user-friendly interface. This is the
  * new design that will eventually replace the current Logger trait.
  */
-abstract class SamLogger[F[_], Ctx] extends LoggerKernel[F, Ctx] {
+trait SamLogger[F[_], Ctx] {
+  protected def kernel: LoggerKernel[F, Ctx]
+  
+  /** Access to the underlying kernel for advanced use cases */
+  def underlying: LoggerKernel[F, Ctx] = kernel
 
-  final def info(logBit: LogRecord[Ctx], others: LogRecord[Ctx]*)(implicit
+  final def info(message: => String)(implicit
       pkg: sourcecode.Pkg,
       filename: sourcecode.FileName,
       name: sourcecode.Name,
       line: sourcecode.Line
-  ): F[Unit] = log_(KernelLogLevel.Info, logBit, others: _*)
+  ): F[Unit] = log_(KernelLogLevel.Info, message)
 
-  final def warn(logBit: LogRecord[Ctx], others: LogRecord[Ctx]*)(implicit
+  final def warn(message: => String)(implicit
       pkg: sourcecode.Pkg,
       filename: sourcecode.FileName,
       name: sourcecode.Name,
       line: sourcecode.Line
-  ): F[Unit] = log_(KernelLogLevel.Warn, logBit, others: _*)
+  ): F[Unit] = log_(KernelLogLevel.Warn, message)
 
-  final def error(logBit: LogRecord[Ctx], others: LogRecord[Ctx]*)(implicit
+  final def error(message: => String)(implicit
       pkg: sourcecode.Pkg,
       filename: sourcecode.FileName,
       name: sourcecode.Name,
       line: sourcecode.Line
-  ): F[Unit] = log_(KernelLogLevel.Error, logBit, others: _*)
+  ): F[Unit] = log_(KernelLogLevel.Error, message)
 
-  final def trace(logBit: LogRecord[Ctx], others: LogRecord[Ctx]*)(implicit
+  final def trace(message: => String)(implicit
       pkg: sourcecode.Pkg,
       filename: sourcecode.FileName,
       name: sourcecode.Name,
       line: sourcecode.Line
-  ): F[Unit] = log_(KernelLogLevel.Trace, logBit, others: _*)
+  ): F[Unit] = log_(KernelLogLevel.Trace, message)
 
-  final def debug(logBit: LogRecord[Ctx], others: LogRecord[Ctx]*)(implicit
+  final def debug(message: => String)(implicit
       pkg: sourcecode.Pkg,
       filename: sourcecode.FileName,
       name: sourcecode.Name,
       line: sourcecode.Line
-  ): F[Unit] = log_(KernelLogLevel.Debug, logBit, others: _*)
+  ): F[Unit] = log_(KernelLogLevel.Debug, message)
 
   private final def log_(
       level: KernelLogLevel,
-      bit: LogRecord[Ctx],
-      others: LogRecord[Ctx]*
+      message: => String
   )(implicit
       pkg: sourcecode.Pkg,
       filename: sourcecode.FileName,
       name: sourcecode.Name,
       line: sourcecode.Line
   ): F[Unit] = {
-    log(
+    kernel.log(
       level,
-      (record: Builder) =>
-        LogRecord.combine[Ctx](others)(
-          bit(
-            record
-              .withLevel(level)
-              .withClassName(pkg.value + "." + name.value)
-              .withFileName(filename.value)
-              .withLine(line.value)
-          )
-        )
+      (record: Log.Builder[Ctx]) =>
+        record
+          .withLevel(level)
+          .withMessage(message)
+          .withClassName(pkg.value + "." + name.value)
+          .withFileName(filename.value)
+          .withLine(line.value)
     )
   }
 
@@ -93,38 +92,27 @@ abstract class SamLogger[F[_], Ctx] extends LoggerKernel[F, Ctx] {
 object SamLogger {
   def apply[F[_], Ctx](implicit ev: SamLogger[F, Ctx]) = ev
 
-  def wrap[F[_], Ctx](kernel: LoggerKernel[F, Ctx]): SamLogger[F, Ctx] = new SamLogger[F, Ctx] {
-    def log(level: KernelLogLevel, record: Builder => Builder): F[Unit] =
-      kernel.log(level, record)
+  def wrap[F[_], Ctx](k: LoggerKernel[F, Ctx]): SamLogger[F, Ctx] = new SamLogger[F, Ctx] {
+    protected def kernel: LoggerKernel[F, Ctx] = k
   }
 
-  implicit def optionTSamLogger[F[_]: Functor, Ctx](implicit
-      ev: SamLogger[F, Ctx]
-  ): SamLogger[OptionT[F, *], Ctx] =
-    ev.mapK(OptionT.liftK[F])
-
-  implicit def eitherTSamLogger[F[_]: Functor, E, Ctx](implicit
-      ev: SamLogger[F, Ctx]
-  ): SamLogger[EitherT[F, E, *], Ctx] =
-    ev.mapK(EitherT.liftK[F, E])
-
-  implicit def kleisliSamLogger[F[_], A, Ctx](implicit
-      ev: SamLogger[F, Ctx]
-  ): SamLogger[Kleisli[F, A, *], Ctx] =
-    ev.mapK(Kleisli.liftK[F, A])
 
   private def withModifiedString[F[_], Ctx](
       l: SamLogger[F, Ctx],
       f: String => String
   ): SamLogger[F, Ctx] =
     new SamLogger[F, Ctx] {
-      def log(level: KernelLogLevel, record: Builder => Builder): F[Unit] =
-        l.log(level, record(_).adaptMessage(f))
+      protected def kernel: LoggerKernel[F, Ctx] = new LoggerKernel[F, Ctx] {
+        def log(level: KernelLogLevel, record: Log.Builder[Ctx] => Log.Builder[Ctx]): F[Unit] =
+          l.underlying.log(level, record(_).adaptMessage(f))
+      }
     }
 
   private def mapK[G[_], F[_], Ctx](f: G ~> F)(logger: SamLogger[G, Ctx]): SamLogger[F, Ctx] =
     new SamLogger[F, Ctx] {
-      def log(level: KernelLogLevel, record: Builder => Builder): F[Unit] =
-        f(logger.log(level, record))
+      protected def kernel: LoggerKernel[F, Ctx] = new LoggerKernel[F, Ctx] {
+        def log(level: KernelLogLevel, record: Log.Builder[Ctx] => Log.Builder[Ctx]): F[Unit] =
+          f(logger.underlying.log(level, record))
+      }
     }
 }

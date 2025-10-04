@@ -19,23 +19,12 @@ package org.typelevel.log4cats
 import cats.Order
 
 final case class KernelLogLevel(name: String, value: Int) {
-  def namePadded: String = KernelLogLevel.padded(this)
-
-  KernelLogLevel.add(this)
+  def namePadded: String = name.padTo(5, ' ').mkString
 }
 
 object KernelLogLevel {
-  private var maxLength = 0
-
-  private var map = Map.empty[String, KernelLogLevel]
-  private var padded = Map.empty[KernelLogLevel, String]
-
   implicit final val orderKernelLogLevel: Order[KernelLogLevel] =
     Order.by[KernelLogLevel, Int](-_.value)
-
-  // For Java/legacy interop, if needed (not implicit)
-  val LevelOrdering: Ordering[KernelLogLevel] =
-    Ordering.by[KernelLogLevel, Int](_.value).reverse
 
   val Trace: KernelLogLevel = KernelLogLevel("TRACE", 100)
   val Debug: KernelLogLevel = KernelLogLevel("DEBUG", 200)
@@ -43,23 +32,4 @@ object KernelLogLevel {
   val Warn: KernelLogLevel = KernelLogLevel("WARN", 400)
   val Error: KernelLogLevel = KernelLogLevel("ERROR", 500)
   val Fatal: KernelLogLevel = KernelLogLevel("FATAL", 600)
-
-  def add(level: KernelLogLevel): Unit = synchronized {
-    val length = level.name.length
-    map += level.name.toLowerCase -> level
-    if (length > maxLength) {
-      maxLength = length
-      padded = map.map { case (_, level) =>
-        level -> level.name.padTo(maxLength, ' ').mkString
-      }
-    } else {
-      padded += level -> level.name.padTo(maxLength, ' ').mkString
-    }
-  }
-
-  def get(name: String): Option[KernelLogLevel] = map.get(name.toLowerCase)
-
-  def apply(name: String): KernelLogLevel = get(name).getOrElse(
-    throw new RuntimeException(s"Level not found by name: $name")
-  )
 }

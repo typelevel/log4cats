@@ -16,6 +16,8 @@
 
 package org.typelevel.log4cats
 
+import cats.~>
+
 /**
  * This is the fundamental abstraction: a single-abstract-method interface that has the following
  * properties:
@@ -34,18 +36,25 @@ package org.typelevel.log4cats
  * implementation.
  */
 trait LoggerKernel[F[_], Ctx] {
-  type Builder = Log.Builder[Ctx]
+  def log(level: KernelLogLevel, record: Log.Builder[Ctx] => Log.Builder[Ctx]): F[Unit]
 
-  def log(level: KernelLogLevel, record: Builder => Builder): F[Unit]
-
-  final def logTrace(record: Builder => Builder): F[Unit] =
+  final def logTrace(record: Log.Builder[Ctx] => Log.Builder[Ctx]): F[Unit] =
     log(KernelLogLevel.Trace, record)
-  final def logDebug(record: Builder => Builder): F[Unit] =
+  final def logDebug(record: Log.Builder[Ctx] => Log.Builder[Ctx]): F[Unit] =
     log(KernelLogLevel.Debug, record)
-  final def logInfo(record: Builder => Builder): F[Unit] =
+  final def logInfo(record: Log.Builder[Ctx] => Log.Builder[Ctx]): F[Unit] =
     log(KernelLogLevel.Info, record)
-  final def logWarn(record: Builder => Builder): F[Unit] =
+  final def logWarn(record: Log.Builder[Ctx] => Log.Builder[Ctx]): F[Unit] =
     log(KernelLogLevel.Warn, record)
-  final def logError(record: Builder => Builder): F[Unit] =
+  final def logError(record: Log.Builder[Ctx] => Log.Builder[Ctx]): F[Unit] =
     log(KernelLogLevel.Error, record)
+
+  /**
+   * Transform the effect type using a natural transformation.
+   * This allows converting between different effect types (e.g., IO to Task, Task to IO).
+   */
+  def mapK[G[_]](f: F ~> G): LoggerKernel[G, Ctx] = new LoggerKernel[G, Ctx] {
+    def log(level: KernelLogLevel, record: Log.Builder[Ctx] => Log.Builder[Ctx]): G[Unit] =
+      f(LoggerKernel.this.log(level, record))
+  }
 }
