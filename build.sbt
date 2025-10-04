@@ -26,10 +26,10 @@ ThisBuild / githubWorkflowJavaVersions := Seq(JavaSpec.temurin("8"), JavaSpec.te
 
 ThisBuild / tlVersionIntroduced := Map("3" -> "2.1.1")
 
-val catsV = "2.11.0"
-val catsEffectV = "3.6.3"
+val catsV = "2.13.0"
+val catsEffectV = "3.7.0-RC1"
 val slf4jV = "1.7.36"
-val munitCatsEffectV = "2.1.0"
+val munitCatsEffectV = "2.2.0-RC1"
 val logbackClassicV = "1.2.13"
 val sourcecodeV = "0.4.2"
 
@@ -122,5 +122,5 @@ lazy val commonSettings = Seq(
 )
 
 lazy val commonNativeSettings = Seq(
-  tlVersionIntroduced := List("2.12", "2.13", "3").map(_ -> "2.4.1").toMap
+  tlVersionIntroduced := List("2.12", "2.13", "3").map(_ -> "2.8.0").toMap
 )
