@@ -83,7 +83,7 @@ class SamStructuredLoggerTest extends CatsEffectSuite {
       kernel = testKernel[IO](ref)
       logger = SamStructuredLogger.fromKernel(kernel)
 
-      val exception = new RuntimeException("Test exception")
+      exception = new RuntimeException("Test exception")
       _ <- logger.error(Map("error_type" -> "runtime"), exception)("Error with context")
       logs <- ref.get
     } yield {
