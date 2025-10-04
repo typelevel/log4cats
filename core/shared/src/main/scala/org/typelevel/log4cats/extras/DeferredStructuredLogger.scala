@@ -95,6 +95,7 @@ object DeferredStructuredLogger {
                 case KernelLogLevel.Warn => LogLevel.Warn
                 case KernelLogLevel.Error => LogLevel.Error
                 case KernelLogLevel.Fatal => LogLevel.Error
+                case _ => LogLevel.Error // Handle any other KernelLogLevel values
               }
               val deferredMsg = DeferredLogMessage(
                 logLevel,

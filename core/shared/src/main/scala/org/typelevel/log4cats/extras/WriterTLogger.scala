@@ -54,6 +54,7 @@ object WriterTLogger {
               case KernelLogLevel.Warn => LogLevel.Warn
               case KernelLogLevel.Error => LogLevel.Error
               case KernelLogLevel.Fatal => LogLevel.Error
+              case _ => LogLevel.Error // Handle any other KernelLogLevel values
             }
             WriterT.tell[F, G[LogMessage]](
               Applicative[G].pure(LogMessage(logLevel, log.throwable, log.message()))
