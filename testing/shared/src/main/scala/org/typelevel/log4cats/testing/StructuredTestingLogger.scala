@@ -17,7 +17,8 @@
 package org.typelevel.log4cats.testing
 
 import cats.data.Chain
-import org.typelevel.log4cats.SelfAwareStructuredLogger
+import org.typelevel.log4cats.{SelfAwareStructuredLogger, LoggerKernel, KernelLogLevel}
+import org.typelevel.log4cats.Log
 import cats.effect.{Ref, Sync}
 import cats.syntax.all.*
 
@@ -145,51 +146,73 @@ object StructuredTestingLogger {
       def isWarnEnabled: F[Boolean] = Sync[F].pure(warnEnabled)
       def isErrorEnabled: F[Boolean] = Sync[F].pure(errorEnabled)
 
+      protected def kernel: LoggerKernel[F, String] = new LoggerKernel[F, String] {
+        def log(level: KernelLogLevel, logBuilder: Log.Builder[String] => Log.Builder[String]): F[Unit] = {
+          val log = logBuilder(Log.mutableBuilder[String]()).build()
+          val message = log.message()
+          val throwable = log.throwable
+          val context = log.context
+          
+          level match {
+            case KernelLogLevel.Trace => 
+              if (traceEnabled) appendLogMessage(TRACE(message, throwable, context)) else Sync[F].unit
+            case KernelLogLevel.Debug => 
+              if (debugEnabled) appendLogMessage(DEBUG(message, throwable, context)) else Sync[F].unit
+            case KernelLogLevel.Info => 
+              if (infoEnabled) appendLogMessage(INFO(message, throwable, context)) else Sync[F].unit
+            case KernelLogLevel.Warn => 
+              if (warnEnabled) appendLogMessage(WARN(message, throwable, context)) else Sync[F].unit
+            case KernelLogLevel.Error => 
+              if (errorEnabled) appendLogMessage(ERROR(message, throwable, context)) else Sync[F].unit
+          }
+        }
+      }
+
       private val noop = Sync[F].unit
 
-      def error(message: => String): F[Unit] =
+      override def error(message: => String): F[Unit] =
         if (errorEnabled) appendLogMessage(ERROR(message, None)) else noop
-      def error(t: Throwable)(message: => String): F[Unit] =
+      override def error(t: Throwable)(message: => String): F[Unit] =
         if (errorEnabled) appendLogMessage(ERROR(message, t.some)) else noop
-      def error(ctx: Map[String, String])(message: => String): F[Unit] =
+      override def error(ctx: Map[String, String])(message: => String): F[Unit] =
         if (errorEnabled) appendLogMessage(ERROR(message, None, ctx)) else noop
-      def error(ctx: Map[String, String], t: Throwable)(message: => String): F[Unit] =
+      override def error(ctx: Map[String, String], t: Throwable)(message: => String): F[Unit] =
         if (errorEnabled) appendLogMessage(ERROR(message, t.some, ctx)) else noop
 
-      def warn(message: => String): F[Unit] =
+      override def warn(message: => String): F[Unit] =
         if (warnEnabled) appendLogMessage(WARN(message, None)) else noop
-      def warn(t: Throwable)(message: => String): F[Unit] =
+      override def warn(t: Throwable)(message: => String): F[Unit] =
         if (warnEnabled) appendLogMessage(WARN(message, t.some)) else noop
-      def warn(ctx: Map[String, String])(message: => String): F[Unit] =
+      override def warn(ctx: Map[String, String])(message: => String): F[Unit] =
         if (warnEnabled) appendLogMessage(WARN(message, None, ctx)) else noop
-      def warn(ctx: Map[String, String], t: Throwable)(message: => String): F[Unit] =
+      override def warn(ctx: Map[String, String], t: Throwable)(message: => String): F[Unit] =
         if (warnEnabled) appendLogMessage(WARN(message, t.some, ctx)) else noop
 
-      def info(message: => String): F[Unit] =
+      override def info(message: => String): F[Unit] =
         if (infoEnabled) appendLogMessage(INFO(message, None)) else noop
-      def info(t: Throwable)(message: => String): F[Unit] =
+      override def info(t: Throwable)(message: => String): F[Unit] =
         if (infoEnabled) appendLogMessage(INFO(message, t.some)) else noop
-      def info(ctx: Map[String, String])(message: => String): F[Unit] =
+      override def info(ctx: Map[String, String])(message: => String): F[Unit] =
         if (infoEnabled) appendLogMessage(INFO(message, None, ctx)) else noop
-      def info(ctx: Map[String, String], t: Throwable)(message: => String): F[Unit] =
+      override def info(ctx: Map[String, String], t: Throwable)(message: => String): F[Unit] =
         if (infoEnabled) appendLogMessage(INFO(message, t.some, ctx)) else noop
 
-      def debug(message: => String): F[Unit] =
+      override def debug(message: => String): F[Unit] =
         if (debugEnabled) appendLogMessage(DEBUG(message, None)) else noop
-      def debug(t: Throwable)(message: => String): F[Unit] =
+      override def debug(t: Throwable)(message: => String): F[Unit] =
         if (debugEnabled) appendLogMessage(DEBUG(message, t.some)) else noop
-      def debug(ctx: Map[String, String])(message: => String): F[Unit] =
+      override def debug(ctx: Map[String, String])(message: => String): F[Unit] =
         if (debugEnabled) appendLogMessage(DEBUG(message, None, ctx)) else noop
-      def debug(ctx: Map[String, String], t: Throwable)(message: => String): F[Unit] =
+      override def debug(ctx: Map[String, String], t: Throwable)(message: => String): F[Unit] =
         if (debugEnabled) appendLogMessage(DEBUG(message, t.some, ctx)) else noop
 
-      def trace(message: => String): F[Unit] =
+      override def trace(message: => String): F[Unit] =
         if (traceEnabled) appendLogMessage(TRACE(message, None)) else noop
-      def trace(t: Throwable)(message: => String): F[Unit] =
+      override def trace(t: Throwable)(message: => String): F[Unit] =
         if (traceEnabled) appendLogMessage(TRACE(message, t.some)) else noop
-      def trace(ctx: Map[String, String])(message: => String): F[Unit] =
+      override def trace(ctx: Map[String, String])(message: => String): F[Unit] =
         if (traceEnabled) appendLogMessage(TRACE(message, None, ctx)) else noop
-      def trace(ctx: Map[String, String], t: Throwable)(message: => String): F[Unit] =
+      override def trace(ctx: Map[String, String], t: Throwable)(message: => String): F[Unit] =
         if (traceEnabled) appendLogMessage(TRACE(message, t.some, ctx)) else noop
     }
 }

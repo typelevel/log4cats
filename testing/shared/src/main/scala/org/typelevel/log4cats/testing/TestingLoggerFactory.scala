@@ -22,7 +22,8 @@ import cats.effect.{Ref, Sync}
 import cats.syntax.all.*
 import org.typelevel.log4cats.extras.LogLevel
 import org.typelevel.log4cats.testing.TestingLoggerFactory.LogMessage
-import org.typelevel.log4cats.{LoggerFactory, SelfAwareStructuredLogger}
+import org.typelevel.log4cats.{LoggerFactory, SelfAwareStructuredLogger, LoggerKernel, KernelLogLevel}
+import org.typelevel.log4cats.Log
 
 import java.io.{PrintWriter, StringWriter}
 import java.util.concurrent.atomic.AtomicReference
@@ -178,6 +179,28 @@ object TestingLoggerFactory {
           override val isInfoEnabled: F[Boolean] = infoEnabled.pure[F]
           override val isWarnEnabled: F[Boolean] = warnEnabled.pure[F]
           override val isErrorEnabled: F[Boolean] = errorEnabled.pure[F]
+
+          protected def kernel: LoggerKernel[F, String] = new LoggerKernel[F, String] {
+            def log(level: KernelLogLevel, logBuilder: Log.Builder[String] => Log.Builder[String]): F[Unit] = {
+              val log = logBuilder(Log.mutableBuilder[String]()).build()
+              val message = log.message()
+              val throwable = log.throwable
+              val context = log.context
+              
+              level match {
+                case KernelLogLevel.Trace => 
+                  if (traceEnabled) save(Trace(name, message, throwable, context)) else Sync[F].unit
+                case KernelLogLevel.Debug => 
+                  if (debugEnabled) save(Debug(name, message, throwable, context)) else Sync[F].unit
+                case KernelLogLevel.Info => 
+                  if (infoEnabled) save(Info(name, message, throwable, context)) else Sync[F].unit
+                case KernelLogLevel.Warn => 
+                  if (warnEnabled) save(Warn(name, message, throwable, context)) else Sync[F].unit
+                case KernelLogLevel.Error => 
+                  if (errorEnabled) save(Error(name, message, throwable, context)) else Sync[F].unit
+              }
+            }
+          }
 
           private val noop = Sync[F].unit
 
