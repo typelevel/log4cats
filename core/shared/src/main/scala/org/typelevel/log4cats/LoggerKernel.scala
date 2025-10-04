@@ -50,8 +50,8 @@ trait LoggerKernel[F[_], Ctx] {
     log(KernelLogLevel.Error, record)
 
   /**
-   * Transform the effect type using a natural transformation.
-   * This allows converting between different effect types (e.g., IO to Task, Task to IO).
+   * Transform the effect type using a natural transformation. This allows converting between
+   * different effect types (e.g., IO to Task, Task to IO).
    */
   def mapK[G[_]](f: F ~> G): LoggerKernel[G, Ctx] = new LoggerKernel[G, Ctx] {
     def log(level: KernelLogLevel, record: Log.Builder[Ctx] => Log.Builder[Ctx]): G[Unit] =

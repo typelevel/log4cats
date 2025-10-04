@@ -23,9 +23,14 @@ import munit.CatsEffectSuite
 class SamStructuredLoggerTest extends CatsEffectSuite {
 
   // Test kernel that captures log calls for verification
-  def testKernel[F[_]: cats.effect.Sync](ref: Ref[F, List[Log[String]]]): LoggerKernel[F, String] = {
+  def testKernel[F[_]: cats.effect.Sync](
+      ref: Ref[F, List[Log[String]]]
+  ): LoggerKernel[F, String] = {
     new LoggerKernel[F, String] {
-      def log(level: KernelLogLevel, record: Log.Builder[String] => Log.Builder[String]): F[Unit] = {
+      def log(
+          level: KernelLogLevel,
+          record: Log.Builder[String] => Log.Builder[String]
+      ): F[Unit] = {
         val logRecord = record(Log.mutableBuilder[String]()).build()
         ref.update(_ :+ logRecord)
       }
@@ -37,7 +42,7 @@ class SamStructuredLoggerTest extends CatsEffectSuite {
       ref <- Ref.of[IO, List[Log[String]]](List.empty)
       kernel = testKernel[IO](ref)
       logger = SamStructuredLogger.fromKernel(kernel)
-      
+
       _ <- logger.info(Map("base" -> "value", "extra" -> "data"))("Test message")
       logs <- ref.get
     } yield {
@@ -55,7 +60,7 @@ class SamStructuredLoggerTest extends CatsEffectSuite {
       ref <- Ref.of[IO, List[Log[String]]](List.empty)
       kernel = testKernel[IO](ref)
       logger = SamStructuredLogger.fromKernel(kernel)
-      
+
       _ <- logger.trace(Map("level" -> "trace"))("Trace message")
       _ <- logger.debug(Map("level" -> "debug"))("Debug message")
       _ <- logger.info(Map("level" -> "info"))("Info message")
@@ -77,7 +82,7 @@ class SamStructuredLoggerTest extends CatsEffectSuite {
       ref <- Ref.of[IO, List[Log[String]]](List.empty)
       kernel = testKernel[IO](ref)
       logger = SamStructuredLogger.fromKernel(kernel)
-      
+
       val exception = new RuntimeException("Test exception")
       _ <- logger.error(Map("error_type" -> "runtime"), exception)("Error with context")
       logs <- ref.get
@@ -96,7 +101,7 @@ class SamStructuredLoggerTest extends CatsEffectSuite {
       kernel = testKernel[IO](ref)
       logger = SamStructuredLogger.fromKernel(kernel)
       enrichedLogger = logger.addContext(Map("service" -> "test-service"))
-      
+
       _ <- enrichedLogger.info(Map("request_id" -> "123"))("Request processed")
       logs <- ref.get
     } yield {
@@ -114,7 +119,7 @@ class SamStructuredLoggerTest extends CatsEffectSuite {
       kernel = testKernel[IO](ref)
       logger = SamStructuredLogger.fromKernel(kernel)
       enrichedLogger = logger.addContext("service" -> "test-service", "version" -> "1.0.0")
-      
+
       _ <- enrichedLogger.info("Service started")
       logs <- ref.get
     } yield {

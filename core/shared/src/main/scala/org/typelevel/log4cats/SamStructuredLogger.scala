@@ -122,7 +122,6 @@ object SamStructuredLogger {
         (level, record) => sl.kernel.log(level, record(_).adaptContext(modifyCtx))
     }
 
-
   private def withModifiedString[F[_]](
       l: SamStructuredLogger[F],
       f: String => String

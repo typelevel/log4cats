@@ -17,7 +17,7 @@
 package org.typelevel.log4cats.testing
 
 import cats.data.Chain
-import org.typelevel.log4cats.{SelfAwareLogger, LoggerKernel, KernelLogLevel}
+import org.typelevel.log4cats.{KernelLogLevel, LoggerKernel, SelfAwareLogger}
 import org.typelevel.log4cats.Log
 import cats.effect.{Ref, Sync}
 import cats.syntax.all.*
@@ -126,21 +126,24 @@ object TestingLogger {
       def isErrorEnabled: F[Boolean] = Sync[F].pure(errorEnabled)
 
       protected def kernel: LoggerKernel[F, String] = new LoggerKernel[F, String] {
-        def log(level: KernelLogLevel, logBuilder: Log.Builder[String] => Log.Builder[String]): F[Unit] = {
+        def log(
+            level: KernelLogLevel,
+            logBuilder: Log.Builder[String] => Log.Builder[String]
+        ): F[Unit] = {
           val log = logBuilder(Log.mutableBuilder[String]()).build()
           val message = log.message()
           val throwable = log.throwable
-          
+
           level match {
-            case KernelLogLevel.Trace => 
+            case KernelLogLevel.Trace =>
               if (traceEnabled) appendLogMessage(TRACE(message, throwable)) else Sync[F].unit
-            case KernelLogLevel.Debug => 
+            case KernelLogLevel.Debug =>
               if (debugEnabled) appendLogMessage(DEBUG(message, throwable)) else Sync[F].unit
-            case KernelLogLevel.Info => 
+            case KernelLogLevel.Info =>
               if (infoEnabled) appendLogMessage(INFO(message, throwable)) else Sync[F].unit
-            case KernelLogLevel.Warn => 
+            case KernelLogLevel.Warn =>
               if (warnEnabled) appendLogMessage(WARN(message, throwable)) else Sync[F].unit
-            case KernelLogLevel.Error => 
+            case KernelLogLevel.Error =>
               if (errorEnabled) appendLogMessage(ERROR(message, throwable)) else Sync[F].unit
           }
         }

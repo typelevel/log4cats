@@ -23,9 +23,14 @@ import munit.CatsEffectSuite
 class SamLoggerTest extends CatsEffectSuite {
 
   // Test kernel that captures log calls for verification
-  def testKernel[F[_]: cats.effect.Sync](ref: Ref[F, List[Log[String]]]): LoggerKernel[F, String] = {
+  def testKernel[F[_]: cats.effect.Sync](
+      ref: Ref[F, List[Log[String]]]
+  ): LoggerKernel[F, String] = {
     new LoggerKernel[F, String] {
-      def log(level: KernelLogLevel, record: Log.Builder[String] => Log.Builder[String]): F[Unit] = {
+      def log(
+          level: KernelLogLevel,
+          record: Log.Builder[String] => Log.Builder[String]
+      ): F[Unit] = {
         val logRecord = record(Log.mutableBuilder[String]()).build()
         ref.update(_ :+ logRecord)
       }
@@ -37,7 +42,7 @@ class SamLoggerTest extends CatsEffectSuite {
       ref <- Ref.of[IO, List[Log[String]]](List.empty)
       kernel = testKernel[IO](ref)
       logger = SamLogger.wrap(kernel)
-      
+
       _ <- logger.info("Hello, SAM Logger!")
       logs <- ref.get
     } yield {
@@ -51,7 +56,7 @@ class SamLoggerTest extends CatsEffectSuite {
       ref <- Ref.of[IO, List[Log[String]]](List.empty)
       kernel = testKernel[IO](ref)
       logger = SamLogger.wrap(kernel)
-      
+
       _ <- logger.info("User action")
       logs <- ref.get
     } yield {
@@ -66,7 +71,7 @@ class SamLoggerTest extends CatsEffectSuite {
       ref <- Ref.of[IO, List[Log[String]]](List.empty)
       kernel = testKernel[IO](ref)
       logger = SamLogger.wrap(kernel)
-      
+
       _ <- logger.error("Something went wrong")
       logs <- ref.get
     } yield {
@@ -81,7 +86,7 @@ class SamLoggerTest extends CatsEffectSuite {
       ref <- Ref.of[IO, List[Log[String]]](List.empty)
       kernel = testKernel[IO](ref)
       logger = SamLogger.wrap(kernel)
-      
+
       _ <- logger.info("First log entry")
       _ <- logger.info("Second log entry")
       logs <- ref.get
@@ -98,7 +103,7 @@ class SamLoggerTest extends CatsEffectSuite {
       kernel = testKernel[IO](ref)
       logger = SamLogger.wrap(kernel)
       modifiedLogger = logger.withModifiedString(msg => s"[MODIFIED] $msg")
-      
+
       _ <- modifiedLogger.info("Test message")
       logs <- ref.get
     } yield {
@@ -113,7 +118,7 @@ class SamLoggerTest extends CatsEffectSuite {
       kernel = testKernel[IO](ref)
       logger = SamLogger.wrap(kernel)
       modifiedLogger = logger.withModifiedString(msg => s"[MODIFIED] $msg")
-      
+
       _ <- modifiedLogger.info("Test message")
       logs <- ref.get
     } yield {

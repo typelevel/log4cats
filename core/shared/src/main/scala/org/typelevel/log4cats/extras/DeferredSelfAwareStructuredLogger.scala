@@ -21,7 +21,7 @@ import cats.effect.kernel.Resource.ExitCase
 import cats.effect.kernel.{Concurrent, Ref, Resource}
 import cats.syntax.all.*
 import cats.{~>, Show}
-import org.typelevel.log4cats.{SelfAwareStructuredLogger, LoggerKernel, KernelLogLevel}
+import org.typelevel.log4cats.{KernelLogLevel, LoggerKernel, SelfAwareStructuredLogger}
 import org.typelevel.log4cats.Log
 
 /**
@@ -35,7 +35,7 @@ trait DeferredSelfAwareStructuredLogger[F[_]]
     extends SelfAwareStructuredLogger[F]
     with DeferredLogging[F] {
   protected def kernel: LoggerKernel[F, String]
-  
+
   override def mapK[G[_]](fk: F ~> G): DeferredSelfAwareStructuredLogger[G] =
     DeferredSelfAwareStructuredLogger.mapK(this, fk)
 
@@ -65,23 +65,27 @@ object DeferredSelfAwareStructuredLogger {
         stash.update(_.append(lm -> logger))
 
       protected def kernel: LoggerKernel[F, String] = new LoggerKernel[F, String] {
-            def log(level: KernelLogLevel, logBuilder: Log.Builder[String] => Log.Builder[String]): F[Unit] = {
-              val log = logBuilder(Log.mutableBuilder[String]()).build()
-              val logLevel = level match {
-                case KernelLogLevel.Trace => LogLevel.Trace
-                case KernelLogLevel.Debug => LogLevel.Debug
-                case KernelLogLevel.Info => LogLevel.Info
-                case KernelLogLevel.Warn => LogLevel.Warn
-                case KernelLogLevel.Error => LogLevel.Error
-              }
-              val deferredMsg = DeferredLogMessage(
-                logLevel,
-                log.context,
-                log.throwable,
-                log.message
-              )
-              save(deferredMsg)
-            }
+        def log(
+            level: KernelLogLevel,
+            logBuilder: Log.Builder[String] => Log.Builder[String]
+        ): F[Unit] = {
+          val log = logBuilder(Log.mutableBuilder[String]()).build()
+          val logLevel = level match {
+            case KernelLogLevel.Trace => LogLevel.Trace
+            case KernelLogLevel.Debug => LogLevel.Debug
+            case KernelLogLevel.Info => LogLevel.Info
+            case KernelLogLevel.Warn => LogLevel.Warn
+            case KernelLogLevel.Error => LogLevel.Error
+            case KernelLogLevel.Fatal => LogLevel.Error
+          }
+          val deferredMsg = DeferredLogMessage(
+            logLevel,
+            log.context,
+            log.throwable,
+            log.message
+          )
+          save(deferredMsg)
+        }
       }
 
       override def isTraceEnabled: F[Boolean] = logger.isTraceEnabled
@@ -180,7 +184,7 @@ object DeferredSelfAwareStructuredLogger {
   ): DeferredSelfAwareStructuredLogger[G] =
     new DeferredSelfAwareStructuredLogger[G] {
       protected def kernel: LoggerKernel[G, String] = logger.kernel.mapK(fk)
-      
+
       override def inspect: G[Chain[DeferredLogMessage]] = fk(
         logger.inspect
       )
@@ -298,7 +302,7 @@ object DeferredSelfAwareStructuredLogger {
   ): DeferredSelfAwareStructuredLogger[F] =
     new DeferredSelfAwareStructuredLogger[F] {
       protected def kernel: LoggerKernel[F, String] = logger.kernel
-      
+
       override def inspect: F[Chain[DeferredLogMessage]] = logger.inspect
       override def log: F[Unit] = logger.log
       override def isTraceEnabled: F[Boolean] = logger.isTraceEnabled

@@ -21,7 +21,7 @@ import cats.effect.kernel.Resource.ExitCase
 import cats.effect.kernel.{Concurrent, Ref, Resource}
 import cats.syntax.all.*
 import cats.~>
-import org.typelevel.log4cats.{Logger, LoggerKernel, KernelLogLevel}
+import org.typelevel.log4cats.{KernelLogLevel, Logger, LoggerKernel}
 import org.typelevel.log4cats.Log
 
 /**
@@ -51,7 +51,7 @@ import org.typelevel.log4cats.Log
  */
 trait DeferredLogger[F[_]] extends Logger[F] with DeferredLogging[F] {
   protected def kernel: LoggerKernel[F, String]
-  
+
   override def withModifiedString(f: String => String): DeferredLogger[F] =
     DeferredLogger.withModifiedString(this, f)
   override def mapK[G[_]](fk: F ~> G): DeferredLogger[G] = DeferredLogger.mapK(this, fk)
@@ -70,7 +70,10 @@ object DeferredLogger {
           private def save(lm: DeferredLogMessage): F[Unit] = ref.update(_.append(lm))
 
           protected def kernel: LoggerKernel[F, String] = new LoggerKernel[F, String] {
-            def log(level: KernelLogLevel, logBuilder: Log.Builder[String] => Log.Builder[String]): F[Unit] = {
+            def log(
+                level: KernelLogLevel,
+                logBuilder: Log.Builder[String] => Log.Builder[String]
+            ): F[Unit] = {
               val log = logBuilder(Log.mutableBuilder[String]()).build()
               val logLevel = level match {
                 case KernelLogLevel.Trace => LogLevel.Trace
@@ -78,6 +81,7 @@ object DeferredLogger {
                 case KernelLogLevel.Info => LogLevel.Info
                 case KernelLogLevel.Warn => LogLevel.Warn
                 case KernelLogLevel.Error => LogLevel.Error
+                case KernelLogLevel.Fatal => LogLevel.Error
               }
               val deferredMsg = DeferredLogMessage(
                 logLevel,
@@ -123,7 +127,7 @@ object DeferredLogger {
   ): DeferredLogger[G] =
     new DeferredLogger[G] {
       protected def kernel: LoggerKernel[G, String] = logger.kernel.mapK(fk)
-      
+
       override def inspect: G[Chain[DeferredLogMessage]] = fk(logger.inspect)
       override def log: G[Unit] = fk(logger.log)
 
@@ -150,7 +154,7 @@ object DeferredLogger {
   ): DeferredLogger[F] =
     new DeferredLogger[F] {
       protected def kernel: LoggerKernel[F, String] = logger.kernel
-      
+
       override def inspect: F[Chain[DeferredLogMessage]] = logger.inspect
       override def log: F[Unit] = logger.log
 

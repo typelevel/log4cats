@@ -35,7 +35,7 @@ object SelfAwareLogger {
   private def mapK[G[_], F[_]](f: G ~> F)(logger: SelfAwareLogger[G]): SelfAwareLogger[F] =
     new SelfAwareLogger[F] {
       protected def kernel: LoggerKernel[F, String] = logger.underlying.mapK(f)
-      
+
       def isTraceEnabled: F[Boolean] = f(logger.isTraceEnabled)
       def isDebugEnabled: F[Boolean] = f(logger.isDebugEnabled)
       def isInfoEnabled: F[Boolean] = f(logger.isInfoEnabled)
@@ -49,7 +49,7 @@ object SelfAwareLogger {
   ): SelfAwareLogger[F] =
     new SelfAwareLogger[F] {
       protected def kernel: LoggerKernel[F, String] = l.underlying
-      
+
       override def isTraceEnabled: F[Boolean] = l.isTraceEnabled
       override def isDebugEnabled: F[Boolean] = l.isDebugEnabled
       override def isInfoEnabled: F[Boolean] = l.isInfoEnabled

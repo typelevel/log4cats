@@ -50,13 +50,13 @@ object SelfAwareStructuredLogger {
   ) extends SelfAwareStructuredLogger[F] {
     protected def kernel: LoggerKernel[F, String] = sl.underlying
     private lazy val defaultCtx: Map[String, String] = modify(Map.empty)
-    
+
     override def error(message: => String): F[Unit] = sl.error(defaultCtx)(message)
     override def warn(message: => String): F[Unit] = sl.warn(defaultCtx)(message)
     override def info(message: => String): F[Unit] = sl.info(defaultCtx)(message)
     override def debug(message: => String): F[Unit] = sl.debug(defaultCtx)(message)
     override def trace(message: => String): F[Unit] = sl.trace(defaultCtx)(message)
-    
+
     override def trace(ctx: Map[String, String])(msg: => String): F[Unit] =
       sl.trace(modify(ctx))(msg)
     override def debug(ctx: Map[String, String])(msg: => String): F[Unit] =
@@ -103,7 +103,7 @@ object SelfAwareStructuredLogger {
   ): SelfAwareStructuredLogger[F] =
     new SelfAwareStructuredLogger[F] {
       protected def kernel: LoggerKernel[F, String] = l.underlying
-      
+
       def isTraceEnabled: F[Boolean] = l.isTraceEnabled
       def isDebugEnabled: F[Boolean] = l.isDebugEnabled
       def isInfoEnabled: F[Boolean] = l.isInfoEnabled
@@ -142,7 +142,7 @@ object SelfAwareStructuredLogger {
   )(logger: SelfAwareStructuredLogger[G]): SelfAwareStructuredLogger[F] =
     new SelfAwareStructuredLogger[F] {
       protected def kernel: LoggerKernel[F, String] = logger.underlying.mapK(f)
-      
+
       def isTraceEnabled: F[Boolean] = f(logger.isTraceEnabled)
       def isDebugEnabled: F[Boolean] = f(logger.isDebugEnabled)
       def isInfoEnabled: F[Boolean] = f(logger.isInfoEnabled)

@@ -17,7 +17,7 @@
 package org.typelevel.log4cats.testing
 
 import cats.data.Chain
-import org.typelevel.log4cats.{SelfAwareStructuredLogger, LoggerKernel, KernelLogLevel}
+import org.typelevel.log4cats.{KernelLogLevel, LoggerKernel, SelfAwareStructuredLogger}
 import org.typelevel.log4cats.Log
 import cats.effect.{Ref, Sync}
 import cats.syntax.all.*
@@ -147,23 +147,29 @@ object StructuredTestingLogger {
       def isErrorEnabled: F[Boolean] = Sync[F].pure(errorEnabled)
 
       protected def kernel: LoggerKernel[F, String] = new LoggerKernel[F, String] {
-        def log(level: KernelLogLevel, logBuilder: Log.Builder[String] => Log.Builder[String]): F[Unit] = {
+        def log(
+            level: KernelLogLevel,
+            logBuilder: Log.Builder[String] => Log.Builder[String]
+        ): F[Unit] = {
           val log = logBuilder(Log.mutableBuilder[String]()).build()
           val message = log.message()
           val throwable = log.throwable
           val context = log.context
-          
+
           level match {
-            case KernelLogLevel.Trace => 
-              if (traceEnabled) appendLogMessage(TRACE(message, throwable, context)) else Sync[F].unit
-            case KernelLogLevel.Debug => 
-              if (debugEnabled) appendLogMessage(DEBUG(message, throwable, context)) else Sync[F].unit
-            case KernelLogLevel.Info => 
+            case KernelLogLevel.Trace =>
+              if (traceEnabled) appendLogMessage(TRACE(message, throwable, context))
+              else Sync[F].unit
+            case KernelLogLevel.Debug =>
+              if (debugEnabled) appendLogMessage(DEBUG(message, throwable, context))
+              else Sync[F].unit
+            case KernelLogLevel.Info =>
               if (infoEnabled) appendLogMessage(INFO(message, throwable, context)) else Sync[F].unit
-            case KernelLogLevel.Warn => 
+            case KernelLogLevel.Warn =>
               if (warnEnabled) appendLogMessage(WARN(message, throwable, context)) else Sync[F].unit
-            case KernelLogLevel.Error => 
-              if (errorEnabled) appendLogMessage(ERROR(message, throwable, context)) else Sync[F].unit
+            case KernelLogLevel.Error =>
+              if (errorEnabled) appendLogMessage(ERROR(message, throwable, context))
+              else Sync[F].unit
           }
         }
       }

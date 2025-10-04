@@ -25,14 +25,14 @@ import org.typelevel.log4cats.extras.LogLevel.*
 class ConsoleLogger[F[_]: Sync](logLevel: Option[LogLevel] = Option(Trace))
     extends SelfAwareStructuredLogger[F] {
   private val ConsoleF: ConsoleF[F] = implicitly
-  
+
   protected def kernel: LoggerKernel[F, String] = new LoggerKernel[F, String] {
     def log(level: KernelLogLevel, record: Log.Builder[String] => Log.Builder[String]): F[Unit] = {
       val logRecord = record(Log.mutableBuilder[String]())
       val log = logRecord.build()
       val message = log.message()
       val throwable = log.throwable
-      
+
       level match {
         case KernelLogLevel.Trace => ConsoleF.debug(message, throwable.orNull)
         case KernelLogLevel.Debug => ConsoleF.debug(message, throwable.orNull)
@@ -43,7 +43,7 @@ class ConsoleLogger[F[_]: Sync](logLevel: Option[LogLevel] = Option(Trace))
       }
     }
   }
-  
+
   def isTraceEnabled: F[Boolean] = logLevel.exists(_ <= Trace).pure[F]
   def isDebugEnabled: F[Boolean] = logLevel.exists(_ <= Debug).pure[F]
   def isInfoEnabled: F[Boolean] = logLevel.exists(_ <= Info).pure[F]

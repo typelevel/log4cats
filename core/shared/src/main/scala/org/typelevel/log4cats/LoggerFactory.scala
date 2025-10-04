@@ -46,7 +46,6 @@ trait LoggerFactory[F[_]] extends LoggerFactoryGen[F] {
 object LoggerFactory extends LoggerFactoryGenCompanion {
   def apply[F[_]: LoggerFactory]: LoggerFactory[F] = implicitly
 
-
   private def mapK[F[_]: Functor, G[_]](fk: F ~> G)(lf: LoggerFactory[F]): LoggerFactory[G] =
     new LoggerFactory[G] {
 

@@ -17,7 +17,7 @@
 package org.typelevel.log4cats.noop
 
 import cats.Applicative
-import org.typelevel.log4cats.{SelfAwareStructuredLogger, LoggerKernel, KernelLogLevel, Log}
+import org.typelevel.log4cats.{KernelLogLevel, Log, LoggerKernel, SelfAwareStructuredLogger}
 
 object NoOpLogger {
   def apply[F[_]: Applicative]: SelfAwareStructuredLogger[F] = impl[F]
@@ -32,7 +32,7 @@ object NoOpLogger {
 
   private def lazyImpl[F[_]: Applicative] = new SelfAwareStructuredLogger[F] {
     protected def kernel: LoggerKernel[F, String] = new LoggerKernel[F, String] {
-      def log(level: KernelLogLevel, record: Log.Builder[String] => Log.Builder[String]): F[Unit] = 
+      def log(level: KernelLogLevel, record: Log.Builder[String] => Log.Builder[String]): F[Unit] =
         Applicative[F].pure(())
     }
 
@@ -45,7 +45,7 @@ object NoOpLogger {
 
   private def strictImpl[F[_]: Applicative] = new SelfAwareStructuredLogger[F] {
     protected def kernel: LoggerKernel[F, String] = new LoggerKernel[F, String] {
-      def log(level: KernelLogLevel, record: Log.Builder[String] => Log.Builder[String]): F[Unit] = 
+      def log(level: KernelLogLevel, record: Log.Builder[String] => Log.Builder[String]): F[Unit] =
         Applicative[F].pure(())
     }
 

@@ -21,34 +21,34 @@ import cats.Show.Shown
 
 trait StructuredLogger[F[_]] extends Logger[F] {
   // Structured logging methods
-  def trace(ctx: Map[String, String])(msg: => String): F[Unit] = 
+  def trace(ctx: Map[String, String])(msg: => String): F[Unit] =
     kernel.log(KernelLogLevel.Trace, _.withMessage(msg).withContextMap(ctx))
-  
-  def trace(ctx: Map[String, String], t: Throwable)(msg: => String): F[Unit] = 
+
+  def trace(ctx: Map[String, String], t: Throwable)(msg: => String): F[Unit] =
     kernel.log(KernelLogLevel.Trace, _.withMessage(msg).withContextMap(ctx).withThrowable(t))
-  
-  def debug(ctx: Map[String, String])(msg: => String): F[Unit] = 
+
+  def debug(ctx: Map[String, String])(msg: => String): F[Unit] =
     kernel.log(KernelLogLevel.Debug, _.withMessage(msg).withContextMap(ctx))
-  
-  def debug(ctx: Map[String, String], t: Throwable)(msg: => String): F[Unit] = 
+
+  def debug(ctx: Map[String, String], t: Throwable)(msg: => String): F[Unit] =
     kernel.log(KernelLogLevel.Debug, _.withMessage(msg).withContextMap(ctx).withThrowable(t))
-  
-  def info(ctx: Map[String, String])(msg: => String): F[Unit] = 
+
+  def info(ctx: Map[String, String])(msg: => String): F[Unit] =
     kernel.log(KernelLogLevel.Info, _.withMessage(msg).withContextMap(ctx))
-  
-  def info(ctx: Map[String, String], t: Throwable)(msg: => String): F[Unit] = 
+
+  def info(ctx: Map[String, String], t: Throwable)(msg: => String): F[Unit] =
     kernel.log(KernelLogLevel.Info, _.withMessage(msg).withContextMap(ctx).withThrowable(t))
-  
-  def warn(ctx: Map[String, String])(msg: => String): F[Unit] = 
+
+  def warn(ctx: Map[String, String])(msg: => String): F[Unit] =
     kernel.log(KernelLogLevel.Warn, _.withMessage(msg).withContextMap(ctx))
-  
-  def warn(ctx: Map[String, String], t: Throwable)(msg: => String): F[Unit] = 
+
+  def warn(ctx: Map[String, String], t: Throwable)(msg: => String): F[Unit] =
     kernel.log(KernelLogLevel.Warn, _.withMessage(msg).withContextMap(ctx).withThrowable(t))
-  
-  def error(ctx: Map[String, String])(msg: => String): F[Unit] = 
+
+  def error(ctx: Map[String, String])(msg: => String): F[Unit] =
     kernel.log(KernelLogLevel.Error, _.withMessage(msg).withContextMap(ctx))
-  
-  def error(ctx: Map[String, String], t: Throwable)(msg: => String): F[Unit] = 
+
+  def error(ctx: Map[String, String], t: Throwable)(msg: => String): F[Unit] =
     kernel.log(KernelLogLevel.Error, _.withMessage(msg).withContextMap(ctx).withThrowable(t))
 
   override def mapK[G[_]](fk: F ~> G): StructuredLogger[G] =
@@ -84,13 +84,13 @@ object StructuredLogger {
   ) extends StructuredLogger[F] {
     protected def kernel: LoggerKernel[F, String] = sl.underlying
     private lazy val defaultCtx: Map[String, String] = modify(Map.empty)
-    
+
     override def error(message: => String): F[Unit] = sl.error(defaultCtx)(message)
     override def warn(message: => String): F[Unit] = sl.warn(defaultCtx)(message)
     override def info(message: => String): F[Unit] = sl.info(defaultCtx)(message)
     override def debug(message: => String): F[Unit] = sl.debug(defaultCtx)(message)
     override def trace(message: => String): F[Unit] = sl.trace(defaultCtx)(message)
-    
+
     override def trace(ctx: Map[String, String])(msg: => String): F[Unit] =
       sl.trace(modify(ctx))(msg)
     override def debug(ctx: Map[String, String])(msg: => String): F[Unit] =

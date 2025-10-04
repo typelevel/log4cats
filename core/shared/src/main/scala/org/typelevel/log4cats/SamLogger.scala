@@ -19,12 +19,12 @@ package org.typelevel.log4cats
 import cats.*
 
 /**
- * A SAM-based Logger that provides a user-friendly interface. This is the
- * new design that will eventually replace the current Logger trait.
+ * A SAM-based Logger that provides a user-friendly interface. This is the new design that will
+ * eventually replace the current Logger trait.
  */
 trait SamLogger[F[_], Ctx] {
   protected def kernel: LoggerKernel[F, Ctx]
-  
+
   /** Access to the underlying kernel for advanced use cases */
   def underlying: LoggerKernel[F, Ctx] = kernel
 
@@ -95,7 +95,6 @@ object SamLogger {
   def wrap[F[_], Ctx](k: LoggerKernel[F, Ctx]): SamLogger[F, Ctx] = new SamLogger[F, Ctx] {
     protected def kernel: LoggerKernel[F, Ctx] = k
   }
-
 
   private def withModifiedString[F[_], Ctx](
       l: SamLogger[F, Ctx],

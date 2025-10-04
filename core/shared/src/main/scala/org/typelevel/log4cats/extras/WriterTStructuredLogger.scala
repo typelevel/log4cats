@@ -20,7 +20,12 @@ import cats.data.WriterT
 import cats.kernel.Monoid
 import cats.syntax.all.*
 import cats.{~>, Alternative, Applicative, Foldable, Monad}
-import org.typelevel.log4cats.{SelfAwareStructuredLogger, StructuredLogger, LoggerKernel, KernelLogLevel}
+import org.typelevel.log4cats.{
+  KernelLogLevel,
+  LoggerKernel,
+  SelfAwareStructuredLogger,
+  StructuredLogger
+}
 import org.typelevel.log4cats.Log
 
 /**
@@ -44,19 +49,28 @@ object WriterTStructuredLogger {
     new SelfAwareStructuredLogger[WriterT[F, G[StructuredLogMessage], *]] {
       type LoggerF[A] = WriterT[F, G[StructuredLogMessage], A]
 
-      protected def kernel: LoggerKernel[WriterT[F, G[StructuredLogMessage], *], String] = new LoggerKernel[WriterT[F, G[StructuredLogMessage], *], String] {
-        def log(level: KernelLogLevel, logBuilder: Log.Builder[String] => Log.Builder[String]): WriterT[F, G[StructuredLogMessage], Unit] = {
-          val log = logBuilder(Log.mutableBuilder[String]()).build()
-          val logLevel = level match {
-            case KernelLogLevel.Trace => LogLevel.Trace
-            case KernelLogLevel.Debug => LogLevel.Debug
-            case KernelLogLevel.Info => LogLevel.Info
-            case KernelLogLevel.Warn => LogLevel.Warn
-            case KernelLogLevel.Error => LogLevel.Error
+      protected def kernel: LoggerKernel[WriterT[F, G[StructuredLogMessage], *], String] =
+        new LoggerKernel[WriterT[F, G[StructuredLogMessage], *], String] {
+          def log(
+              level: KernelLogLevel,
+              logBuilder: Log.Builder[String] => Log.Builder[String]
+          ): WriterT[F, G[StructuredLogMessage], Unit] = {
+            val log = logBuilder(Log.mutableBuilder[String]()).build()
+            val logLevel = level match {
+              case KernelLogLevel.Trace => LogLevel.Trace
+              case KernelLogLevel.Debug => LogLevel.Debug
+              case KernelLogLevel.Info => LogLevel.Info
+              case KernelLogLevel.Warn => LogLevel.Warn
+              case KernelLogLevel.Error => LogLevel.Error
+              case KernelLogLevel.Fatal => LogLevel.Error
+            }
+            WriterT.tell[F, G[StructuredLogMessage]](
+              Applicative[G].pure(
+                StructuredLogMessage(logLevel, log.context, log.throwable, log.message())
+              )
+            )
           }
-          WriterT.tell[F, G[StructuredLogMessage]](Applicative[G].pure(StructuredLogMessage(logLevel, log.context, log.throwable, log.message())))
         }
-      }
 
       override def isTraceEnabled: LoggerF[Boolean] = isEnabled(traceEnabled)
 

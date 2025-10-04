@@ -20,40 +20,40 @@ import cats.*
 
 trait Logger[F[_]] extends MessageLogger[F] with ErrorLogger[F] {
   protected def kernel: LoggerKernel[F, String]
-  
+
   /** Access to the underlying kernel for advanced use cases */
   def underlying: LoggerKernel[F, String] = kernel
 
   // MessageLogger methods
-  def error(message: => String): F[Unit] = 
+  def error(message: => String): F[Unit] =
     kernel.log(KernelLogLevel.Error, _.withMessage(message))
-  
-  def warn(message: => String): F[Unit] = 
+
+  def warn(message: => String): F[Unit] =
     kernel.log(KernelLogLevel.Warn, _.withMessage(message))
-  
-  def info(message: => String): F[Unit] = 
+
+  def info(message: => String): F[Unit] =
     kernel.log(KernelLogLevel.Info, _.withMessage(message))
-  
-  def debug(message: => String): F[Unit] = 
+
+  def debug(message: => String): F[Unit] =
     kernel.log(KernelLogLevel.Debug, _.withMessage(message))
-  
-  def trace(message: => String): F[Unit] = 
+
+  def trace(message: => String): F[Unit] =
     kernel.log(KernelLogLevel.Trace, _.withMessage(message))
 
   // ErrorLogger methods
-  def error(t: Throwable)(message: => String): F[Unit] = 
+  def error(t: Throwable)(message: => String): F[Unit] =
     kernel.log(KernelLogLevel.Error, _.withMessage(message).withThrowable(t))
-  
-  def warn(t: Throwable)(message: => String): F[Unit] = 
+
+  def warn(t: Throwable)(message: => String): F[Unit] =
     kernel.log(KernelLogLevel.Warn, _.withMessage(message).withThrowable(t))
-  
-  def info(t: Throwable)(message: => String): F[Unit] = 
+
+  def info(t: Throwable)(message: => String): F[Unit] =
     kernel.log(KernelLogLevel.Info, _.withMessage(message).withThrowable(t))
-  
-  def debug(t: Throwable)(message: => String): F[Unit] = 
+
+  def debug(t: Throwable)(message: => String): F[Unit] =
     kernel.log(KernelLogLevel.Debug, _.withMessage(message).withThrowable(t))
-  
-  def trace(t: Throwable)(message: => String): F[Unit] = 
+
+  def trace(t: Throwable)(message: => String): F[Unit] =
     kernel.log(KernelLogLevel.Trace, _.withMessage(message).withThrowable(t))
 
   def withModifiedString(f: String => String): Logger[F] = Logger.withModifiedString[F](this, f)
@@ -62,8 +62,6 @@ trait Logger[F[_]] extends MessageLogger[F] with ErrorLogger[F] {
 
 object Logger {
   def apply[F[_]](implicit ev: Logger[F]) = ev
-
-
 
   private def withModifiedString[F[_]](l: Logger[F], f: String => String): Logger[F] =
     new Logger[F] {
