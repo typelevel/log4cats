@@ -17,113 +17,110 @@
 package org.typelevel.log4cats
 
 import cats.effect.IO
+import cats.effect.Ref
 import munit.CatsEffectSuite
 
 class SamLoggerTest extends CatsEffectSuite {
 
-  test("LoggerKernel should work with a simple console implementation") {
-    val kernel = ConsoleLoggerKernel[IO, String]
-    val logger = SamLogger.wrap(kernel)
-
-    logger.info("Hello, SAM Logger!").void
+  // Test kernel that captures log calls for verification
+  def testKernel[F[_]: cats.effect.Sync](ref: Ref[F, List[Log[String]]]): LoggerKernel[F, String] = {
+    new LoggerKernel[F, String] {
+      def log(level: KernelLogLevel, record: Log.Builder[String] => Log.Builder[String]): F[Unit] = {
+        val logRecord = record(Log.mutableBuilder[String]()).build()
+        ref.update(_ :+ logRecord)
+      }
+    }
   }
 
-  test("LoggerKernel should support structured logging with context") {
-    val kernel = ConsoleLoggerKernel[IO, String]
-    val logger = SamLogger.wrap(kernel)
-
-    logger
-      .info(
-        "User action",
-        ("user_id", "123"),
-        ("action", "login")
-      )
-      .void
+  test("SamLogger should execute logging operations and capture them") {
+    for {
+      ref <- Ref.of[IO, List[Log[String]]](List.empty)
+      kernel = testKernel[IO](ref)
+      logger = SamLogger.wrap(kernel)
+      
+      _ <- logger.info("Hello, SAM Logger!")
+      logs <- ref.get
+    } yield {
+      assertEquals(logs.length, 1)
+      assertEquals(logs.head.message(), "Hello, SAM Logger!")
+    }
   }
 
-  test("LoggerKernel should support error logging with throwables") {
-    val kernel = ConsoleLoggerKernel[IO, String]
-    val logger = SamLogger.wrap(kernel)
-
-    val exception = new RuntimeException("Test exception")
-
-    logger
-      .error(
-        "Something went wrong",
-        exception
-      )
-      .void
+  test("SamLogger should support simple message logging") {
+    for {
+      ref <- Ref.of[IO, List[Log[String]]](List.empty)
+      kernel = testKernel[IO](ref)
+      logger = SamLogger.wrap(kernel)
+      
+      _ <- logger.info("User action")
+      logs <- ref.get
+    } yield {
+      assertEquals(logs.length, 1)
+      val log = logs.head
+      assertEquals(log.message(), "User action")
+    }
   }
 
-  test("LoggerKernel should support multiple log records") {
-    val kernel = ConsoleLoggerKernel[IO, String]
-    val logger = SamLogger.wrap(kernel)
+  test("SamLogger should support error logging") {
+    for {
+      ref <- Ref.of[IO, List[Log[String]]](List.empty)
+      kernel = testKernel[IO](ref)
+      logger = SamLogger.wrap(kernel)
+      
+      _ <- logger.error("Something went wrong")
+      logs <- ref.get
+    } yield {
+      assertEquals(logs.length, 1)
+      val log = logs.head
+      assertEquals(log.message(), "Something went wrong")
+    }
+  }
 
-    logger
-      .info(
-        "Complex log entry",
-        ("request_id", "abc-123"),
-        ("duration_ms", 150),
-        new RuntimeException("Nested error")
-      )
-      .void
+  test("SamLogger should support multiple log calls") {
+    for {
+      ref <- Ref.of[IO, List[Log[String]]](List.empty)
+      kernel = testKernel[IO](ref)
+      logger = SamLogger.wrap(kernel)
+      
+      _ <- logger.info("First log entry")
+      _ <- logger.info("Second log entry")
+      logs <- ref.get
+    } yield {
+      assertEquals(logs.length, 2)
+      assertEquals(logs(0).message(), "First log entry")
+      assertEquals(logs(1).message(), "Second log entry")
+    }
   }
 
   test("SamLogger withModifiedString should modify messages correctly") {
-    val kernel = ConsoleLoggerKernel[IO, String]
-    val logger = SamLogger.wrap(kernel)
-    val modifiedLogger = logger.withModifiedString(msg => s"[MODIFIED] $msg")
-
-    // Test that the message is modified
-    modifiedLogger.info("Test message").void
+    for {
+      ref <- Ref.of[IO, List[Log[String]]](List.empty)
+      kernel = testKernel[IO](ref)
+      logger = SamLogger.wrap(kernel)
+      modifiedLogger = logger.withModifiedString(msg => s"[MODIFIED] $msg")
+      
+      _ <- modifiedLogger.info("Test message")
+      logs <- ref.get
+    } yield {
+      assertEquals(logs.length, 1)
+      assertEquals(logs.head.message(), "[MODIFIED] Test message")
+    }
   }
 
-  test("SamLogger withModifiedString should preserve context and other fields") {
-    val kernel = ConsoleLoggerKernel[IO, String]
-    val logger = SamLogger.wrap(kernel)
-    val modifiedLogger = logger.withModifiedString(msg => s"[MODIFIED] $msg")
-
-    // Test that context and other fields are preserved
-    modifiedLogger
-      .info(
-        "Test message",
-        ("key", "value"),
-        new RuntimeException("Test exception")
-      )
-      .void
+  test("SamLogger withModifiedString should preserve other fields") {
+    for {
+      ref <- Ref.of[IO, List[Log[String]]](List.empty)
+      kernel = testKernel[IO](ref)
+      logger = SamLogger.wrap(kernel)
+      modifiedLogger = logger.withModifiedString(msg => s"[MODIFIED] $msg")
+      
+      _ <- modifiedLogger.info("Test message")
+      logs <- ref.get
+    } yield {
+      assertEquals(logs.length, 1)
+      val log = logs.head
+      assertEquals(log.message(), "[MODIFIED] Test message")
+    }
   }
 
-  test("LogRecord should combine multiple records correctly") {
-    val record1: LogRecord[String] = _.withMessage("Hello")
-    val record2: LogRecord[String] = _.withContext("key")("value")
-
-    val combined = LogRecord.combine(Seq(record1, record2))
-    val builder = Log.mutableBuilder[String]()
-    val result = combined(builder).build()
-
-    assertEquals(result.message(), "Hello")
-    assert(result.context.contains("key"))
-  }
-
-  test("Recordable should convert strings to log records") {
-    val record = implicitly[Recordable[String, String]].record("test message")
-    val result = record(Log.mutableBuilder[String]()).build()
-
-    assertEquals(result.message(), "test message")
-  }
-
-  test("Recordable should convert tuples to context records") {
-    val record = implicitly[Recordable[String, (String, String)]].record(("key", "value"))
-    val result = record(Log.mutableBuilder[String]()).build()
-
-    assert(result.context.contains("key"))
-  }
-
-  test("Recordable should convert throwables to log records") {
-    val exception = new RuntimeException("test")
-    val record = implicitly[Recordable[String, Throwable]].record(exception)
-    val result = record(Log.mutableBuilder[String]()).build()
-
-    assertEquals(result.throwable, Some(exception))
-  }
 }

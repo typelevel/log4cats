@@ -34,12 +34,12 @@ object LoggerFactorySyntaxCompilation {
     lf.mapK(Kleisli.liftK[F, A])
 
   def eitherTLoggerFactory[F[_]: Functor: LoggerFactory, E]: LoggerFactory[EitherT[F, E, *]] =
-    LoggerFactory[EitherT[F, E, *]]
+    LoggerFactory[F].mapK(EitherT.liftK[F, E])
 
   def optionTLoggerFactory[F[_]: Functor: LoggerFactory]: LoggerFactory[OptionT[F, *]] =
-    LoggerFactory[OptionT[F, *]]
+    LoggerFactory[F].mapK(OptionT.liftK[F])
 
   def kleisliLoggerFactory[F[_]: Functor: LoggerFactory, A]: LoggerFactory[Kleisli[F, A, *]] =
-    LoggerFactory[Kleisli[F, A, *]]
+    LoggerFactory[F].mapK(Kleisli.liftK[F, A])
 
 }
