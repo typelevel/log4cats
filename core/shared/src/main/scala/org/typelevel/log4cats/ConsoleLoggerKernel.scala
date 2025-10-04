@@ -27,9 +27,8 @@ class ConsoleLoggerKernel[F[_], Ctx](implicit F: Sync[F]) extends LoggerKernel[F
     F.delay {
       val logRecord = record(Log.mutableBuilder[Ctx]()).build()
 
-      val timestamp = logRecord.timestamp.map(_.toMillis).getOrElse(System.currentTimeMillis())
-      // Use simple timestamp formatting instead of java.time.Instant for Scala Native compatibility
-      val timeStr = s"${new java.util.Date(timestamp).toString}"
+      val timestamp = logRecord.timestamp.getOrElse(java.time.Instant.now())
+      val timeStr = timestamp.toString
 
       val levelStr = logRecord.level.namePadded
       val message = logRecord.message
