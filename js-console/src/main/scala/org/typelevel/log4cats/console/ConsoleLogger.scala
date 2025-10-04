@@ -40,7 +40,8 @@ class ConsoleLogger[F[_]: Sync](logLevel: Option[LogLevel] = Option(Trace))
         case KernelLogLevel.Warn => ConsoleF.warn(message, throwable.orNull)
         case KernelLogLevel.Error => ConsoleF.error(message, throwable.orNull)
         case KernelLogLevel.Fatal => ConsoleF.error(message, throwable.orNull)
-        case _ => ConsoleF.error(message, throwable.orNull) // Handle any other KernelLogLevel values
+        case _ =>
+          ConsoleF.error(message, throwable.orNull) // Handle any other KernelLogLevel values
       }
     }
   }
