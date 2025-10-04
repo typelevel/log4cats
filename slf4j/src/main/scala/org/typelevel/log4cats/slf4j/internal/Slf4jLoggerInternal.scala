@@ -61,6 +61,7 @@ private[slf4j] object Slf4jLoggerInternal {
           case KernelLogLevel.Info => F.delay(logger.isInfoEnabled)
           case KernelLogLevel.Warn => F.delay(logger.isWarnEnabled)
           case KernelLogLevel.Error => F.delay(logger.isErrorEnabled)
+          case _ => F.pure(false) // Handle any other KernelLogLevel values
         }
 
         Sync[F].flatMap(isEnabled) { enabled =>
@@ -108,6 +109,13 @@ private[slf4j] object Slf4jLoggerInternal {
                   else logger.warn(message)
                 }
               case KernelLogLevel.Error =>
+                F.delay {
+                  val message = log.message()
+                  val throwable = log.throwable
+                  if (throwable.isDefined) logger.error(message, throwable.get)
+                  else logger.error(message)
+                }
+              case _ =>
                 F.delay {
                   val message = log.message()
                   val throwable = log.throwable
