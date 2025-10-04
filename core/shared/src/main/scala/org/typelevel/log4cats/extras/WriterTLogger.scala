@@ -40,6 +40,20 @@ object WriterTLogger {
       errorEnabled: Boolean = true
   ): SelfAwareLogger[WriterT[F, G[LogMessage], *]] =
     new SelfAwareLogger[WriterT[F, G[LogMessage], *]] {
+      protected def kernel: LoggerKernel[WriterT[F, G[LogMessage], *], String] = new LoggerKernel[WriterT[F, G[LogMessage], *], String] {
+        def log(level: KernelLogLevel, logBuilder: Log.Builder[String] => Log.Builder[String]): WriterT[F, G[LogMessage], Unit] = {
+          val log = logBuilder(Log.mutableBuilder[String]()).build()
+          val logLevel = level match {
+            case KernelLogLevel.Trace => LogLevel.Trace
+            case KernelLogLevel.Debug => LogLevel.Debug
+            case KernelLogLevel.Info => LogLevel.Info
+            case KernelLogLevel.Warn => LogLevel.Warn
+            case KernelLogLevel.Error => LogLevel.Error
+          }
+          WriterT.tell[F, G[LogMessage]](Applicative[G].pure(LogMessage(logLevel, log.throwable, log.message())))
+        }
+      }
+      
       override def isTraceEnabled: WriterT[F, G[LogMessage], Boolean] = isEnabled(traceEnabled)
       override def isDebugEnabled: WriterT[F, G[LogMessage], Boolean] = isEnabled(debugEnabled)
       override def isInfoEnabled: WriterT[F, G[LogMessage], Boolean] = isEnabled(infoEnabled)
