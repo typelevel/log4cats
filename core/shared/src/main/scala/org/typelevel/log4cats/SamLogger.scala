@@ -28,49 +28,19 @@ trait SamLogger[F[_], Ctx] {
   /** Access to the underlying kernel for advanced use cases */
   def underlying: LoggerKernel[F, Ctx] = kernel
 
-  final def info(message: => String)(implicit
-      pkg: sourcecode.Pkg,
-      filename: sourcecode.FileName,
-      name: sourcecode.Name,
-      line: sourcecode.Line
-  ): F[Unit] = log_(KernelLogLevel.Info, message)
+  final def info(message: => String): F[Unit] = log_(KernelLogLevel.Info, message)
 
-  final def warn(message: => String)(implicit
-      pkg: sourcecode.Pkg,
-      filename: sourcecode.FileName,
-      name: sourcecode.Name,
-      line: sourcecode.Line
-  ): F[Unit] = log_(KernelLogLevel.Warn, message)
+  final def warn(message: => String): F[Unit] = log_(KernelLogLevel.Warn, message)
 
-  final def error(message: => String)(implicit
-      pkg: sourcecode.Pkg,
-      filename: sourcecode.FileName,
-      name: sourcecode.Name,
-      line: sourcecode.Line
-  ): F[Unit] = log_(KernelLogLevel.Error, message)
+  final def error(message: => String): F[Unit] = log_(KernelLogLevel.Error, message)
 
-  final def trace(message: => String)(implicit
-      pkg: sourcecode.Pkg,
-      filename: sourcecode.FileName,
-      name: sourcecode.Name,
-      line: sourcecode.Line
-  ): F[Unit] = log_(KernelLogLevel.Trace, message)
+  final def trace(message: => String): F[Unit] = log_(KernelLogLevel.Trace, message)
 
-  final def debug(message: => String)(implicit
-      pkg: sourcecode.Pkg,
-      filename: sourcecode.FileName,
-      name: sourcecode.Name,
-      line: sourcecode.Line
-  ): F[Unit] = log_(KernelLogLevel.Debug, message)
+  final def debug(message: => String): F[Unit] = log_(KernelLogLevel.Debug, message)
 
   private final def log_(
       level: KernelLogLevel,
       message: => String
-  )(implicit
-      pkg: sourcecode.Pkg,
-      filename: sourcecode.FileName,
-      name: sourcecode.Name,
-      line: sourcecode.Line
   ): F[Unit] = {
     kernel.log(
       level,
@@ -78,9 +48,6 @@ trait SamLogger[F[_], Ctx] {
         record
           .withLevel(level)
           .withMessage(message)
-          .withClassName(pkg.value + "." + name.value)
-          .withFileName(filename.value)
-          .withLine(line.value)
     )
   }
 
