@@ -32,7 +32,7 @@ class SamLoggerTest extends CatsEffectSuite {
           record: Log.Builder[String] => Log.Builder[String]
       ): F[Unit] = {
         val logRecord = record(Log.mutableBuilder[String]()).build()
-        ref.update(_ :+ logRecord)
+        F.flatMap(ref.update(_ :+ logRecord))(_ => F.unit)
       }
     }
   }
