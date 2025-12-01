@@ -4,7 +4,7 @@ val Scala213 = "2.13.18"
 val Scala212 = "2.12.20"
 val Scala3 = "3.3.7"
 
-ThisBuild / tlBaseVersion := "2.7"
+ThisBuild / tlBaseVersion := "2.8"
 ThisBuild / crossScalaVersions := Seq(Scala213, Scala212, Scala3)
 ThisBuild / scalaVersion := Scala213
 ThisBuild / startYear := Some(2018)
@@ -52,34 +52,7 @@ lazy val core = crossProject(JSPlatform, JVMPlatform, NativePlatform)
     libraryDependencies ++= {
       if (tlIsScala3.value) Seq.empty
       else Seq("org.scala-lang" % "scala-reflect" % scalaVersion.value % Provided)
-    },
-    mimaBinaryIssueFilters ++= Seq(
-      // Removed implicit conversions for monad transformers from Logger - these were intentionally removed
-      ProblemFilters
-        .exclude[DirectMissingMethodProblem]("org.typelevel.log4cats.Logger.kleisliLogger"),
-      ProblemFilters
-        .exclude[DirectMissingMethodProblem]("org.typelevel.log4cats.Logger.eitherTLogger"),
-      ProblemFilters
-        .exclude[DirectMissingMethodProblem]("org.typelevel.log4cats.Logger.optionTLogger"),
-      // Removed implicit conversions for monad transformers from LoggerFactory - these were intentionally removed
-      ProblemFilters
-        .exclude[DirectMissingMethodProblem]("org.typelevel.log4cats.LoggerFactory.kleisliFactory"),
-      ProblemFilters
-        .exclude[DirectMissingMethodProblem]("org.typelevel.log4cats.LoggerFactory.eitherTFactory"),
-      ProblemFilters
-        .exclude[DirectMissingMethodProblem]("org.typelevel.log4cats.LoggerFactory.optionTFactory"),
-      // Added new kernel methods - these are new API additions
-      ProblemFilters.exclude[ReversedMissingMethodProblem]("org.typelevel.log4cats.Logger.kernel"),
-      ProblemFilters.exclude[ReversedMissingMethodProblem](
-        "org.typelevel.log4cats.extras.DeferredLogger.kernel"
-      ),
-      ProblemFilters.exclude[ReversedMissingMethodProblem](
-        "org.typelevel.log4cats.extras.DeferredSelfAwareStructuredLogger.kernel"
-      ),
-      ProblemFilters.exclude[ReversedMissingMethodProblem](
-        "org.typelevel.log4cats.extras.DeferredStructuredLogger.kernel"
-      )
-    )
+    }
   )
   .nativeSettings(commonNativeSettings)
 

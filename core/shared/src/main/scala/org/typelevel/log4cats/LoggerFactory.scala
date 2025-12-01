@@ -18,6 +18,7 @@ package org.typelevel.log4cats
 
 import cats.Functor
 import cats.Show.Shown
+import cats.data.{EitherT, Kleisli, OptionT}
 import cats.syntax.functor.*
 import cats.~>
 
@@ -45,6 +46,15 @@ trait LoggerFactory[F[_]] extends LoggerFactoryGen[F] {
 
 object LoggerFactory extends LoggerFactoryGenCompanion {
   def apply[F[_]: LoggerFactory]: LoggerFactory[F] = implicitly
+
+  implicit def optionTFactory[F[_]: LoggerFactory: Functor]: LoggerFactory[OptionT[F, *]] =
+    LoggerFactory[F].mapK(OptionT.liftK[F])
+
+  implicit def eitherTFactory[F[_]: LoggerFactory: Functor, E]: LoggerFactory[EitherT[F, E, *]] =
+    LoggerFactory[F].mapK(EitherT.liftK[F, E])
+
+  implicit def kleisliFactory[F[_]: LoggerFactory: Functor, A]: LoggerFactory[Kleisli[F, A, *]] =
+    LoggerFactory[F].mapK(Kleisli.liftK[F, A])
 
   private def mapK[F[_]: Functor, G[_]](fk: F ~> G)(lf: LoggerFactory[F]): LoggerFactory[G] =
     new LoggerFactory[G] {
