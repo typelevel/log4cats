@@ -63,7 +63,6 @@ object WriterTStructuredLogger {
               case KernelLogLevel.Warn => LogLevel.Warn
               case KernelLogLevel.Error => LogLevel.Error
               case KernelLogLevel.Fatal => LogLevel.Error
-              case _ => LogLevel.Error // Handle any other KernelLogLevel values
             }
             WriterT.tell[F, G[StructuredLogMessage]](
               Applicative[G].pure(
