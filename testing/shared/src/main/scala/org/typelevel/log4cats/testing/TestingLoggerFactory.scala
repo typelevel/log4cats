@@ -206,7 +206,7 @@ object TestingLoggerFactory {
                   if (warnEnabled) save(Warn(name, message, throwable, context)) else Sync[F].unit
                 case KernelLogLevel.Error =>
                   if (errorEnabled) save(Error(name, message, throwable, context)) else Sync[F].unit
-                case _ =>
+                case KernelLogLevel.Fatal =>
                   if (errorEnabled) save(Error(name, message, throwable, context)) else Sync[F].unit
               }
             }

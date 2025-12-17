@@ -145,38 +145,11 @@ object TestingLogger {
               if (warnEnabled) appendLogMessage(WARN(message, throwable)) else Sync[F].unit
             case KernelLogLevel.Error =>
               if (errorEnabled) appendLogMessage(ERROR(message, throwable)) else Sync[F].unit
-            case _ =>
+            case KernelLogLevel.Fatal =>
               if (errorEnabled) appendLogMessage(ERROR(message, throwable)) else Sync[F].unit
           }
         }
       }
-
-      private val noop = Sync[F].unit
-
-      override def error(message: => String): F[Unit] =
-        if (errorEnabled) appendLogMessage(ERROR(message, None)) else noop
-      override def error(t: Throwable)(message: => String): F[Unit] =
-        if (errorEnabled) appendLogMessage(ERROR(message, t.some)) else noop
-
-      override def warn(message: => String): F[Unit] =
-        if (warnEnabled) appendLogMessage(WARN(message, None)) else noop
-      override def warn(t: Throwable)(message: => String): F[Unit] =
-        if (warnEnabled) appendLogMessage(WARN(message, t.some)) else noop
-
-      override def info(message: => String): F[Unit] =
-        if (infoEnabled) appendLogMessage(INFO(message, None)) else noop
-      override def info(t: Throwable)(message: => String): F[Unit] =
-        if (infoEnabled) appendLogMessage(INFO(message, t.some)) else noop
-
-      override def debug(message: => String): F[Unit] =
-        if (debugEnabled) appendLogMessage(DEBUG(message, None)) else noop
-      override def debug(t: Throwable)(message: => String): F[Unit] =
-        if (debugEnabled) appendLogMessage(DEBUG(message, t.some)) else noop
-
-      override def trace(message: => String): F[Unit] =
-        if (traceEnabled) appendLogMessage(TRACE(message, None)) else noop
-      override def trace(t: Throwable)(message: => String): F[Unit] =
-        if (traceEnabled) appendLogMessage(TRACE(message, t.some)) else noop
     }
 
 }
