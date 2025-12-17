@@ -27,7 +27,7 @@ class NoOpLoggerKernelTest extends CatsEffectSuite {
 
   test("NoOpLoggerKernel should do nothing and not fail") {
     val kernel = NoOpLoggerKernel[IO, String]
-    val logger = SamLogger.wrap(kernel)
+    val logger = Logger.wrap(kernel)
     // All of these should be no-ops and not throw
     logger.info("This should not appear") *>
       logger.error(boom()) *>
@@ -36,10 +36,23 @@ class NoOpLoggerKernelTest extends CatsEffectSuite {
       logger.trace(boom())
   }
 
-  test("NoOpLoggerKernel should work with SamLogger") {
+  test("NoOpLoggerKernel should work with Logger") {
     val kernel = NoOpLoggerKernel[IO, String]
-    val logger = SamLogger.wrap(kernel)
-    logger.info("SamLogger test") *>
-      logger.error("SamLogger test")
+    val logger = Logger.wrap(kernel)
+    logger.info("Logger test") *>
+      logger.error("Logger test")
+  }
+
+  test("NoOpLogger.strictEvalArgs should evaluate messages even when disabled") {
+    var evaluated = false
+    def messageThatSetsFlag(): String = {
+      evaluated = true
+      "This should be evaluated"
+    }
+
+    val strictLogger = NoOpLogger.strictEvalArgs[IO]
+    // Even though logging is disabled, the message should be evaluated
+    strictLogger.info(messageThatSetsFlag()) *>
+      IO(assert(evaluated, "Message should have been evaluated in strict mode"))
   }
 }
