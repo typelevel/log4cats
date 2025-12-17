@@ -205,7 +205,9 @@ object Log {
 
     override def withThrowable(throwable: Throwable): Builder[Ctx] = this
 
-    override def withContext[A](name: String)(ctx: A)(implicit E: Context.Encoder[A, Ctx]): Builder[Ctx] = this
+    override def withContext[A](name: String)(ctx: A)(implicit
+        E: Context.Encoder[A, Ctx]
+    ): Builder[Ctx] = this
 
     override def withFileName(name: String): Builder[Ctx] = this
 

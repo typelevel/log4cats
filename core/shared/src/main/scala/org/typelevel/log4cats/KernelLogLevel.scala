@@ -26,7 +26,9 @@ sealed abstract class KernelLogLevel(val name: String, val value: Int) {
 }
 
 object KernelLogLevel {
-  implicit final val log4catsCatsInstances: Eq[KernelLogLevel] & Hash[KernelLogLevel] & Order[KernelLogLevel] & Show[KernelLogLevel] =
+  implicit final val log4catsCatsInstances: Eq[KernelLogLevel] & Hash[KernelLogLevel] & Order[
+    KernelLogLevel
+  ] & Show[KernelLogLevel] =
     new Hash[KernelLogLevel] with Order[KernelLogLevel] with Show[KernelLogLevel] {
       override def eqv(x: KernelLogLevel, y: KernelLogLevel): Boolean = x == y
 
