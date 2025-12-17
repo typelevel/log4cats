@@ -71,6 +71,11 @@ trait StructuredLogger[F[_]] extends Logger[F] {
 object StructuredLogger {
   def apply[F[_]](implicit ev: StructuredLogger[F]): StructuredLogger[F] = ev
 
+  def fromKernel[F[_]](kernelImpl: LoggerKernel[F, String]): StructuredLogger[F] =
+    new StructuredLogger[F] {
+      protected def kernel: LoggerKernel[F, String] = kernelImpl
+    }
+
   def withContext[F[_]](sl: StructuredLogger[F])(ctx: Map[String, String]): StructuredLogger[F] =
     new ModifiedContextStructuredLogger[F](sl)(ctx ++ _)
 

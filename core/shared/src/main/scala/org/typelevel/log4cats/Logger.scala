@@ -64,6 +64,10 @@ trait Logger[F[_]] extends MessageLogger[F] with ErrorLogger[F] {
 object Logger {
   def apply[F[_]](implicit ev: Logger[F]) = ev
 
+  def wrap[F[_]](k: LoggerKernel[F, String]): Logger[F] = new Logger[F] {
+    protected def kernel: LoggerKernel[F, String] = k
+  }
+
   implicit def optionTLogger[F[_]: Logger: Functor]: Logger[OptionT[F, *]] =
     Logger[F].mapK(OptionT.liftK[F])
 
