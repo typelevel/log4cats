@@ -16,20 +16,31 @@
 
 package org.typelevel.log4cats
 
-import cats.Order
+import cats.{Order, Show}
+import cats.kernel.{Eq, Hash}
 
-final case class KernelLogLevel(name: String, value: Int) {
+sealed abstract class KernelLogLevel(val name: String, val value: Int) {
   def namePadded: String = name.padTo(5, ' ').mkString
+
+  override def toString: String = name
 }
 
 object KernelLogLevel {
-  implicit final val orderKernelLogLevel: Order[KernelLogLevel] =
-    Order.by[KernelLogLevel, Int](-_.value)
+  implicit final val log4catsCatsInstances: Eq[KernelLogLevel] & Hash[KernelLogLevel] & Order[KernelLogLevel] & Show[KernelLogLevel] =
+    new Hash[KernelLogLevel] with Order[KernelLogLevel] with Show[KernelLogLevel] {
+      override def eqv(x: KernelLogLevel, y: KernelLogLevel): Boolean = x == y
 
-  val Trace: KernelLogLevel = KernelLogLevel("TRACE", 100)
-  val Debug: KernelLogLevel = KernelLogLevel("DEBUG", 200)
-  val Info: KernelLogLevel = KernelLogLevel("INFO", 300)
-  val Warn: KernelLogLevel = KernelLogLevel("WARN", 400)
-  val Error: KernelLogLevel = KernelLogLevel("ERROR", 500)
-  val Fatal: KernelLogLevel = KernelLogLevel("FATAL", 600)
+      override def hash(x: KernelLogLevel): Int = x.##
+
+      override def compare(x: KernelLogLevel, y: KernelLogLevel): Int = x.value.compare(y.value)
+
+      override def show(t: KernelLogLevel): String = t.name
+    }
+
+  case object Trace extends KernelLogLevel("TRACE", 100)
+  case object Debug extends KernelLogLevel("DEBUG", 200)
+  case object Info extends KernelLogLevel("INFO", 300)
+  case object Warn extends KernelLogLevel("WARN", 400)
+  case object Error extends KernelLogLevel("ERROR", 500)
+  case object Fatal extends KernelLogLevel("FATAL", 600)
 }
