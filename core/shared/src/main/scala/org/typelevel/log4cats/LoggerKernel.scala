@@ -38,17 +38,6 @@ import cats.~>
 trait LoggerKernel[F[_], Ctx] {
   def log(level: KernelLogLevel, record: Log.Builder[Ctx] => Log.Builder[Ctx]): F[Unit]
 
-  final def logTrace(record: Log.Builder[Ctx] => Log.Builder[Ctx]): F[Unit] =
-    log(KernelLogLevel.Trace, record)
-  final def logDebug(record: Log.Builder[Ctx] => Log.Builder[Ctx]): F[Unit] =
-    log(KernelLogLevel.Debug, record)
-  final def logInfo(record: Log.Builder[Ctx] => Log.Builder[Ctx]): F[Unit] =
-    log(KernelLogLevel.Info, record)
-  final def logWarn(record: Log.Builder[Ctx] => Log.Builder[Ctx]): F[Unit] =
-    log(KernelLogLevel.Warn, record)
-  final def logError(record: Log.Builder[Ctx] => Log.Builder[Ctx]): F[Unit] =
-    log(KernelLogLevel.Error, record)
-
   /**
    * Transform the effect type using a natural transformation. This allows converting between
    * different effect types (e.g., IO to Task, Task to IO).
