@@ -24,4 +24,11 @@ object NoOpLoggerKernel {
     override def log(level: KernelLogLevel, record: Log.Builder[Ctx] => Log.Builder[Ctx]): F[Unit] =
       Applicative[F].unit
   }
+
+  def strict[F[_]: Applicative, Ctx]: LoggerKernel[F, Ctx] = new LoggerKernel[F, Ctx] {
+    override def log(level: KernelLogLevel, record: Log.Builder[Ctx] => Log.Builder[Ctx]): F[Unit] = {
+      val _ = record(Log.strictNoOpBuilder[Ctx]())
+      Applicative[F].unit
+    }
+  }
 }

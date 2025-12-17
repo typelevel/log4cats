@@ -17,7 +17,7 @@
 package org.typelevel.log4cats.noop
 
 import cats.Applicative
-import org.typelevel.log4cats.{KernelLogLevel, Log, LoggerKernel, SelfAwareStructuredLogger}
+import org.typelevel.log4cats.{LoggerKernel, SelfAwareStructuredLogger}
 
 object NoOpLogger {
   def apply[F[_]: Applicative]: SelfAwareStructuredLogger[F] = impl[F]
@@ -31,10 +31,7 @@ object NoOpLogger {
     if (evaluateArgs) strictImpl else lazyImpl
 
   private def lazyImpl[F[_]: Applicative] = new SelfAwareStructuredLogger[F] {
-    protected def kernel: LoggerKernel[F, String] = new LoggerKernel[F, String] {
-      def log(level: KernelLogLevel, record: Log.Builder[String] => Log.Builder[String]): F[Unit] =
-        Applicative[F].pure(())
-    }
+    protected def kernel: LoggerKernel[F, String] = NoOpLoggerKernel[F, String]
 
     @inline override def isTraceEnabled: F[Boolean] = Applicative[F].pure(false)
     @inline override def isDebugEnabled: F[Boolean] = Applicative[F].pure(false)
@@ -44,10 +41,7 @@ object NoOpLogger {
   }
 
   private def strictImpl[F[_]: Applicative] = new SelfAwareStructuredLogger[F] {
-    protected def kernel: LoggerKernel[F, String] = new LoggerKernel[F, String] {
-      def log(level: KernelLogLevel, record: Log.Builder[String] => Log.Builder[String]): F[Unit] =
-        Applicative[F].pure(())
-    }
+    protected def kernel: LoggerKernel[F, String] = NoOpLoggerKernel.strict[F, String]
 
     @inline override def isTraceEnabled: F[Boolean] = Applicative[F].pure(true)
     @inline override def isDebugEnabled: F[Boolean] = Applicative[F].pure(true)

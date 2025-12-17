@@ -70,6 +70,8 @@ object Log {
 
   def mutableBuilder[Ctx](): Builder[Ctx] = new MutableBuilder[Ctx]()
 
+  def strictNoOpBuilder[Ctx](): Builder[Ctx] = new NoOpBuilder[Ctx]()
+
   private class MutableBuilder[Ctx] extends Builder[Ctx] {
     private var _timestamp: Option[FiniteDuration] = None
     private var _level: KernelLogLevel = KernelLogLevel.Info
@@ -188,6 +190,69 @@ object Log {
     override def withLine(line: Int): this.type = {
       _line = if (line > 0) Some(line) else None
       this
+    }
+  }
+
+  private class NoOpBuilder[Ctx] extends Builder[Ctx] {
+    override def withTimestamp(value: FiniteDuration): Builder[Ctx] = this
+
+    override def withLevel(level: KernelLogLevel): Builder[Ctx] = this
+
+    override def withMessage(message: => String): Builder[Ctx] = {
+      val _ = message
+      this
+    }
+
+    override def withThrowable(throwable: Throwable): Builder[Ctx] = this
+
+    override def withContext[A](name: String)(ctx: A)(implicit E: Context.Encoder[A, Ctx]): Builder[Ctx] = this
+
+    override def withFileName(name: String): Builder[Ctx] = this
+
+    override def withClassName(name: String): Builder[Ctx] = this
+
+    override def withMethodName(name: String): Builder[Ctx] = this
+
+    override def withLine(line: Int): Builder[Ctx] = this
+
+    override def adaptTimestamp(f: FiniteDuration => FiniteDuration): Builder[Ctx] = this
+
+    override def adaptLevel(f: KernelLogLevel => KernelLogLevel): Builder[Ctx] = this
+
+    override def adaptMessage(f: String => String): Builder[Ctx] = this
+
+    override def adaptThrowable(f: Throwable => Throwable): Builder[Ctx] = this
+
+    override def adaptContext(f: Map[String, Ctx] => Map[String, Ctx]): Builder[Ctx] = this
+
+    override def adaptFileName(f: String => String): Builder[Ctx] = this
+
+    override def adaptClassName(f: String => String): Builder[Ctx] = this
+
+    override def adaptMethodName(f: String => String): Builder[Ctx] = this
+
+    override def adaptLine(f: Int => Int): Builder[Ctx] = this
+
+    override def build(): Log[Ctx] = new Log[Ctx] {
+      override def timestamp: Option[FiniteDuration] = None
+
+      override def level: KernelLogLevel = KernelLogLevel.Info
+
+      override def message: () => String = () => ""
+
+      override def throwable: Option[Throwable] = None
+
+      override def context: Map[String, Ctx] = Map.empty
+
+      override def fileName: Option[String] = None
+
+      override def className: Option[String] = None
+
+      override def methodName: Option[String] = None
+
+      override def line: Option[Int] = None
+
+      override def levelValue: Int = KernelLogLevel.Info.value
     }
   }
 }
