@@ -25,25 +25,30 @@ import org.typelevel.log4cats.extras.LogLevel.*
 class ConsoleLogger[F[_]: Sync](logLevel: Option[LogLevel] = Option(Trace))
     extends SelfAwareStructuredLogger[F] {
   private val ConsoleF: ConsoleF[F] = implicitly
-  override def trace(t: Throwable)(message: => String): F[Unit] = ConsoleF.debug(message, t)
-  override def trace(message: => String): F[Unit] = ConsoleF.debug(message)
-  override def isTraceEnabled: F[Boolean] = logLevel.exists(_ <= Trace).pure[F]
 
-  override def debug(t: Throwable)(message: => String): F[Unit] = ConsoleF.debug(message, t)
-  override def debug(message: => String): F[Unit] = ConsoleF.debug(message)
-  override def isDebugEnabled: F[Boolean] = logLevel.exists(_ <= Debug).pure[F]
+  protected def kernel: LoggerKernel[F, String] = new LoggerKernel[F, String] {
+    def log(level: KernelLogLevel, record: Log.Builder[String] => Log.Builder[String]): F[Unit] = {
+      val logRecord = record(Log.mutableBuilder[String]())
+      val log = logRecord.build()
+      val message = log.message()
+      val throwable = log.throwable
 
-  override def info(t: Throwable)(message: => String): F[Unit] = ConsoleF.info(message, t)
-  override def info(message: => String): F[Unit] = ConsoleF.info(message)
-  override def isInfoEnabled: F[Boolean] = logLevel.exists(_ <= Info).pure[F]
+      level match {
+        case KernelLogLevel.Trace => ConsoleF.debug(message, throwable.orNull)
+        case KernelLogLevel.Debug => ConsoleF.debug(message, throwable.orNull)
+        case KernelLogLevel.Info => ConsoleF.info(message, throwable.orNull)
+        case KernelLogLevel.Warn => ConsoleF.warn(message, throwable.orNull)
+        case KernelLogLevel.Error => ConsoleF.error(message, throwable.orNull)
+        case KernelLogLevel.Fatal => ConsoleF.error(message, throwable.orNull)
+      }
+    }
+  }
 
-  override def warn(t: Throwable)(message: => String): F[Unit] = ConsoleF.warn(message, t)
-  override def warn(message: => String): F[Unit] = ConsoleF.warn(message)
-  override def isWarnEnabled: F[Boolean] = logLevel.exists(_ <= Warn).pure[F]
-
-  override def error(t: Throwable)(message: => String): F[Unit] = ConsoleF.error(message, t)
-  override def error(message: => String): F[Unit] = ConsoleF.error(message)
-  override def isErrorEnabled: F[Boolean] = logLevel.exists(_ <= Error).pure[F]
+  def isTraceEnabled: F[Boolean] = logLevel.exists(_ <= Trace).pure[F]
+  def isDebugEnabled: F[Boolean] = logLevel.exists(_ <= Debug).pure[F]
+  def isInfoEnabled: F[Boolean] = logLevel.exists(_ <= Info).pure[F]
+  def isWarnEnabled: F[Boolean] = logLevel.exists(_ <= Warn).pure[F]
+  def isErrorEnabled: F[Boolean] = logLevel.exists(_ <= Error).pure[F]
 
   /*
    * ConsoleLogger should probably not extend from StructuredLogger, because there's not
