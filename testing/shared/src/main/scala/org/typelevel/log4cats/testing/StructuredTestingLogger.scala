@@ -35,6 +35,24 @@ object StructuredTestingLogger {
     def ctx: Map[String, String]
     def message: String
     def throwOpt: Option[Throwable]
+
+    def mapCtx(f: Map[String, String] => Map[String, String]): LogMessage =
+      this match {
+        case TRACE(m, t, c) => TRACE(m, t, f(c))
+        case DEBUG(m, t, c) => DEBUG(m, t, f(c))
+        case INFO(m, t, c) => INFO(m, t, f(c))
+        case WARN(m, t, c) => WARN(m, t, f(c))
+        case ERROR(m, t, c) => ERROR(m, t, f(c))
+      }
+
+    def modifyString(f: String => String): LogMessage =
+      this match {
+        case TRACE(m, t, c) => TRACE(f(m), t, c)
+        case DEBUG(m, t, c) => DEBUG(f(m), t, c)
+        case INFO(m, t, c) => INFO(f(m), t, c)
+        case WARN(m, t, c) => WARN(f(m), t, c)
+        case ERROR(m, t, c) => ERROR(f(m), t, c)
+      }
   }
 
   final case class TRACE(
