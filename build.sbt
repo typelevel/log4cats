@@ -62,8 +62,9 @@ lazy val testing = crossProject(JSPlatform, JVMPlatform, NativePlatform)
   .settings(
     name := "log4cats-testing",
     libraryDependencies ++= Seq(
-      "org.typelevel" %%% "cats-effect" % catsEffectV,
-      "ch.qos.logback"                  % "logback-classic" % logbackClassicV % Test
+      "org.typelevel" %%% "cats-effect"             % catsEffectV,
+      "org.typelevel" %%% "scalacheck-effect-munit" % "2.1.0-RC1"       % Test,
+      "ch.qos.logback"                              % "logback-classic" % logbackClassicV % Test
     )
   )
   .nativeSettings(commonNativeSettings)
