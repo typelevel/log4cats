@@ -52,7 +52,21 @@ lazy val core = crossProject(JSPlatform, JVMPlatform, NativePlatform)
     libraryDependencies ++= {
       if (tlIsScala3.value) Seq.empty
       else Seq("org.scala-lang" % "scala-reflect" % scalaVersion.value % Provided)
-    }
+    },
+    mimaBinaryIssueFilters ++= Seq(
+      // New protected abstract method in 2.8 - expected for minor version bump
+      // This allows implementations to access the underlying kernel for advanced use cases
+      ProblemFilters.exclude[ReversedMissingMethodProblem]("org.typelevel.log4cats.Logger.kernel"),
+      ProblemFilters.exclude[ReversedMissingMethodProblem](
+        "org.typelevel.log4cats.extras.DeferredLogger.kernel"
+      ),
+      ProblemFilters.exclude[ReversedMissingMethodProblem](
+        "org.typelevel.log4cats.extras.DeferredSelfAwareStructuredLogger.kernel"
+      ),
+      ProblemFilters.exclude[ReversedMissingMethodProblem](
+        "org.typelevel.log4cats.extras.DeferredStructuredLogger.kernel"
+      )
+    )
   )
   .nativeSettings(commonNativeSettings)
 
