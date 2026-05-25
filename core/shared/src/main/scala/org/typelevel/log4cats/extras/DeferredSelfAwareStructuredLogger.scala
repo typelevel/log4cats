@@ -20,7 +20,7 @@ import cats.data.Chain
 import cats.effect.kernel.Resource.ExitCase
 import cats.effect.kernel.{Concurrent, Ref, Resource}
 import cats.syntax.all.*
-import cats.{~>, Show}
+import cats.~>
 import org.typelevel.log4cats.SelfAwareStructuredLogger
 
 /**
@@ -38,11 +38,6 @@ trait DeferredSelfAwareStructuredLogger[F[_]]
 
   override def addContext(ctx: Map[String, String]): DeferredSelfAwareStructuredLogger[F] =
     DeferredSelfAwareStructuredLogger.withContext(this)(ctx)
-
-  override def addContext(pairs: (String, Show.Shown)*): DeferredSelfAwareStructuredLogger[F] =
-    DeferredSelfAwareStructuredLogger.withContext(this)(
-      pairs.map { case (k, v) => (k, v.toString) }.toMap
-    )
 
   override def withModifiedString(f: String => String): DeferredSelfAwareStructuredLogger[F] =
     DeferredSelfAwareStructuredLogger.withModifiedString(this, f)
