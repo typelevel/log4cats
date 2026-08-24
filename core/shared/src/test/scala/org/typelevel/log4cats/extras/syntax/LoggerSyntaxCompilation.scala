@@ -54,12 +54,12 @@ object LoggerSyntaxCompilation {
     l.withModifiedString(identity)
 
   def eitherTLogger[F[_]: Functor: Logger, A]: EitherT[F, A, Unit] =
-    Logger[EitherT[F, A, *]].info("foo")
+    Logger[F].mapK(EitherT.liftK[F, A]).info("foo")
 
   def kleisliLogger[F[_]: Logger, A]: Kleisli[F, A, Unit] =
-    Logger[Kleisli[F, A, *]].info("bar")
+    Logger[F].mapK(Kleisli.liftK[F, A]).info("bar")
 
   def optionTLogger[F[_]: Functor: Logger]: OptionT[F, Unit] =
-    Logger[OptionT[F, *]].info("baz")
+    Logger[F].mapK(OptionT.liftK[F]).info("baz")
 
 }
