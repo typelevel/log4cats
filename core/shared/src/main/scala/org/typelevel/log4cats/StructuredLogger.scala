@@ -17,7 +17,9 @@
 package org.typelevel.log4cats
 
 import cats.*
+import cats.syntax.foldable.*
 import cats.Show.Shown
+import cats.Show.ContravariantShow
 
 trait StructuredLogger[F[_]] extends Logger[F] {
   def trace(ctx: Map[String, String])(msg: => String): F[Unit]
@@ -36,18 +38,27 @@ trait StructuredLogger[F[_]] extends Logger[F] {
   def addContext(ctx: Map[String, String]): StructuredLogger[F] =
     StructuredLogger.withContext(this)(ctx)
 
+  def addContext(pair: StructuredLogger.ContextPair): StructuredLogger[F] =
+    addContext(pair.toMap)
+
   def addContext(
-      pairs: (String, Shown)*
+      pairs: StructuredLogger.ContextPair*
   ): StructuredLogger[F] =
-    StructuredLogger.withContext(this)(
-      pairs.map { case (k, v) => (k, v.toString) }.toMap
-    )
+    addContext(pairs.toList.foldMap(_.toMap))
 
   override def withModifiedString(f: String => String): StructuredLogger[F] =
     StructuredLogger.withModifiedString[F](this, f)
 }
 
 object StructuredLogger {
+
+  final case class ContextPair(value: (String, Shown)) extends AnyVal {
+    def toMap: Map[String, String] = Map(value._1 -> value._2.toString)
+  }
+
+  implicit def log4catsTupleToContextPair[A: ContravariantShow](pair: (String, A)): ContextPair =
+    ContextPair((pair._1, Shown.mat(pair._2)))
+
   def apply[F[_]](implicit ev: StructuredLogger[F]): StructuredLogger[F] = ev
 
   def withContext[F[_]](sl: StructuredLogger[F])(ctx: Map[String, String]): StructuredLogger[F] =

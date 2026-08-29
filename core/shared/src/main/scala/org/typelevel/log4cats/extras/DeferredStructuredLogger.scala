@@ -16,7 +16,6 @@
 
 package org.typelevel.log4cats.extras
 
-import cats.Show.Shown
 import cats.data.Chain
 import cats.effect.kernel.Resource.ExitCase
 import cats.effect.kernel.{Concurrent, Ref, Resource}
@@ -55,11 +54,6 @@ trait DeferredStructuredLogger[F[_]] extends StructuredLogger[F] with DeferredLo
 
   override def addContext(ctx: Map[String, String]): DeferredStructuredLogger[F] =
     DeferredStructuredLogger.withContext(this, ctx)
-
-  override def addContext(
-      pairs: (String, Shown)*
-  ): DeferredStructuredLogger[F] =
-    DeferredStructuredLogger.withContext(this, pairs.map { case (k, v) => (k, v.toString) }.toMap)
 
   override def withModifiedString(f: String => String): DeferredStructuredLogger[F] =
     DeferredStructuredLogger.withModifiedString[F](this, f)
