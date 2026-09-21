@@ -18,11 +18,9 @@ package org.typelevel.log4cats
 
 import cats.Functor
 import cats.Show.Shown
-import cats.data.Kleisli
+import cats.data.{EitherT, Kleisli, OptionT}
 import cats.syntax.functor.*
 import cats.~>
-import cats.data.OptionT
-import cats.data.EitherT
 
 import scala.annotation.implicitNotFound
 
