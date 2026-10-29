@@ -19,6 +19,7 @@ package org.typelevel.log4cats.slf4j.internal
 import cats.effect.*
 import org.slf4j.{Logger as JLogger, MDC}
 import org.typelevel.log4cats.*
+import org.typelevel.scalaccompat.annotation.unused
 
 private[slf4j] object Slf4jLoggerInternal {
 
@@ -34,7 +35,7 @@ private[slf4j] object Slf4jLoggerInternal {
 
   final class Slf4jLogger[F[_]](
       val logger: JLogger,
-      sync: Sync.Type,
+      @unused sync: Sync.Type,
       defaultCtx: Map[String, String]
   )(implicit
       F: Sync[F]
