@@ -17,7 +17,6 @@
 package org.typelevel.log4cats
 
 import cats.*
-import cats.Show.Shown
 
 trait SelfAwareStructuredLogger[F[_]] extends SelfAwareLogger[F] with StructuredLogger[F] {
   override def mapK[G[_]](fk: F ~> G): SelfAwareStructuredLogger[G] =
@@ -25,13 +24,6 @@ trait SelfAwareStructuredLogger[F[_]] extends SelfAwareLogger[F] with Structured
 
   override def addContext(ctx: Map[String, String]): SelfAwareStructuredLogger[F] =
     SelfAwareStructuredLogger.withContext(this)(ctx)
-
-  override def addContext(
-      pairs: (String, Shown)*
-  ): SelfAwareStructuredLogger[F] =
-    SelfAwareStructuredLogger.withContext(this)(
-      pairs.map { case (k, v) => (k, v.toString) }.toMap
-    )
 
   override def withModifiedString(f: String => String): SelfAwareStructuredLogger[F] =
     SelfAwareStructuredLogger.withModifiedString[F](this, f)
