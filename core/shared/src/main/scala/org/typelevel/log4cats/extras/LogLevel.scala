@@ -56,7 +56,8 @@ object LogLevel {
     case Trace => 1
   }
 
-  implicit final val logLevelOrder: Order[LogLevel] = Order.by[LogLevel, Int](toIndex)
+  implicit final val logLevelOrder: Order[LogLevel] =
+    Order.by[LogLevel, Int](toIndex)
 
   implicit final val logLevelHash: Hash[LogLevel] = Hash.by(toIndex)
 }

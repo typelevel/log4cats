@@ -76,6 +76,8 @@ object PagingSelfAwareStructuredLogger {
         s"pageSizeK(=$pageSizeK) and maxPageNeeded(=$maxPageNeeded) must be positive numbers."
       )
 
+    protected def kernel: LoggerKernel[F, String] = sl.underlying
+
     @deprecated("Use constructor with randomUUID", "2.5.0")
     def this(pageSizeK: Int, maxPageNeeded: Int)(
         sl: SelfAwareStructuredLogger[F]
